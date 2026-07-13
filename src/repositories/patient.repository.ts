@@ -2,7 +2,6 @@ import { getRedisClient } from "@/lib/redis/client";
 import type { Patient, PatientStatus } from "@/types";
 import { redisKeys } from "@/lib/redis/keys";
 
-
 export class PatientRepository {
   private get redis() {
     return getRedisClient();
@@ -10,7 +9,7 @@ export class PatientRepository {
 
   private key(id: string): string {
     return redisKeys.patient(id);
-}
+  }
 
   async findById(id: string): Promise<Patient | null> {
     const data = await this.redis.hgetall<Record<string, string>>(this.key(id));

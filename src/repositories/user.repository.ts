@@ -2,14 +2,13 @@ import { getRedisClient } from "@/lib/redis/client";
 import type { User, UserStatus } from "@/types";
 import { redisKeys } from "@/lib/redis/keys";
 
-
 export class UserRepository {
   private get redis() {
     return getRedisClient();
   }
 
   private key(id: string): string {
-      return redisKeys.user(id);
+    return redisKeys.user(id);
   }
 
   private emailKey(email: string): string {
