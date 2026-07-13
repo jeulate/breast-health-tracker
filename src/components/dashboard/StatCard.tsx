@@ -6,18 +6,71 @@ interface StatCardProps {
 }
 
 const colorMap = {
-  blue: "bg-blue-50 border-blue-200 text-blue-700",
-  green: "bg-green-50 border-green-200 text-green-700",
-  yellow: "bg-yellow-50 border-yellow-200 text-yellow-700",
-  red: "bg-red-50 border-red-200 text-red-700",
-};
+  blue: {
+    card: "border-blue-200 bg-blue-50/80 dark:border-blue-500/20 dark:bg-blue-500/10",
+    title: "text-blue-700 dark:text-blue-300",
+    value: "text-blue-800 dark:text-blue-200",
+    description: "text-blue-600 dark:text-blue-300/80",
+    indicator: "bg-blue-500",
+  },
+  green: {
+    card: "border-emerald-200 bg-emerald-50/80 dark:border-emerald-500/20 dark:bg-emerald-500/10",
+    title: "text-emerald-700 dark:text-emerald-300",
+    value: "text-emerald-800 dark:text-emerald-200",
+    description: "text-emerald-600 dark:text-emerald-300/80",
+    indicator: "bg-emerald-500",
+  },
+  yellow: {
+    card: "border-amber-200 bg-amber-50/80 dark:border-amber-500/20 dark:bg-amber-500/10",
+    title: "text-amber-700 dark:text-amber-300",
+    value: "text-amber-800 dark:text-amber-200",
+    description: "text-amber-600 dark:text-amber-300/80",
+    indicator: "bg-amber-500",
+  },
+  red: {
+    card: "border-rose-200 bg-rose-50/80 dark:border-rose-500/20 dark:bg-rose-500/10",
+    title: "text-rose-700 dark:text-rose-300",
+    value: "text-rose-800 dark:text-rose-200",
+    description: "text-rose-600 dark:text-rose-300/80",
+    indicator: "bg-rose-500",
+  },
+} satisfies Record<
+  NonNullable<StatCardProps["color"]>,
+  {
+    card: string;
+    title: string;
+    value: string;
+    description: string;
+    indicator: string;
+  }
+>;
 
 export function StatCard({ title, value, description, color = "blue" }: StatCardProps) {
+  const styles = colorMap[color];
+
   return (
-    <div className={`rounded-lg border p-6 ${colorMap[color]}`}>
-      <p className="text-sm font-medium opacity-80">{title}</p>
-      <p className="mt-2 text-3xl font-bold">{value}</p>
-      {description && <p className="mt-1 text-xs opacity-70">{description}</p>}
-    </div>
+    <article
+      className={[
+        "relative overflow-hidden rounded-2xl border p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md",
+        styles.card,
+      ].join(" ")}
+    >
+      <span
+        aria-hidden="true"
+        className={["absolute top-0 left-0 h-full w-1", styles.indicator].join(" ")}
+      />
+
+      <div className="pl-1">
+        <p className={["text-sm font-medium", styles.title].join(" ")}>{title}</p>
+
+        <p className={["mt-2 text-3xl font-bold tracking-tight", styles.value].join(" ")}>
+          {value}
+        </p>
+
+        {description && (
+          <p className={["mt-1 text-xs leading-5", styles.description].join(" ")}>{description}</p>
+        )}
+      </div>
+    </article>
   );
 }

@@ -1,17 +1,12 @@
-import { Sidebar } from "@/components/dashboard/Sidebar";
-import { Header } from "@/components/dashboard/Header";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { getSession } from "@/lib/auth/session";
 
-export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+interface DashboardLayoutProps {
+  children: React.ReactNode;
+}
+
+export default async function DashboardLayout({ children }: Readonly<DashboardLayoutProps>) {
   const session = await getSession();
 
-  return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
-      <Sidebar />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Header userEmail={session?.email} />
-        <main className="flex-1 overflow-auto p-6">{children}</main>
-      </div>
-    </div>
-  );
+  return <DashboardShell userEmail={session?.email}>{children}</DashboardShell>;
 }

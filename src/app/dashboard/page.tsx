@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { StatCard } from "@/components/dashboard/StatCard";
 import { MedicalDisclaimer } from "@/components/dashboard/MedicalDisclaimer";
+import { StatCard } from "@/components/dashboard/StatCard";
 
 export const metadata: Metadata = {
   title: "Inicio | BI-RADS Tracker",
 };
 
-// Simulated data – will be replaced with real data in Phase 2
 const SIMULATED_STATS = [
   {
     title: "Pacientes activas",
@@ -30,7 +29,7 @@ const SIMULATED_STATS = [
     title: "Recordatorios programados",
     value: 0,
     color: "green" as const,
-    description: "Para las próximas 48h",
+    description: "Para las próximas 48 horas",
   },
 ];
 
@@ -39,45 +38,89 @@ const SIMULATED_ACTIVITY = [
     id: "1",
     type: "Sistema iniciado",
     description: "Primera fase implementada",
-    date: new Date().toLocaleDateString("es-MX"),
+    date: new Date().toLocaleDateString("es-BO"),
   },
 ];
 
 export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
+      <section className="flex flex-col gap-1">
+        <p className="text-sm font-medium text-rose-600 dark:text-rose-400">Panel general</p>
+
+        <h2 className="text-foreground text-2xl font-bold tracking-tight">Resumen del sistema</h2>
+
+        <p className="text-muted text-sm">
+          Consulta el estado general de pacientes, controles, alertas y recordatorios.
+        </p>
+      </section>
+
       <MedicalDisclaimer />
 
-      <section>
-        <h2 className="mb-4 text-lg font-semibold text-gray-800">Resumen</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section aria-labelledby="dashboard-summary-title">
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <div>
+            <h3 id="dashboard-summary-title" className="text-foreground text-lg font-semibold">
+              Resumen
+            </h3>
+
+            <p className="text-muted mt-1 text-sm">Indicadores principales de seguimiento.</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {SIMULATED_STATS.map((stat) => (
             <StatCard key={stat.title} {...stat} />
           ))}
         </div>
       </section>
 
-      <section>
-        <h2 className="mb-4 text-lg font-semibold text-gray-800">Actividad reciente</h2>
-        <div className="rounded-lg border border-gray-200 bg-white">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Tipo</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Descripción</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600">Fecha</th>
-              </tr>
-            </thead>
-            <tbody>
-              {SIMULATED_ACTIVITY.map((item) => (
-                <tr key={item.id} className="border-b border-gray-50 last:border-0">
-                  <td className="px-4 py-3 text-gray-700">{item.type}</td>
-                  <td className="px-4 py-3 text-gray-600">{item.description}</td>
-                  <td className="px-4 py-3 text-gray-500">{item.date}</td>
+      <section aria-labelledby="recent-activity-title">
+        <div className="mb-4">
+          <h3 id="recent-activity-title" className="text-foreground text-lg font-semibold">
+            Actividad reciente
+          </h3>
+
+          <p className="text-muted mt-1 text-sm">
+            Últimos movimientos registrados en la plataforma.
+          </p>
+        </div>
+
+        <div className="border-border bg-surface overflow-hidden rounded-2xl border shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] text-sm">
+              <thead>
+                <tr className="border-border bg-surface-secondary border-b">
+                  <th className="text-muted px-5 py-3.5 text-left text-xs font-semibold tracking-wide uppercase">
+                    Tipo
+                  </th>
+
+                  <th className="text-muted px-5 py-3.5 text-left text-xs font-semibold tracking-wide uppercase">
+                    Descripción
+                  </th>
+
+                  <th className="text-muted px-5 py-3.5 text-left text-xs font-semibold tracking-wide uppercase">
+                    Fecha
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+
+              <tbody>
+                {SIMULATED_ACTIVITY.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="border-border hover:bg-surface-secondary border-b transition-colors last:border-0"
+                  >
+                    <td className="text-foreground px-5 py-4 font-medium">{item.type}</td>
+
+                    <td className="text-muted px-5 py-4">{item.description}</td>
+
+                    <td className="text-muted px-5 py-4">{item.date}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
     </div>
