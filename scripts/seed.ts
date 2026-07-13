@@ -1,112 +1,127 @@
 /**
- * Seed script – creates a fictitious admin and two patients.
- * Run with: npm run seed
+ * Seed script.
  *
- * Requires environment variables to be set (copy .env.example to .env.local).
+ * Creates:
+ * - One administrator
+ * - Two fictitious patients
+ *
+ * Run with:
+ * npm run seed
  */
 
-import { randomUUID } from "crypto";
-import { Redis } from "@upstash/redis";
+import { randomUUID } from "node:crypto";
 import bcrypt from "bcryptjs";
-import type { User, Patient } from "../src/types/index.js";
-
-// Load env vars from .env.local when running outside Next.js
 import { config } from "dotenv";
+
 config({ path: ".env.local" });
 
-const redis = new Redis({
-  url: process.env.KV_REST_API_URL!,
-  token: process.env.KV_REST_API_TOKEN!,
-});
+async function seed(): Promise<void> {
+  const [{ getServerEnv }, { getRedisClient }, { redisKeys }] = await Promise.all([
+    import("../src/config/env"),
+    import("../src/lib/redis/client"),
+    import("../src/lib/redis/keys"),
+  ]);
 
-async function seed() {
-  console.log("🌱  Starting seed…\n");
+  const { ADMIN_INITIAL_EMAIL, ADMIN_INITIAL_PASSWORD } = getServerEnv();
+
+  if (!ADMIN_INITIAL_EMAIL || !ADMIN_INITIAL_PASSWORD) {
+    throw new Error("ADMIN_INITIAL_EMAIL and ADMIN_INITIAL_PASSWORD are required to run the seed.");
+  }
+
+  const redis = getRedisClient();
+  const normalizedAdminEmail = ADMIN_INITIAL_EMAIL.trim().toLowerCase();
+  const existingAdminId = await redis.get<string>(redisKeys.userByEmail(normalizedAdminEmail));
 
   const now = new Date().toISOString();
 
-  // ── Admin user ─────────────────────────────────────────────────────────────
-  const adminEmail = process.env.ADMIN_INITIAL_EMAIL ?? "admin@ejemplo.com";
-  const adminPassword = process.env.ADMIN_INITIAL_PASSWORD ?? "Admin1234!";
-  const passwordHash = await bcrypt.hash(adminPassword, 12);
+  console.log("Starting seed...");
 
-  const admin: User = {
-    id: randomUUID(),
-    name: "Administrador",
-    email: adminEmail,
-    passwordHash,
-    role: "ADMIN",
-    status: "ACTIVE",
-    createdAt: now,
-    updatedAt: now,
-  };
+  if (existingAdminId) {
+    console.log(`Administrator already exists with ID ${existingAdminId}. Skipping creation.`);
+  } else {
+    const adminId = randomUUID();
+    const passwordHash = await bcrypt.hash(ADMIN_INITIAL_PASSWORD, 12);
 
-  const pipeline = redis.pipeline();
+    const pipeline = redis.pipeline();
 
-  // Persist admin
-  pipeline.hset(`users:${admin.id}`, {
-    id: admin.id,
-    name: admin.name,
-    email: admin.email,
-    passwordHash: admin.passwordHash,
-    role: admin.role,
-    status: admin.status,
-    createdAt: admin.createdAt,
-    updatedAt: admin.updatedAt,
-  });
-  pipeline.set(`users:email:${admin.email}`, admin.id);
-  pipeline.sadd("users:index", admin.id);
+    pipeline.hset(redisKeys.user(adminId), {
+      id: adminId,
+      name: "Administrador",
+      email: normalizedAdminEmail,
+      passwordHash,
+      role: "ADMIN",
+      status: "ACTIVE",
+      createdAt: now,
+      updatedAt: now,
+    });
 
-  // ── Patients ───────────────────────────────────────────────────────────────
-  const patients: Patient[] = [
+    pipeline.set(redisKeys.userByEmail(normalizedAdminEmail), adminId);
+
+    pipeline.sadd(redisKeys.usersIndex(), adminId);
+
+    await pipeline.exec();
+
+    console.log(`Administrator created: ${normalizedAdminEmail}`);
+  }
+
+  const fictitiousPatients = [
     {
-      id: randomUUID(),
       fullName: "Ana Ficticia López",
       birthDate: "1985-03-15",
-      timezone: "America/Mexico_City",
-      status: "ACTIVE",
-      createdAt: now,
-      updatedAt: now,
+      timezone: "America/La_Paz",
     },
     {
-      id: randomUUID(),
       fullName: "Beatriz Ficticia Martínez",
       birthDate: "1990-07-22",
-      timezone: "America/Mexico_City",
-      status: "ACTIVE",
-      createdAt: now,
-      updatedAt: now,
+      timezone: "America/La_Paz",
     },
   ];
 
-  for (const patient of patients) {
-    pipeline.hset(`patients:${patient.id}`, {
-      id: patient.id,
-      fullName: patient.fullName,
-      birthDate: patient.birthDate ?? "",
-      timezone: patient.timezone,
-      status: patient.status,
-      createdAt: patient.createdAt,
-      updatedAt: patient.updatedAt,
+  const existingPatientIds = await redis.smembers<string[]>(redisKeys.patientsIndex());
+
+  const existingPatientNames = new Set<string>();
+
+  for (const patientId of existingPatientIds) {
+    const patient = await redis.hgetall<{
+      fullName?: string;
+    }>(redisKeys.patient(patientId));
+
+    if (patient?.fullName) {
+      existingPatientNames.add(patient.fullName);
+    }
+  }
+
+  for (const patientData of fictitiousPatients) {
+    if (existingPatientNames.has(patientData.fullName)) {
+      console.log(`Patient already exists: ${patientData.fullName}. Skipping creation.`);
+      continue;
+    }
+
+    const patientId = randomUUID();
+    const pipeline = redis.pipeline();
+
+    pipeline.hset(redisKeys.patient(patientId), {
+      id: patientId,
+      fullName: patientData.fullName,
+      birthDate: patientData.birthDate,
+      timezone: patientData.timezone,
+      status: "ACTIVE",
+      createdAt: now,
+      updatedAt: now,
     });
-    pipeline.sadd("patients:index", patient.id);
+
+    pipeline.sadd(redisKeys.patientsIndex(), patientId);
+
+    await pipeline.exec();
+
+    console.log(`Patient created: ${patientData.fullName}`);
   }
 
-  await pipeline.exec();
-
-  console.log("✅  Admin created:");
-  console.log(`   Email: ${adminEmail}`);
-  console.log(`   Password: ${adminPassword}`);
-  console.log(`   Role: ADMIN\n`);
-
-  for (const p of patients) {
-    console.log(`✅  Patient created: ${p.fullName}`);
-  }
-
-  console.log("\n🌱  Seed complete.");
-  process.exit(0);
+  console.log("Seed completed.");
 }
 
-seed().catch((err) => {
-  console.error("❌  Seed failed:", err);
-  process.exit(1);
+seed().catch((error: unknown) => {
+  console.error("Seed failed:", error instanceof Error ? error.message : error);
+
+  process.exitCode = 1;
 });

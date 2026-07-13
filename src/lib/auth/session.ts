@@ -3,25 +3,30 @@ import { signJwt, verifyJwt } from "@/lib/auth/jwt";
 import type { JwtPayload } from "@/types";
 
 const COOKIE_NAME = "session";
-const COOKIE_MAX_AGE = 60 * 60 * 8; // 8 hours
+const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 8;
 
 export async function createSession(payload: Omit<JwtPayload, "iat" | "exp">): Promise<void> {
   const token = await signJwt(payload);
   const cookieStore = await cookies();
+
   cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: COOKIE_MAX_AGE,
+    maxAge: COOKIE_MAX_AGE_SECONDS,
     path: "/",
   });
 }
 
 export async function getSession(): Promise<JwtPayload | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(COOKIE_NAME)?.value;
+
+  if (!token) {
+    return null;
+  }
+
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get(COOKIE_NAME)?.value;
-    if (!token) return null;
     return await verifyJwt(token);
   } catch {
     return null;

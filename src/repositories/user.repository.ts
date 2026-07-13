@@ -1,9 +1,7 @@
 import { getRedisClient } from "@/lib/redis/client";
 import type { User, UserStatus } from "@/types";
+import { redisKeys } from "@/lib/redis/keys";
 
-const USERS_PREFIX = "users";
-const EMAIL_INDEX_PREFIX = "users:email";
-const USERS_INDEX_KEY = "users:index";
 
 export class UserRepository {
   private get redis() {
@@ -11,11 +9,11 @@ export class UserRepository {
   }
 
   private key(id: string): string {
-    return `${USERS_PREFIX}:${id}`;
+      return redisKeys.user(id);
   }
 
   private emailKey(email: string): string {
-    return `${EMAIL_INDEX_PREFIX}:${email}`;
+    return redisKeys.userByEmail(email);
   }
 
   async findById(id: string): Promise<User | null> {
@@ -34,7 +32,7 @@ export class UserRepository {
     const pipeline = this.redis.pipeline();
     pipeline.hset(this.key(user.id), this.serialize(user));
     pipeline.set(this.emailKey(user.email), user.id);
-    pipeline.sadd(USERS_INDEX_KEY, user.id);
+    pipeline.sadd(redisKeys.usersIndex(), user.id);
     await pipeline.exec();
   }
 
@@ -44,7 +42,7 @@ export class UserRepository {
   }
 
   async listAll(): Promise<User[]> {
-    const ids = await this.redis.smembers(USERS_INDEX_KEY);
+    const ids = await this.redis.smembers(redisKeys.usersIndex());
     if (ids.length === 0) return [];
     const users = await Promise.all(ids.map((id) => this.findById(id)));
     return users.filter((u): u is User => u !== null);

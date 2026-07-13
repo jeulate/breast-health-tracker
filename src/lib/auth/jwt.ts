@@ -1,12 +1,14 @@
 import { SignJWT, jwtVerify } from "jose";
-import { env } from "@/config/env";
+import { getServerEnv } from "@/config/env";
 import type { JwtPayload } from "@/types";
 
 const ALGORITHM = "HS256";
 const EXPIRATION = "8h";
 
 function getSecret(): Uint8Array {
-  return new TextEncoder().encode(env.AUTH_SECRET);
+  const { AUTH_SECRET } = getServerEnv();
+
+  return new TextEncoder().encode(AUTH_SECRET);
 }
 
 export async function signJwt(payload: Omit<JwtPayload, "iat" | "exp">): Promise<string> {

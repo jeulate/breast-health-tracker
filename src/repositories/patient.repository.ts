@@ -1,8 +1,7 @@
 import { getRedisClient } from "@/lib/redis/client";
 import type { Patient, PatientStatus } from "@/types";
+import { redisKeys } from "@/lib/redis/keys";
 
-const PATIENTS_PREFIX = "patients";
-const PATIENTS_INDEX_KEY = "patients:index";
 
 export class PatientRepository {
   private get redis() {
@@ -10,8 +9,8 @@ export class PatientRepository {
   }
 
   private key(id: string): string {
-    return `${PATIENTS_PREFIX}:${id}`;
-  }
+    return redisKeys.patient(id);
+}
 
   async findById(id: string): Promise<Patient | null> {
     const data = await this.redis.hgetall<Record<string, string>>(this.key(id));
@@ -22,7 +21,7 @@ export class PatientRepository {
   async save(patient: Patient): Promise<void> {
     const pipeline = this.redis.pipeline();
     pipeline.hset(this.key(patient.id), this.serialize(patient));
-    pipeline.sadd(PATIENTS_INDEX_KEY, patient.id);
+    pipeline.sadd(redisKeys.patientsIndex(), patient.id);
     await pipeline.exec();
   }
 
@@ -42,14 +41,14 @@ export class PatientRepository {
   }
 
   async listAll(): Promise<Patient[]> {
-    const ids = await this.redis.smembers(PATIENTS_INDEX_KEY);
+    const ids = await this.redis.smembers(redisKeys.patientsIndex());
     if (ids.length === 0) return [];
     const patients = await Promise.all(ids.map((id) => this.findById(id)));
     return patients.filter((p): p is Patient => p !== null);
   }
 
   async count(): Promise<number> {
-    return this.redis.scard(PATIENTS_INDEX_KEY);
+    return this.redis.scard(redisKeys.patientsIndex());
   }
 
   async countByStatus(status: PatientStatus): Promise<number> {
