@@ -3,7 +3,7 @@ import { z } from "zod";
 export const createPatientSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters").max(200),
   birthDate: z.string().optional(),
-  timezone: z.string().default("America/Mexico_City"),
+  timezone: z.string().default("America/La_Paz"),
 });
 
 export const updatePatientSchema = z.object({

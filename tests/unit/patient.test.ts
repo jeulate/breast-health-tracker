@@ -5,7 +5,7 @@ describe("createPatientSchema", () => {
   it("accepts a valid patient", () => {
     const result = createPatientSchema.safeParse({
       fullName: "Ana Pérez",
-      timezone: "America/Mexico_City",
+      timezone: "America/La_Paz",
     });
     expect(result.success).toBe(true);
   });
@@ -14,7 +14,7 @@ describe("createPatientSchema", () => {
     const result = createPatientSchema.safeParse({
       fullName: "Ana Pérez",
       birthDate: "1990-01-01",
-      timezone: "America/Mexico_City",
+      timezone: "America/La_Paz",
     });
     expect(result.success).toBe(true);
     if (result.success) {
@@ -26,14 +26,14 @@ describe("createPatientSchema", () => {
     const result = createPatientSchema.safeParse({ fullName: "Ana Pérez" });
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.timezone).toBe("America/Mexico_City");
+      expect(result.data.timezone).toBe("America/La_Paz");
     }
   });
 
   it("rejects short fullName", () => {
     const result = createPatientSchema.safeParse({
       fullName: "A",
-      timezone: "America/Mexico_City",
+      timezone: "America/La_Paz",
     });
     expect(result.success).toBe(false);
   });

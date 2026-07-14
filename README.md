@@ -22,7 +22,7 @@ La fase de arquitectura base e interfaz inicial se encuentra terminada y despleg
 | Modo oscuro                  | Completada   | Tema persistente y componentes adaptados        |
 | Calidad                      | Completada   | Formato, lint, typecheck, tests y build         |
 | CI/CD                        | Completada   | GitHub Actions y despliegue en Vercel           |
-| Dashboard analítico          | Próxima fase | KPIs, gráficas y actividad reciente             |
+| Dashboard analítico          | Completada   | KPIs reales, gráfica y actividad reciente       |
 | Módulos clínicos             | Planificados | Hallazgos, timeline, controles y recordatorios  |
 | Telegram                     | Planificado  | Notificaciones y recordatorios automatizados    |
 
@@ -34,6 +34,7 @@ La fase de arquitectura base e interfaz inicial se encuentra terminada y despleg
 | React          | Construcción de la interfaz                |
 | TypeScript     | Tipado estático                            |
 | Tailwind CSS 4 | Sistema de estilos                         |
+| Recharts       | Gráficas interactivas del dashboard        |
 | Outfit         | Tipografía principal de la interfaz        |
 | JetBrains Mono | Tipografía para datos técnicos y código    |
 | Upstash Redis  | Persistencia mediante API REST             |
@@ -362,23 +363,24 @@ Un fallo en cualquiera de los controles debe impedir la promoción del cambio a 
 
 ### Fase 2 — Dashboard analítico
 
-**Estado: siguiente fase**
+**Estado: completada**
 
 Objetivo: convertir el dashboard inicial en una vista operativa con información real y una experiencia visual consistente para los módulos posteriores.
 
-- Tarjetas KPI con datos reales.
+- Cuatro tarjetas KPI alimentadas con datos reales.
 - Total de pacientes registrados.
-- Pacientes con controles próximos.
-- Seguimientos pendientes.
-- Distribución de hallazgos por categoría BI-RADS.
-- Gráficas interactivas con ApexCharts o Recharts.
-- Tendencias por periodo.
-- Timeline de actividad reciente.
+- Pacientes activos e inactivos.
+- Nuevos registros de los últimos 30 días.
+- Gráfica interactiva con Recharts.
+- Tendencia de registros durante los últimos seis meses.
+- Distribución porcentual de pacientes por estado.
+- Tabla de actividad reciente con acceso al detalle del paciente.
 - Estados de carga, vacío y error.
-- Animaciones sutiles.
-- Diseño responsive y compatibilidad completa con dark mode.
-- Servicios y repositorios para agregar métricas sin duplicar lógica.
-- Pruebas unitarias para cálculos y transformaciones del dashboard.
+- Diseño responsive y compatibilidad con modo claro y oscuro.
+- Cálculo de métricas separado del acceso a Redis.
+- Una sola lectura de pacientes para generar los indicadores.
+- Pruebas unitarias para totales, estados, fechas y agrupación mensual.
+- Zona horaria predeterminada configurada como `America/La_Paz`.
 
 Rama prevista: `feature/dashboard-v2`.
 
@@ -526,15 +528,15 @@ Cada fase deberá cumplir, como mínimo, con los siguientes criterios:
 
 ## Próximo paso
 
-La siguiente iteración corresponde a la **Fase 2 — Dashboard analítico** y deberá comenzar desde `develop` en una nueva rama:
+La siguiente iteración corresponde a la **Fase 3 — Gestión avanzada de pacientes** y deberá comenzar desde `develop` en una nueva rama:
 
 ```bash
 git switch develop
 git pull origin develop
-git switch -c feature/dashboard-v2
+git switch -c feature/patients-v2
 ```
 
-Antes de implementar componentes visuales se definirán los KPIs, las fuentes de datos, los contratos de servicio y los estados de interfaz necesarios.
+Antes de implementar la interfaz se definirán los contratos de búsqueda, filtrado, ordenamiento y paginación, evitando cargar innecesariamente todos los pacientes desde Redis.
 
 ## Licencia
 
