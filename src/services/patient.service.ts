@@ -20,7 +20,7 @@ export const PatientService = {
       id: randomUUID(),
       fullName: input.fullName,
       birthDate: input.birthDate,
-      timezone: input.timezone ?? "America/Mexico_City",
+      timezone: input.timezone ?? "America/La_Paz",
       status: "ACTIVE",
       createdAt: now,
       updatedAt: now,

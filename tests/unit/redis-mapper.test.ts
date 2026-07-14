@@ -67,7 +67,7 @@ const BASE_USER: User = {
 const BASE_PATIENT: Patient = {
   id: "p-001",
   fullName: "Ana Test",
-  timezone: "America/Mexico_City",
+  timezone: "America/La_Paz",
   status: "ACTIVE",
   createdAt: "2024-01-01T00:00:00.000Z",
   updatedAt: "2024-01-01T00:00:00.000Z",
