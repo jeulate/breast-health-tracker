@@ -11,39 +11,39 @@ El proyecto combina un dashboard administrativo, persistencia en Redis, autentic
 
 La fase de arquitectura base e interfaz inicial se encuentra terminada y desplegada.
 
-| Área | Estado | Implementación |
-| --- | --- | --- |
-| Arquitectura inicial | Completada | Next.js 16, App Router y TypeScript |
-| Persistencia | Completada | Upstash Redis con aislamiento por prefijo |
-| Autenticación | Completada | JWT, cookie HTTP-only y rutas protegidas |
-| Gestión inicial de pacientes | Completada | Listado, creación, consulta y edición |
-| Dashboard base | Completada | Header, sidebar y tarjetas reutilizables |
-| Diseño responsive | Completada | Sidebar colapsable en escritorio y drawer móvil |
-| Modo oscuro | Completada | Tema persistente y componentes adaptados |
-| Calidad | Completada | Formato, lint, typecheck, tests y build |
-| CI/CD | Completada | GitHub Actions y despliegue en Vercel |
-| Dashboard analítico | Próxima fase | KPIs, gráficas y actividad reciente |
-| Módulos clínicos | Planificados | Hallazgos, timeline, controles y recordatorios |
-| Telegram | Planificado | Notificaciones y recordatorios automatizados |
+| Área                         | Estado       | Implementación                                  |
+| ---------------------------- | ------------ | ----------------------------------------------- |
+| Arquitectura inicial         | Completada   | Next.js 16, App Router y TypeScript             |
+| Persistencia                 | Completada   | Upstash Redis con aislamiento por prefijo       |
+| Autenticación                | Completada   | JWT, cookie HTTP-only y rutas protegidas        |
+| Gestión inicial de pacientes | Completada   | Listado, creación, consulta y edición           |
+| Dashboard base               | Completada   | Header, sidebar y tarjetas reutilizables        |
+| Diseño responsive            | Completada   | Sidebar colapsable en escritorio y drawer móvil |
+| Modo oscuro                  | Completada   | Tema persistente y componentes adaptados        |
+| Calidad                      | Completada   | Formato, lint, typecheck, tests y build         |
+| CI/CD                        | Completada   | GitHub Actions y despliegue en Vercel           |
+| Dashboard analítico          | Próxima fase | KPIs, gráficas y actividad reciente             |
+| Módulos clínicos             | Planificados | Hallazgos, timeline, controles y recordatorios  |
+| Telegram                     | Planificado  | Notificaciones y recordatorios automatizados    |
 
 ## Tecnologías
 
-| Tecnología | Uso |
-| --- | --- |
-| Next.js 16 | Framework web con App Router |
-| React | Construcción de la interfaz |
-| TypeScript | Tipado estático |
-| Tailwind CSS 4 | Sistema de estilos |
-| Outfit | Tipografía principal de la interfaz |
-| JetBrains Mono | Tipografía para datos técnicos y código |
-| Upstash Redis | Persistencia mediante API REST |
-| Zod | Validación de datos y variables de entorno |
-| jose | Creación y verificación de JWT |
-| bcryptjs | Hash seguro de contraseñas |
-| Vitest | Pruebas automatizadas |
-| GitHub Actions | Integración y entrega continua |
-| Vercel | Hosting y despliegue de producción |
-| grammY | Integración futura con Telegram |
+| Tecnología     | Uso                                        |
+| -------------- | ------------------------------------------ |
+| Next.js 16     | Framework web con App Router               |
+| React          | Construcción de la interfaz                |
+| TypeScript     | Tipado estático                            |
+| Tailwind CSS 4 | Sistema de estilos                         |
+| Outfit         | Tipografía principal de la interfaz        |
+| JetBrains Mono | Tipografía para datos técnicos y código    |
+| Upstash Redis  | Persistencia mediante API REST             |
+| Zod            | Validación de datos y variables de entorno |
+| jose           | Creación y verificación de JWT             |
+| bcryptjs       | Hash seguro de contraseñas                 |
+| Vitest         | Pruebas automatizadas                      |
+| GitHub Actions | Integración y entrega continua             |
+| Vercel         | Hosting y despliegue de producción         |
+| grammY         | Integración futura con Telegram            |
 
 ## Arquitectura
 
@@ -180,16 +180,16 @@ La aplicación estará disponible en `http://localhost:3000`.
 
 ### Variables actuales
 
-| Variable | Descripción | Requerida |
-| --- | --- | --- |
-| `KV_REST_API_URL` | URL REST de Upstash Redis | Sí |
-| `KV_REST_API_TOKEN` | Token de acceso a Upstash Redis | Sí |
-| `KV_REST_API_READ_ONLY_TOKEN` | Token opcional de solo lectura | No |
-| `HEALTH_APP_REDIS_PREFIX` | Prefijo de aislamiento; recomendado: `bht:v1:` | Sí |
-| `NEXT_PUBLIC_APP_URL` | URL pública de la aplicación | Sí |
-| `AUTH_SECRET` | Clave para firmar JWT; mínimo recomendado de 32 caracteres | Sí |
-| `ADMIN_INITIAL_EMAIL` | Email utilizado por el seed del administrador | Para seed |
-| `ADMIN_INITIAL_PASSWORD` | Contraseña inicial utilizada por el seed | Para seed |
+| Variable                      | Descripción                                                | Requerida |
+| ----------------------------- | ---------------------------------------------------------- | --------- |
+| `KV_REST_API_URL`             | URL REST de Upstash Redis                                  | Sí        |
+| `KV_REST_API_TOKEN`           | Token de acceso a Upstash Redis                            | Sí        |
+| `KV_REST_API_READ_ONLY_TOKEN` | Token opcional de solo lectura                             | No        |
+| `HEALTH_APP_REDIS_PREFIX`     | Prefijo de aislamiento; recomendado: `bht:v1:`             | Sí        |
+| `NEXT_PUBLIC_APP_URL`         | URL pública de la aplicación                               | Sí        |
+| `AUTH_SECRET`                 | Clave para firmar JWT; mínimo recomendado de 32 caracteres | Sí        |
+| `ADMIN_INITIAL_EMAIL`         | Email utilizado por el seed del administrador              | Para seed |
+| `ADMIN_INITIAL_PASSWORD`      | Contraseña inicial utilizada por el seed                   | Para seed |
 
 Ejemplo local:
 
@@ -213,11 +213,11 @@ ADMIN_INITIAL_PASSWORD=reemplazar-por-password-seguro
 
 Estas variables formarán parte de la fase de notificaciones y no deben considerarse activas hasta implementar el módulo correspondiente.
 
-| Variable | Propósito futuro |
-| --- | --- |
-| `TELEGRAM_BOT_TOKEN` | Token entregado por BotFather |
+| Variable                  | Propósito futuro                      |
+| ------------------------- | ------------------------------------- |
+| `TELEGRAM_BOT_TOKEN`      | Token entregado por BotFather         |
 | `TELEGRAM_WEBHOOK_SECRET` | Validación de solicitudes del webhook |
-| `TELEGRAM_CHAT_ID` | Chat autorizado para notificaciones |
+| `TELEGRAM_CHAT_ID`        | Chat autorizado para notificaciones   |
 
 ## Configuración de Redis
 
@@ -240,18 +240,18 @@ Los datos generados son exclusivamente demostrativos y no deben representar paci
 
 ## Scripts disponibles
 
-| Comando | Descripción |
-| --- | --- |
-| `npm run dev` | Inicia el servidor de desarrollo |
-| `npm run build` | Genera el build de producción |
-| `npm run start` | Inicia el build de producción |
-| `npm run lint` | Ejecuta ESLint |
-| `npm run typecheck` | Verifica TypeScript sin emitir archivos |
-| `npm run format` | Aplica el formato configurado |
+| Comando                | Descripción                                |
+| ---------------------- | ------------------------------------------ |
+| `npm run dev`          | Inicia el servidor de desarrollo           |
+| `npm run build`        | Genera el build de producción              |
+| `npm run start`        | Inicia el build de producción              |
+| `npm run lint`         | Ejecuta ESLint                             |
+| `npm run typecheck`    | Verifica TypeScript sin emitir archivos    |
+| `npm run format`       | Aplica el formato configurado              |
 | `npm run format:check` | Verifica el formato sin modificar archivos |
-| `npm run test` | Ejecuta las pruebas una vez |
-| `npm run test:watch` | Ejecuta Vitest en modo observación |
-| `npm run seed` | Carga datos iniciales en Redis |
+| `npm run test`         | Ejecuta las pruebas una vez                |
+| `npm run test:watch`   | Ejecuta Vitest en modo observación         |
+| `npm run seed`         | Carga datos iniciales en Redis             |
 
 ## Validación antes de un commit
 
@@ -267,27 +267,27 @@ El código solo debe integrarse cuando todos los controles finalicen correctamen
 
 ## Endpoints actuales
 
-| Método | Ruta | Descripción | Acceso |
-| --- | --- | --- | --- |
-| `POST` | `/api/auth/login` | Iniciar sesión | Público |
-| `POST` | `/api/auth/logout` | Cerrar sesión | Autenticado |
-| `GET` | `/api/auth/me` | Consultar la sesión actual | Autenticado |
-| `GET` | `/api/patients` | Listar pacientes | Autenticado |
-| `POST` | `/api/patients` | Registrar paciente | Autenticado |
-| `GET` | `/api/patients/[id]` | Consultar un paciente | Autenticado |
-| `PUT` | `/api/patients/[id]` | Actualizar un paciente | Autenticado |
+| Método | Ruta                 | Descripción                | Acceso      |
+| ------ | -------------------- | -------------------------- | ----------- |
+| `POST` | `/api/auth/login`    | Iniciar sesión             | Público     |
+| `POST` | `/api/auth/logout`   | Cerrar sesión              | Autenticado |
+| `GET`  | `/api/auth/me`       | Consultar la sesión actual | Autenticado |
+| `GET`  | `/api/patients`      | Listar pacientes           | Autenticado |
+| `POST` | `/api/patients`      | Registrar paciente         | Autenticado |
+| `GET`  | `/api/patients/[id]` | Consultar un paciente      | Autenticado |
+| `PUT`  | `/api/patients/[id]` | Actualizar un paciente     | Autenticado |
 
 ## Estrategia Git
 
 El repositorio emplea un flujo basado en ramas:
 
-| Rama | Propósito |
-| --- | --- |
-| `main` | Versión estable de producción |
-| `develop` | Integración de funcionalidades terminadas |
-| `feature/*` | Desarrollo aislado de cada módulo o mejora |
-| `fix/*` | Correcciones no urgentes integradas mediante `develop` |
-| `hotfix/*` | Correcciones urgentes que parten de producción |
+| Rama        | Propósito                                              |
+| ----------- | ------------------------------------------------------ |
+| `main`      | Versión estable de producción                          |
+| `develop`   | Integración de funcionalidades terminadas              |
+| `feature/*` | Desarrollo aislado de cada módulo o mejora             |
+| `fix/*`     | Correcciones no urgentes integradas mediante `develop` |
+| `hotfix/*`  | Correcciones urgentes que parten de producción         |
 
 Flujo recomendado para cada funcionalidad:
 
