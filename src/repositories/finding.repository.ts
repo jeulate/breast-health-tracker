@@ -16,7 +16,7 @@ export class FindingRepository {
   }
 
   async findById(id: string): Promise<Finding | null> {
-    const data = await this.redis.hgetall<Record<string, string>>(this.key(id));
+    const data = await this.redis.hgetall<Record<string, unknown>>(this.key(id));
 
     if (!data || Object.keys(data).length === 0) return null;
 
@@ -46,7 +46,7 @@ export class FindingRepository {
     const values: Record<string, string> = { updatedAt: new Date().toISOString() };
     const fieldsToDelete: string[] = [];
 
-    if (fields.category !== undefined) values.category = fields.category;
+    if (fields.category !== undefined) values.category = this.serializeCategory(fields.category);
     if (fields.laterality !== undefined) values.laterality = fields.laterality;
     if (fields.studyType !== undefined) values.studyType = fields.studyType;
     if (fields.studyDate !== undefined) values.studyDate = fields.studyDate;
@@ -134,7 +134,7 @@ export class FindingRepository {
     const record: Record<string, string> = {
       id: finding.id,
       patientId: finding.patientId,
-      category: finding.category,
+      category: this.serializeCategory(finding.category),
       laterality: finding.laterality,
       studyType: finding.studyType,
       studyDate: finding.studyDate,
@@ -152,22 +152,38 @@ export class FindingRepository {
     return record;
   }
 
-  private deserialize(data: Record<string, string>): Finding {
+  private serializeCategory(category: Finding["category"]): string {
+    return `BI-RADS:${category}`;
+  }
+
+  private requiredString(value: unknown): string {
+    return typeof value === "string" ? value : String(value ?? "");
+  }
+
+  private optionalString(value: unknown): string | undefined {
+    const normalized = this.requiredString(value);
+    return normalized || undefined;
+  }
+
+  private deserialize(data: Record<string, unknown>): Finding {
+    const storedCategory = this.requiredString(data.category);
+    const category = storedCategory.replace(/^BI-RADS:/, "") as Finding["category"];
+
     return {
-      id: data.id,
-      patientId: data.patientId,
-      category: data.category as Finding["category"],
-      laterality: data.laterality as Finding["laterality"],
-      studyType: data.studyType as Finding["studyType"],
-      studyDate: data.studyDate,
-      description: data.description,
-      observations: data.observations || undefined,
-      biopsyPerformed: data.biopsyPerformed === "true",
-      biopsyResult: data.biopsyResult || undefined,
-      nextControlDate: data.nextControlDate || undefined,
-      status: data.status as Finding["status"],
-      createdAt: data.createdAt,
-      updatedAt: data.updatedAt,
+      id: this.requiredString(data.id),
+      patientId: this.requiredString(data.patientId),
+      category,
+      laterality: this.requiredString(data.laterality) as Finding["laterality"],
+      studyType: this.requiredString(data.studyType) as Finding["studyType"],
+      studyDate: this.requiredString(data.studyDate),
+      description: this.requiredString(data.description),
+      observations: this.optionalString(data.observations),
+      biopsyPerformed: data.biopsyPerformed === true || data.biopsyPerformed === "true",
+      biopsyResult: this.optionalString(data.biopsyResult),
+      nextControlDate: this.optionalString(data.nextControlDate),
+      status: this.requiredString(data.status) as Finding["status"],
+      createdAt: this.requiredString(data.createdAt),
+      updatedAt: this.requiredString(data.updatedAt),
     };
   }
 }

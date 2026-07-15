@@ -47,7 +47,7 @@ const finding: Finding = {
   updatedAt: "2026-07-11T12:00:00.000Z",
 };
 
-function serializedFinding(value: Finding): Record<string, string> {
+function serializedFinding(value: Finding): Record<string, unknown> {
   return {
     id: value.id,
     patientId: value.patientId,
@@ -77,7 +77,11 @@ describe("FindingRepository", () => {
 
     expect(mocks.pipeline.hset).toHaveBeenCalledWith(
       "bht:test:findings:finding-1",
-      expect.objectContaining({ id: "finding-1", patientId: "patient-1" }),
+      expect.objectContaining({
+        id: "finding-1",
+        patientId: "patient-1",
+        category: "BI-RADS:4A",
+      }),
     );
     expect(mocks.pipeline.sadd).toHaveBeenCalledWith("bht:test:findings:index", "finding-1");
     expect(mocks.pipeline.zadd).toHaveBeenCalledWith(
@@ -94,6 +98,20 @@ describe("FindingRepository", () => {
     mocks.redis.hgetall.mockResolvedValue(serializedFinding(finding));
 
     await expect(new FindingRepository().findById("finding-1")).resolves.toEqual(finding);
+  });
+
+  it("normalizes numeric categories deserialized by Upstash", async () => {
+    mocks.redis.hgetall.mockResolvedValue({
+      ...serializedFinding({ ...finding, category: "3" }),
+      category: 3,
+      biopsyPerformed: false,
+    });
+
+    const result = await new FindingRepository().findById("finding-1");
+
+    expect(result?.category).toBe("3");
+    expect(typeof result?.category).toBe("string");
+    expect(result?.biopsyPerformed).toBe(false);
   });
 
   it("lists only findings that belong to the requested patient", async () => {
