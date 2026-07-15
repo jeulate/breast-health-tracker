@@ -77,7 +77,7 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex min-w-0 flex-col gap-6">
       <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-medium text-rose-600 dark:text-rose-400">Panel general</p>
@@ -164,7 +164,7 @@ export default async function DashboardPage() {
         </article>
       </section>
 
-      <section aria-labelledby="recent-activity-title">
+      <section className="min-w-0" aria-labelledby="recent-activity-title">
         <div className="mb-4">
           <h3 id="recent-activity-title" className="text-foreground text-lg font-semibold">
             Actividad reciente

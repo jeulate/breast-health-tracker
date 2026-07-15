@@ -32,7 +32,7 @@ export function DashboardShell({ children, userEmail }: Readonly<DashboardShellP
   }, []);
 
   return (
-    <div className="bg-background text-foreground flex h-dvh overflow-hidden">
+    <div className="bg-background text-foreground fixed inset-0 flex overflow-hidden">
       <Sidebar
         isMobileOpen={isMobileSidebarOpen}
         isDesktopCollapsed={isDesktopSidebarCollapsed}
@@ -56,8 +56,8 @@ export function DashboardShell({ children, userEmail }: Readonly<DashboardShellP
           onMenuClick={toggleSidebar}
         />
 
-        <main className="bg-background min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
-          <div className="mx-auto w-full max-w-7xl">{children}</div>
+        <main className="bg-background min-h-0 min-w-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+          <div className="mx-auto w-full max-w-7xl min-w-0">{children}</div>
         </main>
       </div>
     </div>

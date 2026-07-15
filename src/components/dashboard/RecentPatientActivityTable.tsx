@@ -39,7 +39,7 @@ export function RecentPatientActivityTable({ activities }: RecentPatientActivity
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="max-w-full overflow-x-auto overscroll-x-contain">
       <table className="w-full min-w-[680px] text-sm">
         <thead>
           <tr className="border-border bg-surface-secondary border-b">
