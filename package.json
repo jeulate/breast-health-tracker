@@ -12,7 +12,8 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "migrate:patient-index": "tsx scripts/migrate-patient-created-index.ts"
   },
   "dependencies": {
     "@upstash/redis": "^1.38.0",
