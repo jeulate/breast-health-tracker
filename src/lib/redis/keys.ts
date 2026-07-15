@@ -36,4 +36,16 @@ export const redisKeys = {
   patientsCreatedAtIndex(): string {
     return `${getPrefix()}patients:created-at`;
   },
+
+  finding(id: string): string {
+    return `${getPrefix()}findings:${id}`;
+  },
+
+  findingsIndex(): string {
+    return `${getPrefix()}findings:index`;
+  },
+
+  patientFindingsByStudyDate(patientId: string): string {
+    return `${getPrefix()}patients:${patientId}:findings:study-date`;
+  },
 };
