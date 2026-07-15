@@ -23,13 +23,21 @@ export interface Patient {
   birthDate?: string;
   timezone: string;
   status: PatientStatus;
-  /** Reserved for Telegram integration – Phase 4 */
+  /** Reserved for Telegram integration – Phase 7 */
   telegramUserId?: string;
-  /** Reserved for Telegram integration – Phase 4 */
+  /** Reserved for Telegram integration – Phase 7 */
   telegramChatId?: string;
   createdAt: string;
   updatedAt: string;
 }
+
+export type {
+  BiradsCategory,
+  BreastLaterality,
+  BreastStudyType,
+  Finding,
+  FindingStatus,
+} from "@/features/findings";
 
 // ─── API Response ─────────────────────────────────────────────────────────────
 
@@ -61,23 +69,16 @@ export type PublicUser = Omit<User, "passwordHash">;
 
 // ─── Placeholders for future phases ──────────────────────────────────────────
 
-/** Phase 2 – BI-RADS findings, symptoms and cycles */
-export interface Finding {
-  id: string;
-  patientId: string;
-  // details TBD in Phase 2
-}
-
-/** Phase 3 – Habits and medical controls */
+/** Phase 5 – Timeline and medical controls */
 export interface MedicalControl {
   id: string;
   patientId: string;
-  // details TBD in Phase 3
+  // details TBD in Phase 5
 }
 
-/** Phase 5 – Reminders */
+/** Phase 6 – Reminders */
 export interface Reminder {
   id: string;
   patientId: string;
-  // details TBD in Phase 5
+  // details TBD in Phase 6
 }
