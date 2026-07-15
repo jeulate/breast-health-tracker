@@ -48,4 +48,16 @@ export const redisKeys = {
   patientFindingsByStudyDate(patientId: string): string {
     return `${getPrefix()}patients:${patientId}:findings:study-date`;
   },
+
+  clinicalEvent(id: string): string {
+    return `${getPrefix()}clinical-events:${id}`;
+  },
+
+  clinicalEventsIndex(): string {
+    return `${getPrefix()}clinical-events:index`;
+  },
+
+  patientClinicalEventsByEventDate(patientId: string): string {
+    return `${getPrefix()}patients:${patientId}:clinical-events:event-date`;
+  },
 };
