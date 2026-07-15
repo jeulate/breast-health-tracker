@@ -45,7 +45,8 @@ const optionalDateSchema = z
   .transform((value) => value || undefined)
   .refine((value) => value === undefined || isValidDateOnly(value), {
     message: "Ingresa una fecha de próximo control válida.",
-  });
+  })
+  .optional();
 
 const optionalText = (maximum: number, message: string) =>
   z
@@ -53,7 +54,8 @@ const optionalText = (maximum: number, message: string) =>
     .trim()
     .max(maximum, message)
     .optional()
-    .transform((value) => value || undefined);
+    .transform((value) => value || undefined)
+    .optional();
 
 const findingFields = {
   category: z.enum(BIRADS_CATEGORIES, { error: "Selecciona una categoría BI-RADS válida." }),
