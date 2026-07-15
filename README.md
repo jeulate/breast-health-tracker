@@ -9,22 +9,23 @@ El proyecto combina un dashboard administrativo, persistencia en Redis, autentic
 
 ## Estado del proyecto
 
-La fase de arquitectura base e interfaz inicial se encuentra terminada y desplegada.
+Las fases de arquitectura base, dashboard analítico y gestión avanzada de pacientes se encuentran terminadas. La Fase 3 está lista para integrarse mediante pull request y desplegarse después de superar el pipeline de calidad.
 
-| Área                         | Estado       | Implementación                                  |
-| ---------------------------- | ------------ | ----------------------------------------------- |
-| Arquitectura inicial         | Completada   | Next.js 16, App Router y TypeScript             |
-| Persistencia                 | Completada   | Upstash Redis con aislamiento por prefijo       |
-| Autenticación                | Completada   | JWT, cookie HTTP-only y rutas protegidas        |
-| Gestión inicial de pacientes | Completada   | Listado, creación, consulta y edición           |
-| Dashboard base               | Completada   | Header, sidebar y tarjetas reutilizables        |
-| Diseño responsive            | Completada   | Sidebar colapsable en escritorio y drawer móvil |
-| Modo oscuro                  | Completada   | Tema persistente y componentes adaptados        |
-| Calidad                      | Completada   | Formato, lint, typecheck, tests y build         |
-| CI/CD                        | Completada   | GitHub Actions y despliegue en Vercel           |
-| Dashboard analítico          | Completada   | KPIs reales, gráfica y actividad reciente       |
-| Módulos clínicos             | Planificados | Hallazgos, timeline, controles y recordatorios  |
-| Telegram                     | Planificado  | Notificaciones y recordatorios automatizados    |
+| Área                          | Estado       | Implementación                                  |
+| ----------------------------- | ------------ | ----------------------------------------------- |
+| Arquitectura inicial          | Completada   | Next.js 16, App Router y TypeScript             |
+| Persistencia                  | Completada   | Upstash Redis con aislamiento por prefijo       |
+| Autenticación                 | Completada   | JWT, cookie HTTP-only y rutas protegidas        |
+| Gestión avanzada de pacientes | Completada   | Búsqueda, filtros, ordenamiento y paginación    |
+| Dashboard base                | Completada   | Header, sidebar y tarjetas reutilizables        |
+| Diseño responsive             | Completada   | Sidebar colapsable en escritorio y drawer móvil |
+| Modo oscuro                   | Completada   | Tema persistente y componentes adaptados        |
+| Calidad                       | Completada   | Formato, lint, typecheck, tests y build         |
+| CI/CD                         | Completada   | GitHub Actions y despliegue en Vercel           |
+| Dashboard analítico           | Completada   | KPIs reales, gráfica y actividad reciente       |
+| Perfil de paciente            | Completada   | Avatar, datos, estado y edición validada        |
+| Módulos clínicos              | Planificados | Hallazgos, timeline, controles y recordatorios  |
+| Telegram                      | Planificado  | Notificaciones y recordatorios automatizados    |
 
 ## Tecnologías
 
@@ -86,6 +87,7 @@ Next.js App Router
 ```text
 breast-health-tracker/
 ├── scripts/
+│   ├── migrate-patient-created-index.ts # Migración del índice cronológico
 │   └── seed.ts                  # Creación de datos iniciales
 ├── src/
 │   ├── app/
@@ -98,10 +100,12 @@ breast-health-tracker/
 │   ├── components/
 │   │   ├── dashboard/           # Header, Sidebar y StatCard
 │   │   ├── forms/               # LoginForm y PatientForm
+│   │   ├── patients/            # Filtros, tabla y paginación
 │   │   └── ui/                  # Controles reutilizables
 │   ├── config/                  # Validación de entorno
 │   ├── features/
 │   │   ├── auth/                # API pública del módulo de autenticación
+│   │   ├── dashboard/           # Contratos y métricas del dashboard
 │   │   └── patients/            # API pública del módulo de pacientes
 │   ├── lib/
 │   │   ├── auth/                # JWT, contraseñas y sesión
@@ -131,11 +135,32 @@ breast-health-tracker/
 ### Pacientes
 
 - Registro de pacientes.
-- Listado de pacientes.
-- Consulta individual.
-- Actualización de información.
-- Validación de formularios y payloads.
+- Listado paginado mediante API.
+- Búsqueda instantánea sin distinción de mayúsculas, minúsculas o acentos.
+- Filtros por estado activo e inactivo.
+- Ordenamiento por nombre, fecha de registro y fecha de actualización.
+- Tamaños de página configurables.
+- Tabla responsive con navegación al detalle.
+- Consulta y perfil individual con avatar generado mediante iniciales.
+- Actualización de información y estado.
+- Confirmaciones visibles después de crear o actualizar.
+- Validación de formularios y payloads con mensajes por campo.
+- Validación estricta de fechas y rechazo de fechas futuras.
+- Zona horaria predeterminada `America/La_Paz`.
+- Índice cronológico de pacientes en Redis.
+- Migración idempotente para datos existentes.
+- Estrategia optimizada con fallback seguro cuando el índice está incompleto.
 - Persistencia aislada en Redis.
+
+### Dashboard analítico
+
+- KPIs calculados con información real de pacientes.
+- Tendencia de registros de los últimos seis meses.
+- Distribución de pacientes por estado.
+- Actividad reciente con acceso al perfil.
+- Estados de carga, vacío y error.
+- Gráficas interactivas con Recharts.
+- Diseño responsive sin desbordamiento del documento.
 
 ### Interfaz
 
@@ -149,6 +174,8 @@ breast-health-tracker/
 - Login renovado.
 - Formularios compatibles con tema claro y oscuro.
 - Componentes reutilizables para futuras fases.
+- Tabla con desplazamiento horizontal contenido en dispositivos pequeños.
+- Perfil de paciente adaptado a escritorio y móvil.
 
 ## Requisitos
 
@@ -226,6 +253,11 @@ Estas variables formarán parte de la fase de notificaciones y no deben consider
 2. Copiar la URL y el token REST a `.env.local`.
 3. Definir `HEALTH_APP_REDIS_PREFIX=bht:v1:`.
 4. Ejecutar el seed inicial.
+5. Si existen pacientes anteriores al índice cronológico, ejecutar la migración.
+
+```bash
+npm run migrate:patient-index
+```
 
 El prefijo evita colisiones cuando una misma base Redis es compartida con otros proyectos.
 
@@ -241,18 +273,19 @@ Los datos generados son exclusivamente demostrativos y no deben representar paci
 
 ## Scripts disponibles
 
-| Comando                | Descripción                                |
-| ---------------------- | ------------------------------------------ |
-| `npm run dev`          | Inicia el servidor de desarrollo           |
-| `npm run build`        | Genera el build de producción              |
-| `npm run start`        | Inicia el build de producción              |
-| `npm run lint`         | Ejecuta ESLint                             |
-| `npm run typecheck`    | Verifica TypeScript sin emitir archivos    |
-| `npm run format`       | Aplica el formato configurado              |
-| `npm run format:check` | Verifica el formato sin modificar archivos |
-| `npm run test`         | Ejecuta las pruebas una vez                |
-| `npm run test:watch`   | Ejecuta Vitest en modo observación         |
-| `npm run seed`         | Carga datos iniciales en Redis             |
+| Comando                         | Descripción                                    |
+| ------------------------------- | ---------------------------------------------- |
+| `npm run dev`                   | Inicia el servidor de desarrollo               |
+| `npm run build`                 | Genera el build de producción                  |
+| `npm run start`                 | Inicia el build de producción                  |
+| `npm run lint`                  | Ejecuta ESLint                                 |
+| `npm run typecheck`             | Verifica TypeScript sin emitir archivos        |
+| `npm run format`                | Aplica el formato configurado                  |
+| `npm run format:check`          | Verifica el formato sin modificar archivos     |
+| `npm run test`                  | Ejecuta las pruebas una vez                    |
+| `npm run test:watch`            | Ejecuta Vitest en modo observación             |
+| `npm run seed`                  | Carga datos iniciales en Redis                 |
+| `npm run migrate:patient-index` | Reconstruye el índice cronológico de pacientes |
 
 ## Validación antes de un commit
 
@@ -268,15 +301,15 @@ El código solo debe integrarse cuando todos los controles finalicen correctamen
 
 ## Endpoints actuales
 
-| Método | Ruta                 | Descripción                | Acceso      |
-| ------ | -------------------- | -------------------------- | ----------- |
-| `POST` | `/api/auth/login`    | Iniciar sesión             | Público     |
-| `POST` | `/api/auth/logout`   | Cerrar sesión              | Autenticado |
-| `GET`  | `/api/auth/me`       | Consultar la sesión actual | Autenticado |
-| `GET`  | `/api/patients`      | Listar pacientes           | Autenticado |
-| `POST` | `/api/patients`      | Registrar paciente         | Autenticado |
-| `GET`  | `/api/patients/[id]` | Consultar un paciente      | Autenticado |
-| `PUT`  | `/api/patients/[id]` | Actualizar un paciente     | Autenticado |
+| Método | Ruta                 | Descripción                         | Acceso      |
+| ------ | -------------------- | ----------------------------------- | ----------- |
+| `POST` | `/api/auth/login`    | Iniciar sesión                      | Público     |
+| `POST` | `/api/auth/logout`   | Cerrar sesión                       | Autenticado |
+| `GET`  | `/api/auth/me`       | Consultar la sesión actual          | Autenticado |
+| `GET`  | `/api/patients`      | Buscar, filtrar y paginar pacientes | Autenticado |
+| `POST` | `/api/patients`      | Registrar paciente                  | Autenticado |
+| `GET`  | `/api/patients/[id]` | Consultar un paciente               | Autenticado |
+| `PUT`  | `/api/patients/[id]` | Actualizar un paciente              | Autenticado |
 
 ## Estrategia Git
 
@@ -309,18 +342,20 @@ develop
 
 No se deben desarrollar funcionalidades directamente sobre `develop` ni `main`.
 
-### Última iteración terminada
+### Iteración actual
 
-La rama `feature/dark-mode` completó correctamente el siguiente flujo:
+La rama `feature/patients-v2` completó el desarrollo de la Fase 3:
 
-- Desarrollo y ajustes visuales.
-- Formato, lint, typecheck, tests y build aprobados.
-- Merge hacia `develop`.
-- Eliminación de la rama feature.
-- Pull request de `develop` hacia `main`.
-- GitHub Actions aprobado.
-- Despliegue correcto en Vercel.
-- Producción estable.
+- Contratos de búsqueda, filtrado, ordenamiento y paginación.
+- Índice cronológico y migración idempotente en Redis.
+- API paginada con estrategia optimizada y fallback seguro.
+- Tabla avanzada, filtros y navegación por URL.
+- Formularios y validaciones reforzados.
+- Perfil individual responsive.
+- Corrección del desplazamiento duplicado en el dashboard.
+- Formato, lint, typecheck, tests, build y pruebas manuales aprobados.
+
+El siguiente paso es abrir un pull request hacia `develop`, validar GitHub Actions y realizar el merge.
 
 ## CI/CD
 
@@ -382,23 +417,33 @@ Objetivo: convertir el dashboard inicial en una vista operativa con información
 - Pruebas unitarias para totales, estados, fechas y agrupación mensual.
 - Zona horaria predeterminada configurada como `America/La_Paz`.
 
-Rama prevista: `feature/dashboard-v2`.
+Rama utilizada: `feature/dashboard-v2`.
 
 ### Fase 3 — Gestión avanzada de pacientes
 
-**Estado: planificada**
+**Estado: completada**
 
-- Tabla moderna estilo TailAdmin.
-- Buscador instantáneo.
-- Filtros avanzados.
-- Paginación.
-- Ordenamiento por columnas.
-- Badges de estado.
-- Fotografía o avatar del paciente.
-- Estados clínicos y administrativos diferenciados.
-- Historial de modificaciones relevantes.
+Objetivo: convertir el CRUD inicial en un módulo administrativo eficiente, validado y preparado para incorporar información clínica en las fases posteriores.
 
-Rama prevista: `feature/patients-v2`.
+- Tabla moderna y responsive estilo TailAdmin.
+- Búsqueda instantánea normalizada, compatible con nombres acentuados.
+- Filtros por estado.
+- Paginación y tamaños de página configurables.
+- Ordenamiento por nombre y fechas.
+- Estado de los filtros representado en la URL.
+- Badges de estado activo e inactivo.
+- Avatar con iniciales y perfil individual del paciente.
+- Formularios de creación y edición con validación por campo.
+- Fechas procesadas sin desplazamientos por zona horaria.
+- Zona horaria boliviana predeterminada.
+- API paginada y estrategia de consulta reutilizable.
+- Índice cronológico en Redis y migración idempotente.
+- Estados de carga y resultados vacíos.
+- Compatibilidad con modo claro y oscuro.
+- Corrección de overflow horizontal y scroll duplicado en móviles.
+- Pruebas unitarias para consultas, parámetros URL, estrategia, índice y validaciones.
+
+Rama utilizada: `feature/patients-v2`.
 
 ### Fase 4 — Hallazgos BI-RADS
 
@@ -528,15 +573,15 @@ Cada fase deberá cumplir, como mínimo, con los siguientes criterios:
 
 ## Próximo paso
 
-La siguiente iteración corresponde a la **Fase 3 — Gestión avanzada de pacientes** y deberá comenzar desde `develop` en una nueva rama:
+Después de integrar y desplegar la Fase 3, la siguiente iteración corresponde a la **Fase 4 — Hallazgos BI-RADS**. Deberá comenzar desde un `develop` actualizado en una nueva rama:
 
 ```bash
 git switch develop
 git pull origin develop
-git switch -c feature/patients-v2
+git switch -c feature/findings
 ```
 
-Antes de implementar la interfaz se definirán los contratos de búsqueda, filtrado, ordenamiento y paginación, evitando cargar innecesariamente todos los pacientes desde Redis.
+Antes de implementar la interfaz se definirán el modelo de hallazgos, las categorías BI-RADS, los tipos de estudio, la lateralidad, las validaciones y la estrategia de persistencia en Redis.
 
 ## Licencia
 
