@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PatientForm } from "@/components/forms/PatientForm";
+import { FindingsSection } from "@/components/findings/FindingsSection";
+import { FindingService } from "@/services/finding.service";
 import { PatientService } from "@/services/patient.service";
-import type { Patient } from "@/types";
+import type { Finding, Patient } from "@/types";
 
 export const metadata: Metadata = {
   title: "Detalle paciente | BI-RADS Tracker",
@@ -20,6 +22,7 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
   const [{ id }, query] = await Promise.all([params, searchParams]);
 
   let patient: Patient | null;
+  let findings: Finding[] = [];
 
   try {
     patient = await PatientService.getById(id);
@@ -29,6 +32,12 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
 
   if (!patient) {
     notFound();
+  }
+
+  try {
+    findings = (await FindingService.listByPatient(patient.id)) ?? [];
+  } catch {
+    findings = [];
   }
 
   const saved = Array.isArray(query.saved) ? query.saved[0] : query.saved;
@@ -168,12 +177,9 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
         </div>
       </section>
 
-      <section aria-labelledby="clinical-modules-title" className="grid gap-4 md:grid-cols-2">
-        <PlannedModule
-          title="Hallazgos BI-RADS"
-          description="Registro de estudios, clasificación y seguimiento de hallazgos mamarios."
-          phase="Fase 4"
-        />
+      <FindingsSection patientId={patient.id} findings={findings} />
+
+      <section aria-labelledby="clinical-modules-title">
         <PlannedModule
           title="Timeline clínico"
           description="Historial cronológico de estudios, controles y evolución del seguimiento."
@@ -259,10 +265,7 @@ function PlannedModule({
   return (
     <article className="border-border bg-surface-secondary rounded-2xl border border-dashed p-5">
       <div className="flex items-center justify-between gap-3">
-        <h2
-          id={title === "Hallazgos BI-RADS" ? "clinical-modules-title" : undefined}
-          className="text-foreground text-sm font-semibold"
-        >
+        <h2 id="clinical-modules-title" className="text-foreground text-sm font-semibold">
           {title}
         </h2>
         <span className="text-muted bg-surface rounded-full px-2.5 py-1 text-xs font-medium">
