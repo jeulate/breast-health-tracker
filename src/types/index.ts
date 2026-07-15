@@ -39,6 +39,14 @@ export type {
   FindingStatus,
 } from "@/features/findings";
 
+export type {
+  ClinicalEvent,
+  ClinicalEventStatus,
+  ClinicalEventType,
+  TimelineEntry,
+  TimelineEntrySource,
+} from "@/features/clinical-timeline";
+
 // ─── API Response ─────────────────────────────────────────────────────────────
 
 export interface ApiError {
@@ -68,13 +76,6 @@ export interface JwtPayload {
 export type PublicUser = Omit<User, "passwordHash">;
 
 // ─── Placeholders for future phases ──────────────────────────────────────────
-
-/** Phase 5 – Timeline and medical controls */
-export interface MedicalControl {
-  id: string;
-  patientId: string;
-  // details TBD in Phase 5
-}
 
 /** Phase 6 – Reminders */
 export interface Reminder {
