@@ -56,7 +56,6 @@ async function seed(): Promise<void> {
     });
 
     pipeline.set(redisKeys.userByEmail(normalizedAdminEmail), adminId);
-
     pipeline.sadd(redisKeys.usersIndex(), adminId);
 
     await pipeline.exec();
@@ -78,13 +77,10 @@ async function seed(): Promise<void> {
   ];
 
   const existingPatientIds = await redis.smembers<string[]>(redisKeys.patientsIndex());
-
   const existingPatientNames = new Set<string>();
 
   for (const patientId of existingPatientIds) {
-    const patient = await redis.hgetall<{
-      fullName?: string;
-    }>(redisKeys.patient(patientId));
+    const patient = await redis.hgetall<{ fullName?: string }>(redisKeys.patient(patientId));
 
     if (patient?.fullName) {
       existingPatientNames.add(patient.fullName);
@@ -111,6 +107,10 @@ async function seed(): Promise<void> {
     });
 
     pipeline.sadd(redisKeys.patientsIndex(), patientId);
+    pipeline.zadd(redisKeys.patientsCreatedAtIndex(), {
+      score: Date.parse(now),
+      member: patientId,
+    });
 
     await pipeline.exec();
 
@@ -122,6 +122,5 @@ async function seed(): Promise<void> {
 
 seed().catch((error: unknown) => {
   console.error("Seed failed:", error instanceof Error ? error.message : error);
-
   process.exitCode = 1;
 });

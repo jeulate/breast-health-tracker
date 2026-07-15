@@ -18,9 +18,19 @@ export class PatientRepository {
   }
 
   async save(patient: Patient): Promise<void> {
+    const createdAtScore = Date.parse(patient.createdAt);
+
+    if (Number.isNaN(createdAtScore)) {
+      throw new Error("Patient createdAt must be a valid ISO date");
+    }
+
     const pipeline = this.redis.pipeline();
     pipeline.hset(this.key(patient.id), this.serialize(patient));
     pipeline.sadd(redisKeys.patientsIndex(), patient.id);
+    pipeline.zadd(redisKeys.patientsCreatedAtIndex(), {
+      score: createdAtScore,
+      member: patient.id,
+    });
     await pipeline.exec();
   }
 
