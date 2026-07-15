@@ -9,7 +9,7 @@ El proyecto combina un dashboard administrativo, persistencia en Redis, autentic
 
 ## Estado del proyecto
 
-Las fases de arquitectura base, dashboard analítico y gestión avanzada de pacientes se encuentran terminadas. La Fase 3 está lista para integrarse mediante pull request y desplegarse después de superar el pipeline de calidad.
+Las fases de arquitectura base, dashboard analítico y gestión avanzada de pacientes se encuentran desplegadas. El alcance inicial de la Fase 4 —registro y seguimiento de hallazgos BI-RADS— está terminado en `feature/findings` y listo para validación e integración.
 
 | Área                          | Estado       | Implementación                                  |
 | ----------------------------- | ------------ | ----------------------------------------------- |
@@ -24,7 +24,8 @@ Las fases de arquitectura base, dashboard analítico y gestión avanzada de paci
 | CI/CD                         | Completada   | GitHub Actions y despliegue en Vercel           |
 | Dashboard analítico           | Completada   | KPIs reales, gráfica y actividad reciente       |
 | Perfil de paciente            | Completada   | Avatar, datos, estado y edición validada        |
-| Módulos clínicos              | Planificados | Hallazgos, timeline, controles y recordatorios  |
+| Hallazgos BI-RADS             | Completada   | Registro, consulta, edición y seguimiento       |
+| Timeline y controles          | Planificados | Cronología, controles y recordatorios           |
 | Telegram                      | Planificado  | Notificaciones y recordatorios automatizados    |
 
 ## Tecnologías
@@ -59,7 +60,7 @@ Next.js App Router
    ├── Páginas y layouts
    ├── Componentes y formularios
    ├── Route Handlers / API
-   └── Middleware de autenticación
+   └── Proxy y validación de sesión en API
              │
              ▼
         Servicios de dominio
@@ -99,6 +100,7 @@ breast-health-tracker/
 │   │   └── layout.tsx           # Layout raíz y tipografías
 │   ├── components/
 │   │   ├── dashboard/           # Header, Sidebar y StatCard
+│   │   ├── findings/            # Formularios y tarjetas BI-RADS
 │   │   ├── forms/               # LoginForm y PatientForm
 │   │   ├── patients/            # Filtros, tabla y paginación
 │   │   └── ui/                  # Controles reutilizables
@@ -106,16 +108,17 @@ breast-health-tracker/
 │   ├── features/
 │   │   ├── auth/                # API pública del módulo de autenticación
 │   │   ├── dashboard/           # Contratos y métricas del dashboard
+│   │   ├── findings/            # Contratos del dominio BI-RADS
 │   │   └── patients/            # API pública del módulo de pacientes
 │   ├── lib/
 │   │   ├── auth/                # JWT, contraseñas y sesión
-│   │   ├── redis/               # Cliente, claves y mapeadores
+│   │   ├── redis/               # Cliente y claves de Redis
 │   │   ├── utils/               # Utilidades y respuestas API
 │   │   └── validations/         # Esquemas Zod
 │   ├── repositories/            # Acceso a datos
 │   ├── services/                # Reglas de negocio
 │   ├── types/                   # Tipos compartidos
-│   └── middleware.ts            # Protección de rutas
+│   └── proxy.ts                 # Protección de páginas del dashboard
 ├── tests/
 │   └── unit/                    # Pruebas unitarias
 └── docs/                        # Documentación complementaria
@@ -129,7 +132,8 @@ breast-health-tracker/
 - Contraseñas almacenadas mediante hash con bcrypt.
 - Sesión firmada con JWT.
 - Cookie HTTP-only con expiración controlada.
-- Middleware para proteger `/dashboard`.
+- Proxy de Next.js para proteger `/dashboard`.
+- Validación explícita de sesión en las API de pacientes y hallazgos.
 - Acceso administrativo en la fase actual.
 
 ### Pacientes
@@ -161,6 +165,24 @@ breast-health-tracker/
 - Estados de carga, vacío y error.
 - Gráficas interactivas con Recharts.
 - Diseño responsive sin desbordamiento del documento.
+
+### Hallazgos BI-RADS
+
+- Registro de hallazgos asociados a una paciente.
+- Categorías BI-RADS `0`, `1`, `2`, `3`, `4A`, `4B`, `4C`, `5` y `6`.
+- Lateralidad izquierda, derecha o bilateral.
+- Estudios de mamografía, ecografía y resonancia.
+- Fecha del estudio y próximo control indicado por el profesional.
+- Descripción y observaciones con validación por campo.
+- Registro opcional de biopsia y su resultado.
+- Estados registrado, en seguimiento y cerrado.
+- Listado cronológico por fecha del estudio.
+- Creación y edición desde el perfil de la paciente.
+- Índice global e índice cronológico por paciente en Redis.
+- Protección contra acceso cruzado entre pacientes.
+- API autenticada mediante cookie de sesión.
+- Normalización de categorías numéricas deserializadas por Upstash.
+- La plataforma registra la clasificación profesional; no calcula ni interpreta BI-RADS.
 
 ### Interfaz
 
@@ -301,15 +323,19 @@ El código solo debe integrarse cuando todos los controles finalicen correctamen
 
 ## Endpoints actuales
 
-| Método | Ruta                 | Descripción                         | Acceso      |
-| ------ | -------------------- | ----------------------------------- | ----------- |
-| `POST` | `/api/auth/login`    | Iniciar sesión                      | Público     |
-| `POST` | `/api/auth/logout`   | Cerrar sesión                       | Autenticado |
-| `GET`  | `/api/auth/me`       | Consultar la sesión actual          | Autenticado |
-| `GET`  | `/api/patients`      | Buscar, filtrar y paginar pacientes | Autenticado |
-| `POST` | `/api/patients`      | Registrar paciente                  | Autenticado |
-| `GET`  | `/api/patients/[id]` | Consultar un paciente               | Autenticado |
-| `PUT`  | `/api/patients/[id]` | Actualizar un paciente              | Autenticado |
+| Método | Ruta                                      | Descripción                         | Acceso      |
+| ------ | ----------------------------------------- | ----------------------------------- | ----------- |
+| `POST` | `/api/auth/login`                         | Iniciar sesión                      | Público     |
+| `POST` | `/api/auth/logout`                        | Cerrar sesión                       | Autenticado |
+| `GET`  | `/api/auth/me`                            | Consultar la sesión actual          | Autenticado |
+| `GET`  | `/api/patients`                           | Buscar, filtrar y paginar pacientes | Autenticado |
+| `POST` | `/api/patients`                           | Registrar paciente                  | Autenticado |
+| `GET`  | `/api/patients/[id]`                      | Consultar un paciente               | Autenticado |
+| `PUT`  | `/api/patients/[id]`                      | Actualizar un paciente              | Autenticado |
+| `GET`  | `/api/patients/[id]/findings`             | Listar hallazgos de una paciente    | Autenticado |
+| `POST` | `/api/patients/[id]/findings`             | Registrar un hallazgo               | Autenticado |
+| `GET`  | `/api/patients/[id]/findings/[findingId]` | Consultar un hallazgo               | Autenticado |
+| `PUT`  | `/api/patients/[id]/findings/[findingId]` | Actualizar un hallazgo              | Autenticado |
 
 ## Estrategia Git
 
@@ -344,18 +370,19 @@ No se deben desarrollar funcionalidades directamente sobre `develop` ni `main`.
 
 ### Iteración actual
 
-La rama `feature/patients-v2` completó el desarrollo de la Fase 3:
+La rama `feature/findings` completó el alcance inicial de la Fase 4:
 
-- Contratos de búsqueda, filtrado, ordenamiento y paginación.
-- Índice cronológico y migración idempotente en Redis.
-- API paginada con estrategia optimizada y fallback seguro.
-- Tabla avanzada, filtros y navegación por URL.
-- Formularios y validaciones reforzados.
-- Perfil individual responsive.
-- Corrección del desplazamiento duplicado en el dashboard.
-- Formato, lint, typecheck, tests, build y pruebas manuales aprobados.
+- Contratos y validaciones del dominio BI-RADS.
+- Repositorio e índices cronológicos en Redis.
+- Servicio con validación de pertenencia y reglas de actualización.
+- API anidada y autenticada por paciente.
+- Protección explícita de las API anteriores de pacientes.
+- Creación, listado y edición de hallazgos desde el perfil.
+- Estados registrado, en seguimiento y cerrado.
+- Pruebas unitarias, de repositorio, servicio, seguridad y contrato API.
+- Pruebas manuales de autenticación, aislamiento, creación y actualización.
 
-El siguiente paso es abrir un pull request hacia `develop`, validar GitHub Actions y realizar el merge.
+El siguiente paso es completar la validación final, abrir un pull request hacia `develop` y verificar GitHub Actions y Vercel Preview.
 
 ## CI/CD
 
@@ -447,19 +474,25 @@ Rama utilizada: `feature/patients-v2`.
 
 ### Fase 4 — Hallazgos BI-RADS
 
-**Estado: planificada**
+**Estado: completada en su alcance inicial**
 
-- Registro de hallazgos por paciente.
-- Categoría BI-RADS.
-- Identificación de mama izquierda o derecha.
+- Registro y consulta de hallazgos por paciente.
+- Categorías BI-RADS válidas, ingresadas manualmente desde un informe profesional.
+- Lateralidad izquierda, derecha o bilateral.
 - Tipo de estudio: ecografía, mamografía o resonancia.
-- Registro de biopsias cuando corresponda.
+- Registro opcional de biopsia y resultado.
 - Descripción y observaciones del hallazgo.
-- Fecha del estudio y próximo control sugerido por el profesional.
-- Archivos o referencias documentales, sujetos a controles de privacidad.
-- Historial de cambios en la categoría BI-RADS.
+- Fecha del estudio y próximo control indicado por el profesional.
+- Estados registrado, en seguimiento y cerrado.
+- Edición con limpieza de campos opcionales.
+- Índice cronológico por fecha de estudio.
+- API anidada con autenticación y aislamiento por paciente.
+- Interfaz responsive y compatible con modo oscuro.
+- Pruebas de dominio, persistencia, servicio, API y seguridad.
 
-Rama prevista: `feature/findings`.
+Los archivos adjuntos y el historial inmutable de cambios quedan diferidos hasta definir almacenamiento privado, autorización, auditoría y políticas de retención.
+
+Rama utilizada: `feature/findings`.
 
 ### Fase 5 — Timeline clínico y seguimiento
 
@@ -573,15 +606,15 @@ Cada fase deberá cumplir, como mínimo, con los siguientes criterios:
 
 ## Próximo paso
 
-Después de integrar y desplegar la Fase 3, la siguiente iteración corresponde a la **Fase 4 — Hallazgos BI-RADS**. Deberá comenzar desde un `develop` actualizado en una nueva rama:
+Después de integrar y desplegar la Fase 4, la siguiente iteración corresponde a la **Fase 5 — Timeline clínico y seguimiento**. Deberá comenzar desde un `develop` actualizado en una nueva rama:
 
 ```bash
 git switch develop
 git pull origin develop
-git switch -c feature/findings
+git switch -c feature/clinical-timeline
 ```
 
-Antes de implementar la interfaz se definirán el modelo de hallazgos, las categorías BI-RADS, los tipos de estudio, la lateralidad, las validaciones y la estrategia de persistencia en Redis.
+Antes de implementar la interfaz se definirán el modelo de eventos, la relación con hallazgos y controles, el orden cronológico y la estrategia de persistencia en Redis.
 
 ## Licencia
 

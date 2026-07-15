@@ -1,3 +1,4 @@
+import { getSession } from "@/lib/auth/session";
 import { parsePatientListQuery } from "@/lib/validations/patient-list";
 import { createPatientSchema } from "@/lib/validations/patient";
 import { PatientService } from "@/services/patient.service";
@@ -5,6 +6,12 @@ import { ok, fail, toJsonResponse } from "@/lib/utils/api-response";
 
 export async function GET(request: Request) {
   try {
+    const session = await getSession();
+
+    if (!session) {
+      return toJsonResponse(fail("UNAUTHORIZED", "Debes iniciar sesión."), 401);
+    }
+
     const searchParams = Object.fromEntries(new URL(request.url).searchParams.entries());
     const query = parsePatientListQuery(searchParams);
     const patients = await PatientService.listPaginated(query);
@@ -16,6 +23,12 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const session = await getSession();
+
+    if (!session) {
+      return toJsonResponse(fail("UNAUTHORIZED", "Debes iniciar sesión."), 401);
+    }
+
     const body = await request.json();
     const result = createPatientSchema.safeParse(body);
 
