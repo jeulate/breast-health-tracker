@@ -1,3 +1,4 @@
+import { getSession } from "@/lib/auth/session";
 import { updatePatientSchema } from "@/lib/validations/patient";
 import { PatientService } from "@/services/patient.service";
 import { ok, fail, toJsonResponse } from "@/lib/utils/api-response";
@@ -8,6 +9,12 @@ interface Params {
 
 export async function GET(_request: Request, { params }: Params) {
   try {
+    const session = await getSession();
+
+    if (!session) {
+      return toJsonResponse(fail("UNAUTHORIZED", "Debes iniciar sesión."), 401);
+    }
+
     const { id } = await params;
     const patient = await PatientService.getById(id);
 
@@ -23,6 +30,12 @@ export async function GET(_request: Request, { params }: Params) {
 
 export async function PUT(request: Request, { params }: Params) {
   try {
+    const session = await getSession();
+
+    if (!session) {
+      return toJsonResponse(fail("UNAUTHORIZED", "Debes iniciar sesión."), 401);
+    }
+
     const { id } = await params;
     const body = await request.json();
     const result = updatePatientSchema.safeParse(body);
