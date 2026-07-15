@@ -122,10 +122,10 @@ export const updateFindingSchema = z
     status: z.enum(FINDING_STATUSES).optional(),
   })
   .strict()
-  .refine((data) => Object.values(data).some((value) => value !== undefined), {
+  .refine((data) => Object.keys(data).length > 0, {
     message: "Envía al menos un campo para actualizar.",
   })
   .superRefine(validateFindingDatesAndBiopsy);
 
-export type CreateFindingInput = z.infer<typeof createFindingSchema>;
+export type CreateFindingInput = z.input<typeof createFindingSchema>;
 export type UpdateFindingInput = z.infer<typeof updateFindingSchema>;
