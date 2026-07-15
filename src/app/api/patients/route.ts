@@ -1,10 +1,13 @@
+import { parsePatientListQuery } from "@/lib/validations/patient-list";
 import { createPatientSchema } from "@/lib/validations/patient";
 import { PatientService } from "@/services/patient.service";
 import { ok, fail, toJsonResponse } from "@/lib/utils/api-response";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const patients = await PatientService.list();
+    const searchParams = Object.fromEntries(new URL(request.url).searchParams.entries());
+    const query = parsePatientListQuery(searchParams);
+    const patients = await PatientService.listPaginated(query);
     return toJsonResponse(ok(patients));
   } catch {
     return toJsonResponse(fail("INTERNAL_ERROR", "Failed to fetch patients"), 500);

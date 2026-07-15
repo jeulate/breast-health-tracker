@@ -1,4 +1,5 @@
 import { getRedisClient } from "@/lib/redis/client";
+import type { PaginatedPatients, SortDirection } from "@/features/patients/patient-list.types";
 import type { Patient, PatientStatus } from "@/types";
 import { redisKeys } from "@/lib/redis/keys";
 
@@ -56,8 +57,41 @@ export class PatientRepository {
     return patients.filter((p): p is Patient => p !== null);
   }
 
+  async listPageByCreatedAt(
+    requestedPage: number,
+    pageSize: number,
+    direction: SortDirection,
+  ): Promise<PaginatedPatients> {
+    const total = await this.countCreatedAtIndex();
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const page = Math.min(Math.max(1, requestedPage), totalPages);
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize - 1;
+
+    const ids = (await this.redis.zrange(redisKeys.patientsCreatedAtIndex(), start, end, {
+      rev: direction === "desc",
+    })) as string[];
+
+    const patients = await Promise.all(ids.map((id) => this.findById(id)));
+    const items = patients.filter((patient): patient is Patient => patient !== null);
+
+    return {
+      items,
+      page,
+      pageSize,
+      total,
+      totalPages,
+      hasPreviousPage: page > 1,
+      hasNextPage: page < totalPages,
+    };
+  }
+
   async count(): Promise<number> {
     return this.redis.scard(redisKeys.patientsIndex());
+  }
+
+  async countCreatedAtIndex(): Promise<number> {
+    return this.redis.zcard(redisKeys.patientsCreatedAtIndex());
   }
 
   async countByStatus(status: PatientStatus): Promise<number> {
