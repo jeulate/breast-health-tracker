@@ -1,4 +1,9 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/Button";
 import type { Finding } from "@/features/findings";
+import { FindingForm } from "./FindingForm";
 
 const studyLabels: Record<Finding["studyType"], string> = {
   MAMMOGRAPHY: "Mamografía",
@@ -18,7 +23,10 @@ const statusLabels: Record<Finding["status"], string> = {
   CLOSED: "Cerrado",
 };
 
-export function FindingCard({ finding }: { finding: Finding }) {
+export function FindingCard({ patientId, finding }: { patientId: string; finding: Finding }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [wasUpdated, setWasUpdated] = useState(false);
+
   return (
     <article className="border-border bg-surface rounded-2xl border p-5 shadow-sm">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -34,11 +42,62 @@ export function FindingCard({ finding }: { finding: Finding }) {
           </div>
         </div>
 
-        <span className="border-border bg-surface-secondary text-foreground inline-flex w-fit rounded-full border px-3 py-1 text-xs font-semibold">
-          {statusLabels[finding.status]}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="border-border bg-surface-secondary text-foreground inline-flex w-fit rounded-full border px-3 py-1 text-xs font-semibold">
+            {statusLabels[finding.status]}
+          </span>
+          {!isEditing ? (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                setWasUpdated(false);
+                setIsEditing(true);
+              }}
+            >
+              Editar
+            </Button>
+          ) : null}
+        </div>
       </div>
 
+      {wasUpdated ? (
+        <div
+          role="status"
+          className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200"
+        >
+          El hallazgo fue actualizado correctamente.
+        </div>
+      ) : null}
+
+      {isEditing ? (
+        <div className="border-border mt-5 border-t pt-5">
+          <h3 className="text-foreground mb-1 text-base font-semibold">Editar hallazgo</h3>
+          <p className="text-muted mb-5 text-sm">
+            Actualiza únicamente los datos consignados por el profesional.
+          </p>
+          <FindingForm
+            patientId={patientId}
+            mode="edit"
+            finding={finding}
+            onCancel={() => setIsEditing(false)}
+            onSaved={() => {
+              setIsEditing(false);
+              setWasUpdated(true);
+            }}
+          />
+        </div>
+      ) : (
+        <FindingDetails finding={finding} />
+      )}
+    </article>
+  );
+}
+
+function FindingDetails({ finding }: { finding: Finding }) {
+  return (
+    <>
       <dl className="mt-5 grid gap-4 sm:grid-cols-3">
         <DataItem label="Fecha del estudio" value={formatDateOnly(finding.studyDate)} />
         <DataItem
@@ -79,7 +138,7 @@ export function FindingCard({ finding }: { finding: Finding }) {
           </p>
         </div>
       ) : null}
-    </article>
+    </>
   );
 }
 

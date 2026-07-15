@@ -9,6 +9,7 @@ import type {
   BreastLaterality,
   BreastStudyType,
   Finding,
+  FindingStatus,
 } from "@/features/findings";
 import type { ApiResponse } from "@/types";
 
@@ -26,7 +27,8 @@ type FindingField =
   | "observations"
   | "biopsyPerformed"
   | "biopsyResult"
-  | "nextControlDate";
+  | "nextControlDate"
+  | "status";
 
 type FieldErrors = Partial<Record<FindingField, string>>;
 
@@ -40,7 +42,16 @@ const findingFields: FindingField[] = [
   "biopsyPerformed",
   "biopsyResult",
   "nextControlDate",
+  "status",
 ];
+
+interface FindingFormProps {
+  patientId: string;
+  mode?: "create" | "edit";
+  finding?: Finding;
+  onCancel?: () => void;
+  onSaved?: (finding: Finding) => void;
+}
 
 function getBoliviaToday(): string {
   const parts = new Intl.DateTimeFormat("en-US", {
@@ -74,21 +85,29 @@ function getFieldErrors(details: unknown): FieldErrors {
   return errors;
 }
 
-export function FindingForm({ patientId }: { patientId: string }) {
+export function FindingForm({
+  patientId,
+  mode = "create",
+  finding,
+  onCancel,
+  onSaved,
+}: FindingFormProps) {
   const router = useRouter();
-  const [category, setCategory] = useState<BiradsCategory | "">("");
-  const [laterality, setLaterality] = useState<BreastLaterality | "">("");
-  const [studyType, setStudyType] = useState<BreastStudyType | "">("");
-  const [studyDate, setStudyDate] = useState("");
-  const [description, setDescription] = useState("");
-  const [observations, setObservations] = useState("");
-  const [biopsyPerformed, setBiopsyPerformed] = useState(false);
-  const [biopsyResult, setBiopsyResult] = useState("");
-  const [nextControlDate, setNextControlDate] = useState("");
+  const [category, setCategory] = useState<BiradsCategory | "">(finding?.category ?? "");
+  const [laterality, setLaterality] = useState<BreastLaterality | "">(finding?.laterality ?? "");
+  const [studyType, setStudyType] = useState<BreastStudyType | "">(finding?.studyType ?? "");
+  const [studyDate, setStudyDate] = useState(finding?.studyDate ?? "");
+  const [description, setDescription] = useState(finding?.description ?? "");
+  const [observations, setObservations] = useState(finding?.observations ?? "");
+  const [biopsyPerformed, setBiopsyPerformed] = useState(finding?.biopsyPerformed ?? false);
+  const [biopsyResult, setBiopsyResult] = useState(finding?.biopsyResult ?? "");
+  const [nextControlDate, setNextControlDate] = useState(finding?.nextControlDate ?? "");
+  const [status, setStatus] = useState<FindingStatus>(finding?.status ?? "RECORDED");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const idPrefix = mode === "edit" ? `finding-${finding?.id ?? "edit"}` : "finding-new";
 
   function clearFieldError(field: FindingField): void {
     setFieldErrors((current) => ({ ...current, [field]: undefined }));
@@ -114,8 +133,17 @@ export function FindingForm({ patientId }: { patientId: string }) {
     setLoading(true);
 
     try {
-      const response = await fetch(`/api/patients/${patientId}/findings`, {
-        method: "POST",
+      if (mode === "edit" && !finding) {
+        setError("No se encontró el hallazgo que deseas editar.");
+        return;
+      }
+
+      const url =
+        mode === "create"
+          ? `/api/patients/${patientId}/findings`
+          : `/api/patients/${patientId}/findings/${finding?.id}`;
+      const response = await fetch(url, {
+        method: mode === "create" ? "POST" : "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           category,
@@ -123,22 +151,31 @@ export function FindingForm({ patientId }: { patientId: string }) {
           studyType,
           studyDate,
           description,
-          observations: observations || undefined,
+          observations,
           biopsyPerformed,
-          biopsyResult: biopsyPerformed ? biopsyResult || undefined : undefined,
-          nextControlDate: nextControlDate || undefined,
+          biopsyResult: biopsyPerformed ? biopsyResult : "",
+          nextControlDate,
+          ...(mode === "edit" ? { status } : {}),
         }),
       });
       const data = (await response.json()) as ApiResponse<Finding>;
 
       if (!response.ok || !data.success || !data.data) {
         setFieldErrors(getFieldErrors(data.error?.details));
-        setError(data.error?.message ?? "No fue posible registrar el hallazgo.");
+        setError(
+          data.error?.message ??
+            (mode === "create"
+              ? "No fue posible registrar el hallazgo."
+              : "No fue posible actualizar el hallazgo."),
+        );
         return;
       }
 
-      resetForm();
-      setSuccess("El hallazgo fue registrado correctamente.");
+      if (mode === "create") {
+        resetForm();
+        setSuccess("El hallazgo fue registrado correctamente.");
+      }
+      onSaved?.(data.data);
       router.refresh();
     } catch {
       setError("No fue posible conectar con el servidor. Intenta nuevamente.");
@@ -169,7 +206,7 @@ export function FindingForm({ patientId }: { patientId: string }) {
 
       <div className="grid gap-5 md:grid-cols-3">
         <SelectField
-          id="finding-category"
+          id={`${idPrefix}-category`}
           label="Categoría BI-RADS"
           value={category}
           onChange={(value) => {
@@ -185,7 +222,7 @@ export function FindingForm({ patientId }: { patientId: string }) {
           }))}
         />
         <SelectField
-          id="finding-laterality"
+          id={`${idPrefix}-laterality`}
           label="Lateralidad"
           value={laterality}
           onChange={(value) => {
@@ -202,7 +239,7 @@ export function FindingForm({ patientId }: { patientId: string }) {
           ]}
         />
         <SelectField
-          id="finding-study-type"
+          id={`${idPrefix}-study-type`}
           label="Tipo de estudio"
           value={studyType}
           onChange={(value) => {
@@ -220,9 +257,29 @@ export function FindingForm({ patientId }: { patientId: string }) {
         />
       </div>
 
+      {mode === "edit" ? (
+        <SelectField
+          id={`${idPrefix}-status`}
+          label="Estado del registro"
+          value={status}
+          onChange={(value) => {
+            setStatus(value as FindingStatus);
+            clearFieldError("status");
+          }}
+          error={fieldErrors.status}
+          disabled={loading}
+          placeholder="Selecciona un estado"
+          options={[
+            { value: "RECORDED", label: "Registrado" },
+            { value: "FOLLOW_UP", label: "En seguimiento" },
+            { value: "CLOSED", label: "Cerrado" },
+          ]}
+        />
+      ) : null}
+
       <div className="grid gap-5 sm:grid-cols-2">
         <Input
-          id="finding-study-date"
+          id={`${idPrefix}-study-date`}
           label="Fecha del estudio"
           type="date"
           value={studyDate}
@@ -236,7 +293,7 @@ export function FindingForm({ patientId }: { patientId: string }) {
           disabled={loading}
         />
         <Input
-          id="finding-next-control"
+          id={`${idPrefix}-next-control`}
           label="Próximo control"
           type="date"
           value={nextControlDate}
@@ -252,7 +309,7 @@ export function FindingForm({ patientId }: { patientId: string }) {
       </div>
 
       <TextAreaField
-        id="finding-description"
+        id={`${idPrefix}-description`}
         label="Descripción del hallazgo"
         value={description}
         onChange={(value) => {
@@ -266,7 +323,7 @@ export function FindingForm({ patientId }: { patientId: string }) {
       />
 
       <TextAreaField
-        id="finding-observations"
+        id={`${idPrefix}-observations`}
         label="Observaciones"
         value={observations}
         onChange={(value) => {
@@ -298,7 +355,7 @@ export function FindingForm({ patientId }: { patientId: string }) {
         {biopsyPerformed ? (
           <div className="mt-4">
             <TextAreaField
-              id="finding-biopsy-result"
+              id={`${idPrefix}-biopsy-result`}
               label="Resultado de biopsia"
               value={biopsyResult}
               onChange={(value) => {
@@ -313,9 +370,26 @@ export function FindingForm({ patientId }: { patientId: string }) {
         ) : null}
       </div>
 
-      <div className="border-border flex justify-end border-t pt-5">
+      <div className="border-border flex flex-col-reverse gap-3 border-t pt-5 sm:flex-row sm:justify-end">
+        {mode === "edit" ? (
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onCancel}
+            disabled={loading}
+            className="w-full sm:w-auto"
+          >
+            Cancelar
+          </Button>
+        ) : null}
         <Button type="submit" disabled={loading} className="w-full sm:w-auto">
-          {loading ? "Registrando…" : "Registrar hallazgo"}
+          {loading
+            ? mode === "create"
+              ? "Registrando…"
+              : "Guardando…"
+            : mode === "create"
+              ? "Registrar hallazgo"
+              : "Guardar cambios"}
         </Button>
       </div>
     </form>

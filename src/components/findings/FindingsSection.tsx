@@ -58,7 +58,7 @@ export function FindingsSection({
       ) : (
         <div className="grid gap-4">
           {findings.map((finding) => (
-            <FindingCard key={finding.id} finding={finding} />
+            <FindingCard key={finding.id} patientId={patientId} finding={finding} />
           ))}
         </div>
       )}
