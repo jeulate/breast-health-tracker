@@ -9,7 +9,7 @@ El proyecto combina un dashboard administrativo, persistencia en Redis, autentic
 
 ## Estado del proyecto
 
-Las fases de arquitectura base, dashboard analítico, gestión avanzada de pacientes y hallazgos BI-RADS se encuentran desplegadas. La Fase 5 —timeline clínico y seguimiento— está terminada en `feature/clinical-timeline` y lista para validación e integración.
+Las fases de arquitectura base, dashboard analítico, gestión avanzada de pacientes, hallazgos BI-RADS y timeline clínico se encuentran desplegadas. El bloque de calendario de la Fase 6 está terminado en `feature/calendar` y listo para integrarse mediante pull request hacia `develop`.
 
 | Área                          | Estado      | Implementación                                  |
 | ----------------------------- | ----------- | ----------------------------------------------- |
@@ -26,6 +26,8 @@ Las fases de arquitectura base, dashboard analítico, gestión avanzada de pacie
 | Perfil de paciente            | Completada  | Avatar, datos, estado y edición validada        |
 | Hallazgos BI-RADS             | Completada  | Registro, consulta, edición y seguimiento       |
 | Timeline clínico              | Completada  | Hallazgos, controles, síntomas y notas          |
+| Calendario                    | Completada  | Vista mensual, agenda móvil y filtros           |
+| Recordatorios                 | Planificada | Programación, ejecución y control de envíos     |
 | Telegram                      | Planificado | Notificaciones y recordatorios automatizados    |
 
 ## Tecnologías
@@ -94,11 +96,13 @@ breast-health-tracker/
 │   ├── app/
 │   │   ├── api/
 │   │   │   ├── auth/            # Login, logout y sesión actual
+│   │   │   ├── calendar/        # Proyección global autenticada del calendario
 │   │   │   └── patients/        # Operaciones de pacientes
-│   │   ├── dashboard/           # Layout y páginas protegidas
+│   │   ├── dashboard/           # Layout, calendario y páginas protegidas
 │   │   ├── login/               # Inicio de sesión
 │   │   └── layout.tsx           # Layout raíz y tipografías
 │   ├── components/
+│   │   ├── calendar/            # Cuadrícula mensual y agenda móvil
 │   │   ├── dashboard/           # Header, Sidebar y StatCard
 │   │   ├── findings/            # Formularios y tarjetas BI-RADS
 │   │   ├── forms/               # LoginForm y PatientForm
@@ -108,6 +112,7 @@ breast-health-tracker/
 │   ├── config/                  # Validación de entorno
 │   ├── features/
 │   │   ├── auth/                # API pública del módulo de autenticación
+│   │   ├── calendar/            # Contratos, proyección y utilidades mensuales
 │   │   ├── clinical-timeline/    # Contratos de eventos y timeline
 │   │   ├── dashboard/           # Contratos y métricas del dashboard
 │   │   ├── findings/            # Contratos del dominio BI-RADS
@@ -203,6 +208,22 @@ breast-health-tracker/
 - Validaciones por campo y confirmación antes de eliminar.
 - Pruebas de dominio, repositorio, servicio y contrato API.
 - La plataforma organiza información registrada; no interpreta síntomas ni emite diagnósticos.
+
+### Calendario
+
+- Vista global mensual de controles clínicos y próximos controles BI-RADS.
+- Proyección de información existente sin duplicar la persistencia en Redis.
+- Agenda responsive para dispositivos móviles y cuadrícula mensual en escritorio.
+- Navegación entre meses y filtro por estado programado, completado o cancelado.
+- Identificación del paciente y acceso directo a su perfil y timeline clínico.
+- Indicador visible para pacientes inactivos.
+- API global autenticada y de solo lectura en `/api/calendar`.
+- Validación estricta del intervalo de fechas y de los parámetros de consulta.
+- Prevención de duplicados cuando un control clínico está vinculado con un hallazgo.
+- Estados de carga, error y resultados vacíos.
+- Compatibilidad con modo claro y oscuro, sin desbordamiento horizontal.
+- Pruebas de proyección, validación, servicio, contrato API y utilidades mensuales.
+- El calendario organiza fechas registradas; no interpreta información clínica ni genera recomendaciones médicas.
 
 ### Interfaz
 
@@ -361,6 +382,7 @@ El código solo debe integrarse cuando todos los controles finalicen correctamen
 | `GET`    | `/api/patients/[id]/timeline/[eventId]`   | Consultar un evento clínico         | Autenticado |
 | `PUT`    | `/api/patients/[id]/timeline/[eventId]`   | Actualizar un evento clínico        | Autenticado |
 | `DELETE` | `/api/patients/[id]/timeline/[eventId]`   | Eliminar un evento clínico          | Autenticado |
+| `GET`    | `/api/calendar`                           | Consultar el calendario global      | Autenticado |
 
 ## Estrategia Git
 
@@ -395,20 +417,19 @@ No se deben desarrollar funcionalidades directamente sobre `develop` ni `main`.
 
 ### Iteración actual
 
-La rama `feature/clinical-timeline` completó la Fase 5:
+La rama `feature/calendar` completó el bloque de calendario de la Fase 6:
 
-- Contratos y validaciones de eventos clínicos.
-- Repositorio e índice cronológico en Redis.
-- Servicio con validación de pertenencia y proyección de hallazgos BI-RADS.
-- API anidada y autenticada por paciente.
-- Creación, consulta, edición y eliminación de eventos manuales.
-- Timeline integrado en el perfil de la paciente.
-- Aislamiento entre pacientes y hallazgos de solo lectura desde el timeline.
-- Pruebas unitarias de dominio, repositorio, servicio y contrato API.
-- Pruebas manuales autenticadas de creación, actualización y eliminación.
-- Validación responsive, modo oscuro, lint, typecheck, tests y build.
+- Contratos y validaciones de consulta.
+- Proyección reutilizable de controles clínicos y próximos controles BI-RADS.
+- Servicio global sin duplicar registros ni crear persistencia adicional.
+- API autenticada y de solo lectura.
+- Vista mensual para escritorio y agenda responsive para móvil.
+- Navegación mensual, filtros por estado y enlaces al perfil de la paciente.
+- Estados de carga, error y resultados vacíos.
+- Pruebas unitarias de proyección, validación, servicio, API y calendario mensual.
+- Validación manual con datos demostrativos, modo oscuro y diseño responsive.
 
-El siguiente paso es abrir un pull request hacia `develop` y verificar GitHub Actions y Vercel Preview.
+El siguiente paso es abrir un pull request hacia `develop` y verificar GitHub Actions y Vercel Preview. Los recordatorios se desarrollarán posteriormente y de forma aislada en `feature/reminders`.
 
 ## CI/CD
 
@@ -540,17 +561,31 @@ Rama utilizada: `feature/clinical-timeline`.
 
 ### Fase 6 — Calendario y recordatorios
 
-**Estado: planificada**
+**Estado: calendario completado; recordatorios planificados**
 
-- Calendario de controles.
-- Próximas citas y estudios.
+Bloque de calendario completado:
+
+- Calendario mensual global de controles y seguimientos.
+- Proyección de controles clínicos existentes.
+- Proyección de próximos controles definidos en hallazgos BI-RADS abiertos.
+- Prevención de duplicados entre eventos relacionados.
+- Filtros por estado y navegación entre meses.
+- Cuadrícula mensual en escritorio y agenda adaptada a móvil.
+- Acceso directo al perfil y timeline de la paciente.
+- API autenticada de solo lectura.
+- Pruebas de contratos, proyección, servicio, API e interfaz mensual.
+
+Bloque de recordatorios pendiente:
+
 - Recordatorios configurables.
 - Estados pendiente, enviado, completado y cancelado.
 - Procesamiento programado mediante cron.
 - Prevención de notificaciones duplicadas.
 - Registro de ejecución y errores.
 
-Ramas previstas: `feature/calendar` y `feature/reminders`.
+Rama utilizada para el calendario: `feature/calendar`.
+
+Rama prevista para recordatorios: `feature/reminders`.
 
 ### Fase 7 — Bot de Telegram
 
@@ -637,7 +672,7 @@ Cada fase deberá cumplir, como mínimo, con los siguientes criterios:
 
 ## Próximo paso
 
-La Fase 5 está terminada en `feature/clinical-timeline`. El siguiente paso es completar su integración mediante un pull request hacia `develop`:
+El calendario de la Fase 6 está terminado en `feature/calendar`. El siguiente paso es completar su integración mediante un pull request hacia `develop`:
 
 ```bash
 git status
@@ -645,7 +680,7 @@ git log --oneline origin/develop..HEAD
 git diff --check origin/develop...HEAD
 ```
 
-Después del merge y la validación en `develop`, se podrá promover el cambio a `main`. La siguiente iteración funcional prevista es la **Fase 6 — Calendario y recordatorios**, que deberá comenzar en una rama nueva desde un `develop` actualizado.
+Después del merge y la validación en `develop`, se podrá promover el cambio a `main`. La siguiente iteración funcional prevista es el bloque de **recordatorios**, que deberá comenzar en `feature/reminders` desde un `develop` actualizado.
 
 ## Licencia
 
