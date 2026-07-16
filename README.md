@@ -9,24 +9,24 @@ El proyecto combina un dashboard administrativo, persistencia en Redis, autentic
 
 ## Estado del proyecto
 
-Las fases de arquitectura base, dashboard analítico y gestión avanzada de pacientes se encuentran desplegadas. El alcance inicial de la Fase 4 —registro y seguimiento de hallazgos BI-RADS— está terminado en `feature/findings` y listo para validación e integración.
+Las fases de arquitectura base, dashboard analítico, gestión avanzada de pacientes y hallazgos BI-RADS se encuentran desplegadas. La Fase 5 —timeline clínico y seguimiento— está terminada en `feature/clinical-timeline` y lista para validación e integración.
 
-| Área                          | Estado       | Implementación                                  |
-| ----------------------------- | ------------ | ----------------------------------------------- |
-| Arquitectura inicial          | Completada   | Next.js 16, App Router y TypeScript             |
-| Persistencia                  | Completada   | Upstash Redis con aislamiento por prefijo       |
-| Autenticación                 | Completada   | JWT, cookie HTTP-only y rutas protegidas        |
-| Gestión avanzada de pacientes | Completada   | Búsqueda, filtros, ordenamiento y paginación    |
-| Dashboard base                | Completada   | Header, sidebar y tarjetas reutilizables        |
-| Diseño responsive             | Completada   | Sidebar colapsable en escritorio y drawer móvil |
-| Modo oscuro                   | Completada   | Tema persistente y componentes adaptados        |
-| Calidad                       | Completada   | Formato, lint, typecheck, tests y build         |
-| CI/CD                         | Completada   | GitHub Actions y despliegue en Vercel           |
-| Dashboard analítico           | Completada   | KPIs reales, gráfica y actividad reciente       |
-| Perfil de paciente            | Completada   | Avatar, datos, estado y edición validada        |
-| Hallazgos BI-RADS             | Completada   | Registro, consulta, edición y seguimiento       |
-| Timeline y controles          | Planificados | Cronología, controles y recordatorios           |
-| Telegram                      | Planificado  | Notificaciones y recordatorios automatizados    |
+| Área                          | Estado      | Implementación                                  |
+| ----------------------------- | ----------- | ----------------------------------------------- |
+| Arquitectura inicial          | Completada  | Next.js 16, App Router y TypeScript             |
+| Persistencia                  | Completada  | Upstash Redis con aislamiento por prefijo       |
+| Autenticación                 | Completada  | JWT, cookie HTTP-only y rutas protegidas        |
+| Gestión avanzada de pacientes | Completada  | Búsqueda, filtros, ordenamiento y paginación    |
+| Dashboard base                | Completada  | Header, sidebar y tarjetas reutilizables        |
+| Diseño responsive             | Completada  | Sidebar colapsable en escritorio y drawer móvil |
+| Modo oscuro                   | Completada  | Tema persistente y componentes adaptados        |
+| Calidad                       | Completada  | Formato, lint, typecheck, tests y build         |
+| CI/CD                         | Completada  | GitHub Actions y despliegue en Vercel           |
+| Dashboard analítico           | Completada  | KPIs reales, gráfica y actividad reciente       |
+| Perfil de paciente            | Completada  | Avatar, datos, estado y edición validada        |
+| Hallazgos BI-RADS             | Completada  | Registro, consulta, edición y seguimiento       |
+| Timeline clínico              | Completada  | Hallazgos, controles, síntomas y notas          |
+| Telegram                      | Planificado | Notificaciones y recordatorios automatizados    |
 
 ## Tecnologías
 
@@ -103,10 +103,12 @@ breast-health-tracker/
 │   │   ├── findings/            # Formularios y tarjetas BI-RADS
 │   │   ├── forms/               # LoginForm y PatientForm
 │   │   ├── patients/            # Filtros, tabla y paginación
+│   │   ├── timeline/             # Timeline y eventos clínicos
 │   │   └── ui/                  # Controles reutilizables
 │   ├── config/                  # Validación de entorno
 │   ├── features/
 │   │   ├── auth/                # API pública del módulo de autenticación
+│   │   ├── clinical-timeline/    # Contratos de eventos y timeline
 │   │   ├── dashboard/           # Contratos y métricas del dashboard
 │   │   ├── findings/            # Contratos del dominio BI-RADS
 │   │   └── patients/            # API pública del módulo de pacientes
@@ -183,6 +185,24 @@ breast-health-tracker/
 - API autenticada mediante cookie de sesión.
 - Normalización de categorías numéricas deserializadas por Upstash.
 - La plataforma registra la clasificación profesional; no calcula ni interpreta BI-RADS.
+
+### Timeline clínico
+
+- Proyección cronológica unificada de hallazgos BI-RADS y eventos manuales.
+- Eventos de tipo control, síntoma registrado y nota clínica.
+- Estados programado, completado y cancelado para controles.
+- Estado registrado para síntomas y notas.
+- Fechas futuras permitidas únicamente para controles programados.
+- Creación, consulta, edición y eliminación de eventos manuales.
+- Hallazgos BI-RADS de solo lectura desde el timeline, sin duplicar su persistencia.
+- Relación opcional y validada entre un evento y un hallazgo de la misma paciente.
+- Índice cronológico por paciente en Redis.
+- API anidada, autenticada y aislada por paciente.
+- Orden estable cuando varios registros comparten la misma fecha.
+- Interfaz responsive compatible con modo claro y oscuro.
+- Validaciones por campo y confirmación antes de eliminar.
+- Pruebas de dominio, repositorio, servicio y contrato API.
+- La plataforma organiza información registrada; no interpreta síntomas ni emite diagnósticos.
 
 ### Interfaz
 
@@ -323,19 +343,24 @@ El código solo debe integrarse cuando todos los controles finalicen correctamen
 
 ## Endpoints actuales
 
-| Método | Ruta                                      | Descripción                         | Acceso      |
-| ------ | ----------------------------------------- | ----------------------------------- | ----------- |
-| `POST` | `/api/auth/login`                         | Iniciar sesión                      | Público     |
-| `POST` | `/api/auth/logout`                        | Cerrar sesión                       | Autenticado |
-| `GET`  | `/api/auth/me`                            | Consultar la sesión actual          | Autenticado |
-| `GET`  | `/api/patients`                           | Buscar, filtrar y paginar pacientes | Autenticado |
-| `POST` | `/api/patients`                           | Registrar paciente                  | Autenticado |
-| `GET`  | `/api/patients/[id]`                      | Consultar un paciente               | Autenticado |
-| `PUT`  | `/api/patients/[id]`                      | Actualizar un paciente              | Autenticado |
-| `GET`  | `/api/patients/[id]/findings`             | Listar hallazgos de una paciente    | Autenticado |
-| `POST` | `/api/patients/[id]/findings`             | Registrar un hallazgo               | Autenticado |
-| `GET`  | `/api/patients/[id]/findings/[findingId]` | Consultar un hallazgo               | Autenticado |
-| `PUT`  | `/api/patients/[id]/findings/[findingId]` | Actualizar un hallazgo              | Autenticado |
+| Método   | Ruta                                      | Descripción                         | Acceso      |
+| -------- | ----------------------------------------- | ----------------------------------- | ----------- |
+| `POST`   | `/api/auth/login`                         | Iniciar sesión                      | Público     |
+| `POST`   | `/api/auth/logout`                        | Cerrar sesión                       | Autenticado |
+| `GET`    | `/api/auth/me`                            | Consultar la sesión actual          | Autenticado |
+| `GET`    | `/api/patients`                           | Buscar, filtrar y paginar pacientes | Autenticado |
+| `POST`   | `/api/patients`                           | Registrar paciente                  | Autenticado |
+| `GET`    | `/api/patients/[id]`                      | Consultar un paciente               | Autenticado |
+| `PUT`    | `/api/patients/[id]`                      | Actualizar un paciente              | Autenticado |
+| `GET`    | `/api/patients/[id]/findings`             | Listar hallazgos de una paciente    | Autenticado |
+| `POST`   | `/api/patients/[id]/findings`             | Registrar un hallazgo               | Autenticado |
+| `GET`    | `/api/patients/[id]/findings/[findingId]` | Consultar un hallazgo               | Autenticado |
+| `PUT`    | `/api/patients/[id]/findings/[findingId]` | Actualizar un hallazgo              | Autenticado |
+| `GET`    | `/api/patients/[id]/timeline`             | Consultar el timeline unificado     | Autenticado |
+| `POST`   | `/api/patients/[id]/timeline`             | Registrar un evento clínico         | Autenticado |
+| `GET`    | `/api/patients/[id]/timeline/[eventId]`   | Consultar un evento clínico         | Autenticado |
+| `PUT`    | `/api/patients/[id]/timeline/[eventId]`   | Actualizar un evento clínico        | Autenticado |
+| `DELETE` | `/api/patients/[id]/timeline/[eventId]`   | Eliminar un evento clínico          | Autenticado |
 
 ## Estrategia Git
 
@@ -370,19 +395,20 @@ No se deben desarrollar funcionalidades directamente sobre `develop` ni `main`.
 
 ### Iteración actual
 
-La rama `feature/findings` completó el alcance inicial de la Fase 4:
+La rama `feature/clinical-timeline` completó la Fase 5:
 
-- Contratos y validaciones del dominio BI-RADS.
-- Repositorio e índices cronológicos en Redis.
-- Servicio con validación de pertenencia y reglas de actualización.
+- Contratos y validaciones de eventos clínicos.
+- Repositorio e índice cronológico en Redis.
+- Servicio con validación de pertenencia y proyección de hallazgos BI-RADS.
 - API anidada y autenticada por paciente.
-- Protección explícita de las API anteriores de pacientes.
-- Creación, listado y edición de hallazgos desde el perfil.
-- Estados registrado, en seguimiento y cerrado.
-- Pruebas unitarias, de repositorio, servicio, seguridad y contrato API.
-- Pruebas manuales de autenticación, aislamiento, creación y actualización.
+- Creación, consulta, edición y eliminación de eventos manuales.
+- Timeline integrado en el perfil de la paciente.
+- Aislamiento entre pacientes y hallazgos de solo lectura desde el timeline.
+- Pruebas unitarias de dominio, repositorio, servicio y contrato API.
+- Pruebas manuales autenticadas de creación, actualización y eliminación.
+- Validación responsive, modo oscuro, lint, typecheck, tests y build.
 
-El siguiente paso es completar la validación final, abrir un pull request hacia `develop` y verificar GitHub Actions y Vercel Preview.
+El siguiente paso es abrir un pull request hacia `develop` y verificar GitHub Actions y Vercel Preview.
 
 ## CI/CD
 
@@ -496,16 +522,21 @@ Rama utilizada: `feature/findings`.
 
 ### Fase 5 — Timeline clínico y seguimiento
 
-**Estado: planificada**
+**Estado: completada**
 
-- Línea de tiempo cronológica por paciente.
-- Estudios y hallazgos relacionados.
-- Controles programados y realizados.
-- Síntomas y observaciones registrados.
-- Comparación histórica de seguimientos.
-- Visualización clara de eventos pendientes y completados.
+- Línea de tiempo cronológica unificada por paciente.
+- Proyección de estudios y hallazgos BI-RADS sin duplicar información.
+- Controles programados, completados y cancelados.
+- Síntomas comunicados y notas clínicas registradas.
+- Creación, consulta, edición y eliminación de eventos manuales.
+- Relación opcional con hallazgos de la misma paciente.
+- Persistencia e índice cronológico en Redis.
+- API autenticada con aislamiento por paciente.
+- Visualización clara de registros y estados.
+- Diseño responsive y compatibilidad con modo oscuro.
+- Pruebas automatizadas y validación manual del flujo completo.
 
-Rama prevista: `feature/clinical-timeline`.
+Rama utilizada: `feature/clinical-timeline`.
 
 ### Fase 6 — Calendario y recordatorios
 
@@ -606,15 +637,15 @@ Cada fase deberá cumplir, como mínimo, con los siguientes criterios:
 
 ## Próximo paso
 
-Después de integrar y desplegar la Fase 4, la siguiente iteración corresponde a la **Fase 5 — Timeline clínico y seguimiento**. Deberá comenzar desde un `develop` actualizado en una nueva rama:
+La Fase 5 está terminada en `feature/clinical-timeline`. El siguiente paso es completar su integración mediante un pull request hacia `develop`:
 
 ```bash
-git switch develop
-git pull origin develop
-git switch -c feature/clinical-timeline
+git status
+git log --oneline origin/develop..HEAD
+git diff --check origin/develop...HEAD
 ```
 
-Antes de implementar la interfaz se definirán el modelo de eventos, la relación con hallazgos y controles, el orden cronológico y la estrategia de persistencia en Redis.
+Después del merge y la validación en `develop`, se podrá promover el cambio a `main`. La siguiente iteración funcional prevista es la **Fase 6 — Calendario y recordatorios**, que deberá comenzar en una rama nueva desde un `develop` actualizado.
 
 ## Licencia
 
