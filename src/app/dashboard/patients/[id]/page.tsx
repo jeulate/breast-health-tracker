@@ -3,9 +3,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PatientForm } from "@/components/forms/PatientForm";
 import { FindingsSection } from "@/components/findings/FindingsSection";
+import { ClinicalTimelineSection } from "@/components/timeline/ClinicalTimelineSection";
 import { FindingService } from "@/services/finding.service";
 import { PatientService } from "@/services/patient.service";
-import type { Finding, Patient } from "@/types";
+import { ClinicalTimelineService } from "@/services/clinical-timeline.service";
+import type { Finding, Patient, TimelineEntry } from "@/types";
 
 export const metadata: Metadata = {
   title: "Detalle paciente | BI-RADS Tracker",
@@ -23,6 +25,7 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
 
   let patient: Patient | null;
   let findings: Finding[] = [];
+  let timelineEntries: TimelineEntry[] = [];
 
   try {
     patient = await PatientService.getById(id);
@@ -38,6 +41,12 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
     findings = (await FindingService.listByPatient(patient.id)) ?? [];
   } catch {
     findings = [];
+  }
+
+  try {
+    timelineEntries = (await ClinicalTimelineService.listByPatient(patient.id)) ?? [];
+  } catch {
+    timelineEntries = [];
   }
 
   const saved = Array.isArray(query.saved) ? query.saved[0] : query.saved;
@@ -179,13 +188,7 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
 
       <FindingsSection patientId={patient.id} findings={findings} />
 
-      <section aria-labelledby="clinical-modules-title">
-        <PlannedModule
-          title="Timeline clínico"
-          description="Historial cronológico de estudios, controles y evolución del seguimiento."
-          phase="Fase 5"
-        />
-      </section>
+      <ClinicalTimelineSection patientId={patient.id} entries={timelineEntries} />
     </div>
   );
 }
@@ -250,30 +253,6 @@ function PatientStatusBadge({ status }: { status: Patient["status"] }) {
       />
       {isActive ? "Activa" : "Inactiva"}
     </span>
-  );
-}
-
-function PlannedModule({
-  title,
-  description,
-  phase,
-}: {
-  title: string;
-  description: string;
-  phase: string;
-}) {
-  return (
-    <article className="border-border bg-surface-secondary rounded-2xl border border-dashed p-5">
-      <div className="flex items-center justify-between gap-3">
-        <h2 id="clinical-modules-title" className="text-foreground text-sm font-semibold">
-          {title}
-        </h2>
-        <span className="text-muted bg-surface rounded-full px-2.5 py-1 text-xs font-medium">
-          {phase}
-        </span>
-      </div>
-      <p className="text-muted mt-2 text-sm leading-6">{description}</p>
-    </article>
   );
 }
 
