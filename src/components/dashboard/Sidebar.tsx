@@ -11,16 +11,9 @@ interface SidebarProps {
 }
 
 const navItems = [
-  {
-    href: "/dashboard",
-    label: "Inicio",
-    icon: "⊞",
-  },
-  {
-    href: "/dashboard/patients",
-    label: "Pacientes",
-    icon: "♡",
-  },
+  { href: "/dashboard", label: "Inicio", icon: "⊞" },
+  { href: "/dashboard/patients", label: "Pacientes", icon: "♡" },
+  { href: "/dashboard/calendar", label: "Calendario", icon: "▦" },
 ];
 
 export function Sidebar({ isMobileOpen, isDesktopCollapsed, onMobileClose }: SidebarProps) {
@@ -49,14 +42,11 @@ export function Sidebar({ isMobileOpen, isDesktopCollapsed, onMobileClose }: Sid
           <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-600 text-sm font-bold text-white shadow-sm shadow-rose-500/20">
             BT
           </span>
-
           <div className="min-w-0">
             <p className="text-foreground truncate text-base font-bold">BI-RADS Tracker</p>
-
             <p className="text-muted truncate text-xs">Health Dashboard</p>
           </div>
         </Link>
-
         <button
           type="button"
           onClick={onMobileClose}
@@ -71,12 +61,10 @@ export function Sidebar({ isMobileOpen, isDesktopCollapsed, onMobileClose }: Sid
         <p className="text-muted mb-2 px-3 text-[11px] font-semibold tracking-wider uppercase">
           Menú
         </p>
-
         <div className="flex flex-col gap-1">
           {navItems.map(({ href, label, icon }) => {
             const isActive =
               pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
-
             return (
               <Link
                 key={href}
@@ -102,7 +90,6 @@ export function Sidebar({ isMobileOpen, isDesktopCollapsed, onMobileClose }: Sid
                 >
                   {icon}
                 </span>
-
                 <span className="truncate">{label}</span>
               </Link>
             );
@@ -113,8 +100,7 @@ export function Sidebar({ isMobileOpen, isDesktopCollapsed, onMobileClose }: Sid
       <footer className="border-border bg-surface mt-auto shrink-0 border-t p-4">
         <div className="bg-surface-secondary rounded-xl px-3 py-3">
           <p className="text-foreground text-xs font-medium">BI-RADS Tracker</p>
-
-          <p className="text-muted mt-0.5 text-xs">v0.1.0 · Fase 1</p>
+          <p className="text-muted mt-0.5 text-xs">v0.1.0 · Fase 6</p>
         </div>
       </footer>
     </aside>
