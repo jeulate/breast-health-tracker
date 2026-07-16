@@ -21,6 +21,11 @@ export interface CalendarItem {
   findingId?: string;
 }
 
+export interface PatientCalendarItem extends CalendarItem {
+  patientName: string;
+  patientActive: boolean;
+}
+
 export interface CalendarRange {
   from: string;
   to: string;
