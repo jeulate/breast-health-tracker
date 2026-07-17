@@ -9,3 +9,4 @@ export {
   type ReminderStatus,
 } from "./reminder.types";
 export { buildReminderId } from "./reminder-id";
+export { canTransitionReminder } from "./reminder-transition";

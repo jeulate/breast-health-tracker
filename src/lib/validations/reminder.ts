@@ -87,6 +87,14 @@ export const reminderSchema = createReminderSchema
     }
   });
 
+export const rescheduleReminderSchema = z
+  .object({
+    scheduledFor: dateTimeSchema,
+    timezone: timezoneSchema.optional(),
+  })
+  .strict();
+
 export type CreateReminderInput = z.input<typeof createReminderSchema>;
 export type CreateReminderData = z.infer<typeof createReminderSchema>;
 export type ReminderData = z.infer<typeof reminderSchema>;
+export type RescheduleReminderInput = z.input<typeof rescheduleReminderSchema>;
