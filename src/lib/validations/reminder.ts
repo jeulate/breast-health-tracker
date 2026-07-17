@@ -94,7 +94,17 @@ export const rescheduleReminderSchema = z
   })
   .strict();
 
+export const createPatientReminderSchema = createReminderSchema.omit({ patientId: true });
+
+export const reminderActionSchema = z.discriminatedUnion("action", [
+  rescheduleReminderSchema.extend({ action: z.literal("RESCHEDULE") }),
+  z.object({ action: z.literal("COMPLETE") }).strict(),
+  z.object({ action: z.literal("CANCEL") }).strict(),
+]);
+
 export type CreateReminderInput = z.input<typeof createReminderSchema>;
 export type CreateReminderData = z.infer<typeof createReminderSchema>;
 export type ReminderData = z.infer<typeof reminderSchema>;
 export type RescheduleReminderInput = z.input<typeof rescheduleReminderSchema>;
+export type CreatePatientReminderInput = z.input<typeof createPatientReminderSchema>;
+export type ReminderActionInput = z.input<typeof reminderActionSchema>;
