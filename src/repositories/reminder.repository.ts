@@ -137,6 +137,45 @@ export class ReminderRepository {
     );
   }
 
+  async listByStatus(status: ReminderStatus): Promise<Reminder[]> {
+    const ids = (await this.redis.smembers(redisKeys.remindersByStatus(status))) as string[];
+    const reminders = await Promise.all(ids.map((id) => this.findById(id)));
+    return reminders.filter(
+      (reminder): reminder is Reminder => reminder !== null && reminder.status === status,
+    );
+  }
+
+  async claimForProcessing(
+    id: string,
+    attemptedAt: string,
+    lockSeconds = 300,
+  ): Promise<Reminder | null> {
+    const locked = await this.redis.set(redisKeys.reminderProcessingLock(id), attemptedAt, {
+      nx: true,
+      ex: lockSeconds,
+    });
+    if (locked !== "OK") return null;
+
+    const reminder = await this.findById(id);
+    if (!reminder || reminder.status !== "PENDING") return null;
+
+    await this.update(id, {
+      status: "PROCESSING",
+      attempts: reminder.attempts + 1,
+      lastAttemptAt: attemptedAt,
+      lastError: undefined,
+    });
+
+    return {
+      ...reminder,
+      status: "PROCESSING",
+      attempts: reminder.attempts + 1,
+      lastAttemptAt: attemptedAt,
+      lastError: undefined,
+      updatedAt: attemptedAt,
+    };
+  }
+
   async belongsToPatient(id: string, patientId: string): Promise<boolean> {
     const reminder = await this.findById(id);
     return reminder?.patientId === patientId;

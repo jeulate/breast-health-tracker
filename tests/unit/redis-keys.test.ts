@@ -38,4 +38,10 @@ describe("Redis keys", () => {
       "bht:test:patients:patient-1:clinical-events:event-date",
     );
   });
+
+  it("creates a processing lock scoped to one reminder", () => {
+    expect(redisKeys.reminderProcessingLock("reminder-1")).toBe(
+      "bht:test:reminders:reminder-1:processing-lock",
+    );
+  });
 });

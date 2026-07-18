@@ -11,3 +11,8 @@ export {
 } from "./reminder.types";
 export { buildReminderId } from "./reminder-id";
 export { canTransitionReminder } from "./reminder-transition";
+export {
+  inAppReminderDelivery,
+  type ReminderDelivery,
+  type ReminderDeliveryResult,
+} from "./reminder-delivery";

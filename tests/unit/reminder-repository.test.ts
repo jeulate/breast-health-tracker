@@ -16,6 +16,8 @@ const mocks = vi.hoisted(() => {
     redis: {
       hgetall: vi.fn(),
       zrange: vi.fn(),
+      smembers: vi.fn(),
+      set: vi.fn(),
       pipeline: vi.fn(() => pipeline),
     },
   };
@@ -195,5 +197,42 @@ describe("ReminderRepository", () => {
 
     await expect(repository.belongsToPatient(reminder.id, reminder.patientId)).resolves.toBe(true);
     await expect(repository.belongsToPatient(reminder.id, "another-patient")).resolves.toBe(false);
+  });
+
+  it("lists reminders from one status index", async () => {
+    mocks.redis.smembers.mockResolvedValue([reminder.id]);
+    mocks.redis.hgetall.mockResolvedValue(serialized(reminder));
+
+    await expect(new ReminderRepository().listByStatus("PENDING")).resolves.toEqual([reminder]);
+    expect(mocks.redis.smembers).toHaveBeenCalledWith("bht:test:reminders:status:PENDING");
+  });
+
+  it("claims a pending reminder only after acquiring its lock", async () => {
+    mocks.redis.set.mockResolvedValue("OK");
+    mocks.redis.hgetall.mockResolvedValue(serialized(reminder));
+    const attemptedAt = "2026-07-24T13:00:00.000Z";
+
+    await expect(
+      new ReminderRepository().claimForProcessing(reminder.id, attemptedAt, 120),
+    ).resolves.toEqual(
+      expect.objectContaining({ status: "PROCESSING", attempts: 1, lastAttemptAt: attemptedAt }),
+    );
+    expect(mocks.redis.set).toHaveBeenCalledWith(
+      `bht:test:reminders:${reminder.id}:processing-lock`,
+      attemptedAt,
+      { nx: true, ex: 120 },
+    );
+    expect(mocks.pipeline.hset).toHaveBeenCalledWith(
+      `bht:test:reminders:${reminder.id}`,
+      expect.objectContaining({ status: "PROCESSING", attempts: "1" }),
+    );
+  });
+
+  it("does not claim a reminder locked by another worker", async () => {
+    mocks.redis.set.mockResolvedValue(null);
+    await expect(
+      new ReminderRepository().claimForProcessing(reminder.id, reminder.updatedAt),
+    ).resolves.toBeNull();
+    expect(mocks.redis.hgetall).not.toHaveBeenCalled();
   });
 });

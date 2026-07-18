@@ -80,4 +80,8 @@ export const redisKeys = {
   patientRemindersByScheduledFor(patientId: string): string {
     return `${getPrefix()}patients:${patientId}:reminders:scheduled-for`;
   },
+
+  reminderProcessingLock(id: string): string {
+    return `${getPrefix()}reminders:${id}:processing-lock`;
+  },
 };
