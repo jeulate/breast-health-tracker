@@ -16,6 +16,8 @@ const serverEnvSchema = z.object({
   KV_REST_API_READ_ONLY_TOKEN: z.string().optional(),
 
   HEALTH_APP_REDIS_PREFIX: z.string().min(1).default("bht:v1:"),
+
+  REMINDER_PROCESSOR_SECRET: z.string().min(32).optional(),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
