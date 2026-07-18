@@ -1,4 +1,10 @@
-import { buildReminderId, canTransitionReminder, type Reminder } from "@/features/reminders";
+import { buildCalendarItems } from "@/features/calendar";
+import {
+  buildReminderId,
+  canTransitionReminder,
+  type Reminder,
+  type ReminderCandidate,
+} from "@/features/reminders";
 import {
   createReminderSchema,
   rescheduleReminderSchema,
@@ -69,6 +75,29 @@ async function updateAndRead(
 }
 
 export const ReminderService = {
+  async listCandidates(patientId: string): Promise<ReminderCandidate[] | null> {
+    const patient = await patientRepository.findById(patientId);
+    if (!patient) return null;
+
+    const [events, findings] = await Promise.all([
+      clinicalEventRepository.listByPatient(patientId, "asc"),
+      findingRepository.listByPatient(patientId, "asc"),
+    ]);
+    const today = localDateForTimezone(new Date().toISOString(), patient.timezone);
+
+    return buildCalendarItems(events, findings, {
+      from: today,
+      to: "9999-12-31",
+      status: "SCHEDULED",
+    }).map((item) => ({
+      id: item.id,
+      source: item.source,
+      sourceId: item.sourceId,
+      targetDate: item.date,
+      title: item.title,
+    }));
+  },
+
   async listByPatient(patientId: string): Promise<Reminder[] | null> {
     const patient = await patientRepository.findById(patientId);
     if (!patient) return null;
@@ -87,7 +116,18 @@ export const ReminderService = {
     if (!(await sourceIsValid(parsed))) return null;
 
     const scheduledFor = new Date(parsed.scheduledFor).toISOString();
+    if (Date.parse(scheduledFor) <= Date.now()) return null;
     if (!isScheduledOnOrBeforeTarget(scheduledFor, parsed.targetDate, parsed.timezone)) return null;
+
+    const activeForSource = (await reminderRepository.listByPatient(parsed.patientId, "asc")).find(
+      (reminder) =>
+        reminder.source === parsed.source &&
+        reminder.sourceId === parsed.sourceId &&
+        reminder.channel === parsed.channel &&
+        reminder.status !== "COMPLETED" &&
+        reminder.status !== "CANCELLED",
+    );
+    if (activeForSource) return activeForSource;
 
     const id = buildReminderId({
       source: parsed.source,
@@ -96,7 +136,10 @@ export const ReminderService = {
       channel: parsed.channel,
     });
     const existing = await reminderRepository.findById(id);
-    if (existing) return existing.patientId === parsed.patientId ? existing : null;
+    if (existing) {
+      if (existing.patientId !== parsed.patientId) return null;
+      return existing.status === "COMPLETED" || existing.status === "CANCELLED" ? null : existing;
+    }
 
     const now = new Date().toISOString();
     const reminder: Reminder = {
@@ -130,6 +173,7 @@ export const ReminderService = {
     const parsed = rescheduleReminderSchema.parse(input);
     const timezone = parsed.timezone ?? reminder.timezone;
     const scheduledFor = new Date(parsed.scheduledFor).toISOString();
+    if (Date.parse(scheduledFor) <= Date.now()) return null;
     if (!isScheduledOnOrBeforeTarget(scheduledFor, reminder.targetDate, timezone)) return null;
 
     return updateAndRead(patientId, reminder, {

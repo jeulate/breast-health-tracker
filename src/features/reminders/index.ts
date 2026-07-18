@@ -4,6 +4,7 @@ export {
   REMINDER_STATUSES,
   type Reminder,
   type ReminderChannel,
+  type ReminderCandidate,
   type ReminderIdentityInput,
   type ReminderSource,
   type ReminderStatus,

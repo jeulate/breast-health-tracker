@@ -44,3 +44,12 @@ export interface ReminderIdentityInput {
   scheduledFor: string;
   channel: ReminderChannel;
 }
+
+/** A selectable source. Clinical details remain in their original entity. */
+export interface ReminderCandidate {
+  id: string;
+  source: ReminderSource;
+  sourceId: string;
+  targetDate: string;
+  title: string;
+}

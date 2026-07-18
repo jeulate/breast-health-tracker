@@ -83,7 +83,7 @@ describe("ReminderService", () => {
     mocks.reminder.findById.mockResolvedValue(null);
     mocks.reminder.save.mockResolvedValue(undefined);
     mocks.reminder.update.mockResolvedValue(undefined);
-    mocks.reminder.listByPatient.mockResolvedValue([reminder]);
+    mocks.reminder.listByPatient.mockResolvedValue([]);
   });
 
   it("creates an idempotent pending reminder for a scheduled control", async () => {
@@ -105,6 +105,18 @@ describe("ReminderService", () => {
     mocks.reminder.findById.mockResolvedValue(reminder);
 
     await expect(ReminderService.create(createInput)).resolves.toBe(reminder);
+    expect(mocks.reminder.save).not.toHaveBeenCalled();
+  });
+
+  it("returns the active reminder for the same source even after its schedule changed", async () => {
+    mocks.reminder.listByPatient.mockResolvedValue([reminder]);
+
+    await expect(
+      ReminderService.create({
+        ...createInput,
+        scheduledFor: "2026-07-23T09:00:00-04:00",
+      }),
+    ).resolves.toBe(reminder);
     expect(mocks.reminder.save).not.toHaveBeenCalled();
   });
 
@@ -173,6 +185,7 @@ describe("ReminderService", () => {
   });
 
   it("lists reminders for an existing patient", async () => {
+    mocks.reminder.listByPatient.mockResolvedValue([reminder]);
     await expect(ReminderService.listByPatient(patientId)).resolves.toEqual([reminder]);
     expect(mocks.reminder.listByPatient).toHaveBeenCalledWith(patientId, "asc");
   });
