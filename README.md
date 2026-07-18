@@ -9,7 +9,7 @@ El proyecto combina un dashboard administrativo, persistencia en Redis, autentic
 
 ## Estado del proyecto
 
-Las fases de arquitectura base, dashboard analítico, gestión avanzada de pacientes, hallazgos BI-RADS y timeline clínico se encuentran desplegadas. El bloque de calendario de la Fase 6 está terminado en `feature/calendar` y listo para integrarse mediante pull request hacia `develop`.
+Las fases de arquitectura base, dashboard analítico, gestión avanzada de pacientes, hallazgos BI-RADS, timeline clínico y calendario se encuentran desplegadas. El bloque de recordatorios de la Fase 6 está terminado en `feature/reminders` y listo para integrarse mediante pull request hacia `develop`.
 
 | Área                          | Estado      | Implementación                                  |
 | ----------------------------- | ----------- | ----------------------------------------------- |
@@ -27,7 +27,7 @@ Las fases de arquitectura base, dashboard analítico, gestión avanzada de pacie
 | Hallazgos BI-RADS             | Completada  | Registro, consulta, edición y seguimiento       |
 | Timeline clínico              | Completada  | Hallazgos, controles, síntomas y notas          |
 | Calendario                    | Completada  | Vista mensual, agenda móvil y filtros           |
-| Recordatorios                 | Planificada | Programación, ejecución y control de envíos     |
+| Recordatorios                 | Completada  | Programación, ejecución y control de estados    |
 | Telegram                      | Planificado | Notificaciones y recordatorios automatizados    |
 
 ## Tecnologías
@@ -97,6 +97,7 @@ breast-health-tracker/
 │   │   ├── api/
 │   │   │   ├── auth/            # Login, logout y sesión actual
 │   │   │   ├── calendar/        # Proyección global autenticada del calendario
+│   │   │   ├── internal/        # Procesamiento interno protegido por secreto
 │   │   │   └── patients/        # Operaciones de pacientes
 │   │   ├── dashboard/           # Layout, calendario y páginas protegidas
 │   │   ├── login/               # Inicio de sesión
@@ -107,6 +108,7 @@ breast-health-tracker/
 │   │   ├── findings/            # Formularios y tarjetas BI-RADS
 │   │   ├── forms/               # LoginForm y PatientForm
 │   │   ├── patients/            # Filtros, tabla y paginación
+│   │   ├── reminders/           # Gestión visual de recordatorios
 │   │   ├── timeline/             # Timeline y eventos clínicos
 │   │   └── ui/                  # Controles reutilizables
 │   ├── config/                  # Validación de entorno
@@ -116,7 +118,8 @@ breast-health-tracker/
 │   │   ├── clinical-timeline/    # Contratos de eventos y timeline
 │   │   ├── dashboard/           # Contratos y métricas del dashboard
 │   │   ├── findings/            # Contratos del dominio BI-RADS
-│   │   └── patients/            # API pública del módulo de pacientes
+│   │   ├── patients/            # API pública del módulo de pacientes
+│   │   └── reminders/           # Contratos, identidad y entrega
 │   ├── lib/
 │   │   ├── auth/                # JWT, contraseñas y sesión
 │   │   ├── redis/               # Cliente y claves de Redis
@@ -225,6 +228,24 @@ breast-health-tracker/
 - Pruebas de proyección, validación, servicio, contrato API y utilidades mensuales.
 - El calendario organiza fechas registradas; no interpreta información clínica ni genera recomendaciones médicas.
 
+### Recordatorios
+
+- Creación desde controles programados y próximos controles BI-RADS.
+- Programación con fecha, hora y zona horaria `America/La_Paz`.
+- Gestión desde el perfil de la paciente.
+- Estados pendiente, procesando, enviado, completado, cancelado y fallido.
+- Reprogramación, finalización y cancelación mediante API autenticada.
+- Identificadores deterministas para evitar duplicados por fuente, fecha y canal.
+- Índices globales, por estado, por fecha programada y por paciente en Redis.
+- Motor de procesamiento con reclamación protegida mediante bloqueo temporal.
+- Reintentos limitados, registro de intentos y recuperación de procesos interrumpidos.
+- Canal interno `IN_APP` desacoplado para futuras integraciones.
+- Endpoint interno protegido mediante `CRON_SECRET`.
+- Ejecución diaria configurada con Vercel Cron mediante `vercel.json`.
+- Procesamiento idempotente ante ejecuciones repetidas o simultáneas.
+- Pruebas de dominio, persistencia, servicio, API, interfaz y procesamiento.
+- Telegram permanece fuera de este alcance y se implementará de forma independiente.
+
 ### Interfaz
 
 - Diseño inspirado en TailAdmin.
@@ -271,16 +292,17 @@ La aplicación estará disponible en `http://localhost:3000`.
 
 ### Variables actuales
 
-| Variable                      | Descripción                                                | Requerida |
-| ----------------------------- | ---------------------------------------------------------- | --------- |
-| `KV_REST_API_URL`             | URL REST de Upstash Redis                                  | Sí        |
-| `KV_REST_API_TOKEN`           | Token de acceso a Upstash Redis                            | Sí        |
-| `KV_REST_API_READ_ONLY_TOKEN` | Token opcional de solo lectura                             | No        |
-| `HEALTH_APP_REDIS_PREFIX`     | Prefijo de aislamiento; recomendado: `bht:v1:`             | Sí        |
-| `NEXT_PUBLIC_APP_URL`         | URL pública de la aplicación                               | Sí        |
-| `AUTH_SECRET`                 | Clave para firmar JWT; mínimo recomendado de 32 caracteres | Sí        |
-| `ADMIN_INITIAL_EMAIL`         | Email utilizado por el seed del administrador              | Para seed |
-| `ADMIN_INITIAL_PASSWORD`      | Contraseña inicial utilizada por el seed                   | Para seed |
+| Variable                      | Descripción                                                | Requerida  |
+| ----------------------------- | ---------------------------------------------------------- | ---------- |
+| `KV_REST_API_URL`             | URL REST de Upstash Redis                                  | Sí         |
+| `KV_REST_API_TOKEN`           | Token de acceso a Upstash Redis                            | Sí         |
+| `KV_REST_API_READ_ONLY_TOKEN` | Token opcional de solo lectura                             | No         |
+| `HEALTH_APP_REDIS_PREFIX`     | Prefijo de aislamiento; recomendado: `bht:v1:`             | Sí         |
+| `NEXT_PUBLIC_APP_URL`         | URL pública de la aplicación                               | Sí         |
+| `AUTH_SECRET`                 | Clave para firmar JWT; mínimo recomendado de 32 caracteres | Sí         |
+| `ADMIN_INITIAL_EMAIL`         | Email utilizado por el seed del administrador              | Para seed  |
+| `ADMIN_INITIAL_PASSWORD`      | Contraseña inicial utilizada por el seed                   | Para seed  |
+| `CRON_SECRET`                 | Secreto Bearer del procesador de recordatorios             | Producción |
 
 Ejemplo local:
 
@@ -295,6 +317,7 @@ HEALTH_APP_REDIS_PREFIX=bht:v1:
 
 ADMIN_INITIAL_EMAIL=admin@example.com
 ADMIN_INITIAL_PASSWORD=reemplazar-por-password-seguro
+CRON_SECRET=reemplazar-por-un-secreto-aleatorio-de-al-menos-32-caracteres
 ```
 
 > [!WARNING]
@@ -364,25 +387,31 @@ El código solo debe integrarse cuando todos los controles finalicen correctamen
 
 ## Endpoints actuales
 
-| Método   | Ruta                                      | Descripción                         | Acceso      |
-| -------- | ----------------------------------------- | ----------------------------------- | ----------- |
-| `POST`   | `/api/auth/login`                         | Iniciar sesión                      | Público     |
-| `POST`   | `/api/auth/logout`                        | Cerrar sesión                       | Autenticado |
-| `GET`    | `/api/auth/me`                            | Consultar la sesión actual          | Autenticado |
-| `GET`    | `/api/patients`                           | Buscar, filtrar y paginar pacientes | Autenticado |
-| `POST`   | `/api/patients`                           | Registrar paciente                  | Autenticado |
-| `GET`    | `/api/patients/[id]`                      | Consultar un paciente               | Autenticado |
-| `PUT`    | `/api/patients/[id]`                      | Actualizar un paciente              | Autenticado |
-| `GET`    | `/api/patients/[id]/findings`             | Listar hallazgos de una paciente    | Autenticado |
-| `POST`   | `/api/patients/[id]/findings`             | Registrar un hallazgo               | Autenticado |
-| `GET`    | `/api/patients/[id]/findings/[findingId]` | Consultar un hallazgo               | Autenticado |
-| `PUT`    | `/api/patients/[id]/findings/[findingId]` | Actualizar un hallazgo              | Autenticado |
-| `GET`    | `/api/patients/[id]/timeline`             | Consultar el timeline unificado     | Autenticado |
-| `POST`   | `/api/patients/[id]/timeline`             | Registrar un evento clínico         | Autenticado |
-| `GET`    | `/api/patients/[id]/timeline/[eventId]`   | Consultar un evento clínico         | Autenticado |
-| `PUT`    | `/api/patients/[id]/timeline/[eventId]`   | Actualizar un evento clínico        | Autenticado |
-| `DELETE` | `/api/patients/[id]/timeline/[eventId]`   | Eliminar un evento clínico          | Autenticado |
-| `GET`    | `/api/calendar`                           | Consultar el calendario global      | Autenticado |
+| Método   | Ruta                                        | Descripción                         | Acceso          |
+| -------- | ------------------------------------------- | ----------------------------------- | --------------- |
+| `POST`   | `/api/auth/login`                           | Iniciar sesión                      | Público         |
+| `POST`   | `/api/auth/logout`                          | Cerrar sesión                       | Autenticado     |
+| `GET`    | `/api/auth/me`                              | Consultar la sesión actual          | Autenticado     |
+| `GET`    | `/api/patients`                             | Buscar, filtrar y paginar pacientes | Autenticado     |
+| `POST`   | `/api/patients`                             | Registrar paciente                  | Autenticado     |
+| `GET`    | `/api/patients/[id]`                        | Consultar un paciente               | Autenticado     |
+| `PUT`    | `/api/patients/[id]`                        | Actualizar un paciente              | Autenticado     |
+| `GET`    | `/api/patients/[id]/findings`               | Listar hallazgos de una paciente    | Autenticado     |
+| `POST`   | `/api/patients/[id]/findings`               | Registrar un hallazgo               | Autenticado     |
+| `GET`    | `/api/patients/[id]/findings/[findingId]`   | Consultar un hallazgo               | Autenticado     |
+| `PUT`    | `/api/patients/[id]/findings/[findingId]`   | Actualizar un hallazgo              | Autenticado     |
+| `GET`    | `/api/patients/[id]/timeline`               | Consultar el timeline unificado     | Autenticado     |
+| `POST`   | `/api/patients/[id]/timeline`               | Registrar un evento clínico         | Autenticado     |
+| `GET`    | `/api/patients/[id]/timeline/[eventId]`     | Consultar un evento clínico         | Autenticado     |
+| `PUT`    | `/api/patients/[id]/timeline/[eventId]`     | Actualizar un evento clínico        | Autenticado     |
+| `DELETE` | `/api/patients/[id]/timeline/[eventId]`     | Eliminar un evento clínico          | Autenticado     |
+| `GET`    | `/api/calendar`                             | Consultar el calendario global      | Autenticado     |
+| `GET`    | `/api/patients/[id]/reminders`              | Listar recordatorios y candidatos   | Autenticado     |
+| `POST`   | `/api/patients/[id]/reminders`              | Crear un recordatorio               | Autenticado     |
+| `GET`    | `/api/patients/[id]/reminders/[reminderId]` | Consultar un recordatorio           | Autenticado     |
+| `PUT`    | `/api/patients/[id]/reminders/[reminderId]` | Reprogramar o cambiar su estado     | Autenticado     |
+| `GET`    | `/api/internal/reminders/process`           | Ejecutar el procesador programado   | Secreto interno |
+| `POST`   | `/api/internal/reminders/process`           | Ejecutar el procesador manualmente  | Secreto interno |
 
 ## Estrategia Git
 
@@ -417,19 +446,19 @@ No se deben desarrollar funcionalidades directamente sobre `develop` ni `main`.
 
 ### Iteración actual
 
-La rama `feature/calendar` completó el bloque de calendario de la Fase 6:
+La rama `feature/reminders` completó el bloque de recordatorios de la Fase 6:
 
-- Contratos y validaciones de consulta.
-- Proyección reutilizable de controles clínicos y próximos controles BI-RADS.
-- Servicio global sin duplicar registros ni crear persistencia adicional.
-- API autenticada y de solo lectura.
-- Vista mensual para escritorio y agenda responsive para móvil.
-- Navegación mensual, filtros por estado y enlaces al perfil de la paciente.
-- Estados de carga, error y resultados vacíos.
-- Pruebas unitarias de proyección, validación, servicio, API y calendario mensual.
-- Validación manual con datos demostrativos, modo oscuro y diseño responsive.
+- Contratos, validaciones e identidad determinista.
+- Persistencia e índices especializados en Redis.
+- Servicio de candidatos, creación, reprogramación y control de estados.
+- API administrativa autenticada y aislada por paciente.
+- Interfaz responsive integrada en el perfil de la paciente.
+- Motor idempotente con bloqueo, reintentos y recuperación.
+- Endpoint interno autenticado mediante `CRON_SECRET`.
+- Programación diaria mediante Vercel Cron.
+- Pruebas automatizadas y validación manual de autorización e idempotencia.
 
-El siguiente paso es abrir un pull request hacia `develop` y verificar GitHub Actions y Vercel Preview. Los recordatorios se desarrollarán posteriormente y de forma aislada en `feature/reminders`.
+El siguiente paso es abrir un pull request hacia `develop` y verificar GitHub Actions y Vercel Preview. Telegram continuará posteriormente y de forma aislada en `feature/telegram`.
 
 ## CI/CD
 
@@ -561,7 +590,7 @@ Rama utilizada: `feature/clinical-timeline`.
 
 ### Fase 6 — Calendario y recordatorios
 
-**Estado: calendario completado; recordatorios planificados**
+**Estado: completada**
 
 Bloque de calendario completado:
 
@@ -575,17 +604,22 @@ Bloque de calendario completado:
 - API autenticada de solo lectura.
 - Pruebas de contratos, proyección, servicio, API e interfaz mensual.
 
-Bloque de recordatorios pendiente:
+Bloque de recordatorios completado:
 
-- Recordatorios configurables.
-- Estados pendiente, enviado, completado y cancelado.
-- Procesamiento programado mediante cron.
-- Prevención de notificaciones duplicadas.
-- Registro de ejecución y errores.
+- Recordatorios configurables desde fuentes clínicas existentes.
+- Estados pendiente, procesando, enviado, completado, cancelado y fallido.
+- Interfaz de creación, reprogramación y control de estado.
+- Persistencia e índices especializados en Redis.
+- Procesamiento idempotente con bloqueo temporal.
+- Reintentos limitados y recuperación de ejecuciones interrumpidas.
+- Endpoint interno protegido mediante secreto Bearer.
+- Procesamiento diario mediante Vercel Cron.
+- Registro de intentos, entregas y errores controlados.
+- Canal interno preparado para incorporar Telegram sin acoplar el dominio.
 
 Rama utilizada para el calendario: `feature/calendar`.
 
-Rama prevista para recordatorios: `feature/reminders`.
+Rama utilizada para recordatorios: `feature/reminders`.
 
 ### Fase 7 — Bot de Telegram
 
@@ -672,7 +706,7 @@ Cada fase deberá cumplir, como mínimo, con los siguientes criterios:
 
 ## Próximo paso
 
-El calendario de la Fase 6 está terminado en `feature/calendar`. El siguiente paso es completar su integración mediante un pull request hacia `develop`:
+El bloque de recordatorios de la Fase 6 está terminado en `feature/reminders`. El siguiente paso es completar su integración mediante un pull request hacia `develop`:
 
 ```bash
 git status
@@ -680,7 +714,7 @@ git log --oneline origin/develop..HEAD
 git diff --check origin/develop...HEAD
 ```
 
-Después del merge y la validación en `develop`, se podrá promover el cambio a `main`. La siguiente iteración funcional prevista es el bloque de **recordatorios**, que deberá comenzar en `feature/reminders` desde un `develop` actualizado.
+Después del merge y la validación en `develop`, se podrá promover el cambio a `main`. La siguiente iteración funcional prevista es la integración de **Telegram**, que deberá comenzar en `feature/telegram` desde un `develop` actualizado.
 
 ## Licencia
 

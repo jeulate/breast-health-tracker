@@ -47,6 +47,14 @@ export type {
   TimelineEntrySource,
 } from "@/features/clinical-timeline";
 
+export type {
+  Reminder,
+  ReminderChannel,
+  ReminderIdentityInput,
+  ReminderSource,
+  ReminderStatus,
+} from "@/features/reminders";
+
 // ─── API Response ─────────────────────────────────────────────────────────────
 
 export interface ApiError {
@@ -74,12 +82,3 @@ export interface JwtPayload {
 // ─── Public User (safe to return to client) ───────────────────────────────────
 
 export type PublicUser = Omit<User, "passwordHash">;
-
-// ─── Placeholders for future phases ──────────────────────────────────────────
-
-/** Phase 6 – Reminders */
-export interface Reminder {
-  id: string;
-  patientId: string;
-  // details TBD in Phase 6
-}

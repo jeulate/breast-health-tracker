@@ -4,9 +4,12 @@ import { notFound } from "next/navigation";
 import { PatientForm } from "@/components/forms/PatientForm";
 import { FindingsSection } from "@/components/findings/FindingsSection";
 import { ClinicalTimelineSection } from "@/components/timeline/ClinicalTimelineSection";
+import { RemindersSection } from "@/components/reminders/RemindersSection";
 import { FindingService } from "@/services/finding.service";
 import { PatientService } from "@/services/patient.service";
 import { ClinicalTimelineService } from "@/services/clinical-timeline.service";
+import { ReminderService } from "@/services/reminder.service";
+import type { Reminder, ReminderCandidate } from "@/features/reminders";
 import type { Finding, Patient, TimelineEntry } from "@/types";
 
 export const metadata: Metadata = {
@@ -26,6 +29,8 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
   let patient: Patient | null;
   let findings: Finding[] = [];
   let timelineEntries: TimelineEntry[] = [];
+  let reminders: Reminder[] = [];
+  let reminderCandidates: ReminderCandidate[] = [];
 
   try {
     patient = await PatientService.getById(id);
@@ -47,6 +52,18 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
     timelineEntries = (await ClinicalTimelineService.listByPatient(patient.id)) ?? [];
   } catch {
     timelineEntries = [];
+  }
+
+  try {
+    reminders = (await ReminderService.listByPatient(patient.id)) ?? [];
+  } catch {
+    reminders = [];
+  }
+
+  try {
+    reminderCandidates = (await ReminderService.listCandidates(patient.id)) ?? [];
+  } catch {
+    reminderCandidates = [];
   }
 
   const saved = Array.isArray(query.saved) ? query.saved[0] : query.saved;
@@ -189,6 +206,14 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
       <FindingsSection patientId={patient.id} findings={findings} />
 
       <ClinicalTimelineSection patientId={patient.id} entries={timelineEntries} />
+
+      <RemindersSection
+        patientId={patient.id}
+        timezone={patient.timezone}
+        patientActive={patient.status === "ACTIVE"}
+        reminders={reminders}
+        candidates={reminderCandidates}
+      />
     </div>
   );
 }

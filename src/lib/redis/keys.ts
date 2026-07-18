@@ -60,4 +60,28 @@ export const redisKeys = {
   patientClinicalEventsByEventDate(patientId: string): string {
     return `${getPrefix()}patients:${patientId}:clinical-events:event-date`;
   },
+
+  reminder(id: string): string {
+    return `${getPrefix()}reminders:${id}`;
+  },
+
+  remindersIndex(): string {
+    return `${getPrefix()}reminders:index`;
+  },
+
+  remindersByScheduledFor(): string {
+    return `${getPrefix()}reminders:scheduled-for`;
+  },
+
+  remindersByStatus(status: string): string {
+    return `${getPrefix()}reminders:status:${status}`;
+  },
+
+  patientRemindersByScheduledFor(patientId: string): string {
+    return `${getPrefix()}patients:${patientId}:reminders:scheduled-for`;
+  },
+
+  reminderProcessingLock(id: string): string {
+    return `${getPrefix()}reminders:${id}:processing-lock`;
+  },
 };
