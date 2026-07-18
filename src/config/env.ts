@@ -17,7 +17,7 @@ const serverEnvSchema = z.object({
 
   HEALTH_APP_REDIS_PREFIX: z.string().min(1).default("bht:v1:"),
 
-  REMINDER_PROCESSOR_SECRET: z.string().min(32).optional(),
+  CRON_SECRET: z.string().min(32).optional(),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;

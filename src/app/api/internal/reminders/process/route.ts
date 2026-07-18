@@ -24,7 +24,7 @@ function hasValidBearerToken(request: Request, secret: string): boolean {
 
 export async function POST(request: Request) {
   try {
-    const secret = getServerEnv().REMINDER_PROCESSOR_SECRET;
+    const secret = getServerEnv().CRON_SECRET;
 
     if (!secret) {
       return toJsonResponse(
@@ -55,3 +55,5 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export const GET = POST;

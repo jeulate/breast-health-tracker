@@ -12,7 +12,7 @@ vi.mock("@/services/reminder-processor.service", () => ({
   },
 }));
 
-import { POST } from "@/app/api/internal/reminders/process/route";
+import { GET, POST } from "@/app/api/internal/reminders/process/route";
 
 const secret = "a-secure-reminder-processor-secret-123456";
 const url = "http://localhost/api/internal/reminders/process";
@@ -27,7 +27,7 @@ function request(token = secret, suffix = ""): Request {
 describe("reminder processor API contract", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.getServerEnv.mockReturnValue({ REMINDER_PROCESSOR_SECRET: secret });
+    mocks.getServerEnv.mockReturnValue({ CRON_SECRET: secret });
     mocks.processDue.mockResolvedValue({
       claimed: 1,
       sent: 1,
@@ -51,7 +51,7 @@ describe("reminder processor API contract", () => {
   });
 
   it("returns 503 when the processor secret is not configured", async () => {
-    mocks.getServerEnv.mockReturnValue({ REMINDER_PROCESSOR_SECRET: undefined });
+    mocks.getServerEnv.mockReturnValue({ CRON_SECRET: undefined });
     const response = await POST(request());
     expect(response.status).toBe(503);
     expect(mocks.processDue).not.toHaveBeenCalled();
@@ -65,6 +65,12 @@ describe("reminder processor API contract", () => {
       success: true,
       data: expect.objectContaining({ claimed: 1, sent: 1 }),
     });
+  });
+
+  it("supports the GET method used by Vercel Cron", async () => {
+    const response = await GET(request());
+    expect(response.status).toBe(200);
+    expect(mocks.processDue).toHaveBeenCalledWith(100);
   });
 
   it("accepts a controlled custom limit", async () => {
