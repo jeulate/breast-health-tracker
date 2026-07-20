@@ -218,6 +218,7 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
         patientId={patient.id}
         timezone={patient.timezone}
         patientActive={patient.status === "ACTIVE"}
+        telegramLinked={Boolean(patient.telegramChatId)}
         reminders={reminders}
         candidates={reminderCandidates}
       />

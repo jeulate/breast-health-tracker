@@ -113,6 +113,7 @@ export const ReminderService = {
     const parsed = createReminderSchema.parse(input);
     const patient = await patientRepository.findById(parsed.patientId);
     if (!patient || patient.status !== "ACTIVE") return null;
+    if (parsed.channel === "TELEGRAM" && !patient.telegramChatId) return null;
     if (!(await sourceIsValid(parsed))) return null;
 
     const scheduledFor = new Date(parsed.scheduledFor).toISOString();

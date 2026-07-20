@@ -1,4 +1,4 @@
-import type { ReminderCandidate } from "./reminder.types";
+import type { ReminderCandidate, ReminderChannel } from "./reminder.types";
 
 function localParts(instant: Date, timezone: string): Record<string, string> {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -72,6 +72,7 @@ export function buildReminderPayload(
   candidate: ReminderCandidate,
   scheduledLocal: string,
   timezone: string,
+  channel: ReminderChannel = "IN_APP",
 ) {
   return {
     source: candidate.source,
@@ -79,5 +80,6 @@ export function buildReminderPayload(
     targetDate: candidate.targetDate,
     scheduledFor: toZonedIsoDateTime(scheduledLocal, timezone),
     timezone,
+    channel,
   };
 }
