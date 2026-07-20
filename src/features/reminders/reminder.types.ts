@@ -7,7 +7,7 @@ export const REMINDER_STATUSES = [
   "CANCELLED",
   "FAILED",
 ] as const;
-export const REMINDER_CHANNELS = ["IN_APP"] as const;
+export const REMINDER_CHANNELS = ["IN_APP", "TELEGRAM"] as const;
 
 export type ReminderSource = (typeof REMINDER_SOURCES)[number];
 export type ReminderStatus = (typeof REMINDER_STATUSES)[number];
