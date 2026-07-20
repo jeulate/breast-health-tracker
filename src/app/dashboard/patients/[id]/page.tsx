@@ -5,6 +5,7 @@ import { PatientForm } from "@/components/forms/PatientForm";
 import { FindingsSection } from "@/components/findings/FindingsSection";
 import { ClinicalTimelineSection } from "@/components/timeline/ClinicalTimelineSection";
 import { RemindersSection } from "@/components/reminders/RemindersSection";
+import { TelegramLinkSection } from "@/components/telegram/TelegramLinkSection";
 import { FindingService } from "@/services/finding.service";
 import { PatientService } from "@/services/patient.service";
 import { ClinicalTimelineService } from "@/services/clinical-timeline.service";
@@ -175,6 +176,12 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
           />
         </dl>
       </section>
+
+      <TelegramLinkSection
+        patientId={patient.id}
+        telegramUserId={patient.telegramUserId}
+        telegramChatId={patient.telegramChatId}
+      />
 
       <section
         aria-labelledby="edit-patient-title"
