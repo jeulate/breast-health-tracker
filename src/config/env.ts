@@ -18,6 +18,10 @@ const serverEnvSchema = z.object({
   HEALTH_APP_REDIS_PREFIX: z.string().min(1).default("bht:v1:"),
 
   CRON_SECRET: z.string().min(32).optional(),
+
+  TELEGRAM_BOT_TOKEN: z.string().min(20).optional(),
+
+  TELEGRAM_WEBHOOK_SECRET: z.string().min(32).optional(),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
