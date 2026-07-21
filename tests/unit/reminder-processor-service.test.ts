@@ -67,11 +67,7 @@ describe("ReminderProcessorService", () => {
       recovered: 0,
     });
 
-    expect(repository.claimForProcessing).toHaveBeenCalledWith(
-      reminder.id,
-      now.toISOString(),
-      300,
-    );
+    expect(repository.claimForProcessing).toHaveBeenCalledWith(reminder.id, now.toISOString(), 300);
 
     expect(repository.update).toHaveBeenCalledWith(reminder.id, {
       status: "SENT",
@@ -91,9 +87,7 @@ describe("ReminderProcessorService", () => {
   });
 
   it("returns a failed delivery to pending while attempts remain", async () => {
-    vi.mocked(delivery.deliver).mockRejectedValue(
-      new Error("temporary\nerror"),
-    );
+    vi.mocked(delivery.deliver).mockRejectedValue(new Error("temporary\nerror"));
 
     const result = await processor().processDue();
 
@@ -113,9 +107,7 @@ describe("ReminderProcessorService", () => {
       lastAttemptAt: now.toISOString(),
     });
 
-    vi.mocked(delivery.deliver).mockRejectedValue(
-      new Error("permanent error"),
-    );
+    vi.mocked(delivery.deliver).mockRejectedValue(new Error("permanent error"));
 
     const result = await processor().processDue();
 
@@ -149,9 +141,7 @@ describe("ReminderProcessorService", () => {
   });
 
   it("does not deliver a sent reminder again in a consecutive execution", async () => {
-    repository.listDue
-      .mockResolvedValueOnce([reminder])
-      .mockResolvedValueOnce([]);
+    repository.listDue.mockResolvedValueOnce([reminder]).mockResolvedValueOnce([]);
 
     const service = processor();
 

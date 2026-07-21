@@ -177,14 +177,11 @@ export function ReminderForm({
         />
       </div>
 
-       <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-blue-800 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200">
-        <p className="text-sm font-medium">
-          El recordatorio se enviará una sola vez.
-        </p>
+      <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-blue-800 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200">
+        <p className="text-sm font-medium">El recordatorio se enviará una sola vez.</p>
         <p className="mt-1 text-xs leading-5">
-          Si ocurre un error técnico, el sistema podrá realizar hasta 3 intentos
-          de procesamiento. Estos reintentos no representan varios mensajes para
-          la paciente.
+          Si ocurre un error técnico, el sistema podrá realizar hasta 3 intentos de procesamiento.
+          Estos reintentos no representan varios mensajes para la paciente.
         </p>
         <p className="mt-1 text-xs leading-5">
           La fecha y hora seleccionadas se interpretarán usando la zona horaria{" "}

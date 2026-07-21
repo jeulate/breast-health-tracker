@@ -96,10 +96,7 @@ export class ReminderProcessorService {
     return recovered;
   }
 
-  private async deliver(
-    reminder: Reminder,
-    summary: ReminderProcessingSummary,
-  ): Promise<void> {
+  private async deliver(reminder: Reminder, summary: ReminderProcessingSummary): Promise<void> {
     const delivery = this.deliveries.get(reminder.channel);
 
     try {

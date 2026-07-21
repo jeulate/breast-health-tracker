@@ -122,9 +122,7 @@ export function ReminderCard({
 
         <div>
           <dt className="text-muted text-xs font-medium">Zona horaria</dt>
-          <dd className="text-foreground mt-1 text-sm font-semibold">
-            {reminder.timezone}
-          </dd>
+          <dd className="text-foreground mt-1 text-sm font-semibold">{reminder.timezone}</dd>
         </div>
 
         <div>
@@ -149,56 +147,44 @@ export function ReminderCard({
         </div>
       </dl>
 
-       <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200">
-          <p className="font-medium">Este recordatorio se entrega una sola vez.</p>
-          <p className="mt-1 text-xs leading-5">
-            Los {reminder.maxAttempts} intentos disponibles son reintentos técnicos ante
-            errores de procesamiento; no representan varios mensajes para el paciente.
-          </p>
-        </div>
+      <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200">
+        <p className="font-medium">Este recordatorio se entrega una sola vez.</p>
+        <p className="mt-1 text-xs leading-5">
+          Los {reminder.maxAttempts} intentos disponibles son reintentos técnicos ante errores de
+          procesamiento; no representan varios mensajes para el paciente.
+        </p>
+      </div>
 
-        {hasProcessingHistory ? (
-          <dl className="border-border mt-4 grid gap-4 rounded-xl border p-4 sm:grid-cols-2 lg:grid-cols-3">
-            {reminder.lastAttemptAt ? (
-              <div>
-                <dt className="text-muted text-xs font-medium">
-                  Inicio del último intento
-                </dt>
-                <dd className="text-foreground mt-1 text-sm font-semibold">
-                  {formatReminderDateTime(
-                    reminder.lastAttemptAt,
-                    reminder.timezone,
-                  )}
-                </dd>
-              </div>
-            ) : null}
+      {hasProcessingHistory ? (
+        <dl className="border-border mt-4 grid gap-4 rounded-xl border p-4 sm:grid-cols-2 lg:grid-cols-3">
+          {reminder.lastAttemptAt ? (
+            <div>
+              <dt className="text-muted text-xs font-medium">Inicio del último intento</dt>
+              <dd className="text-foreground mt-1 text-sm font-semibold">
+                {formatReminderDateTime(reminder.lastAttemptAt, reminder.timezone)}
+              </dd>
+            </div>
+          ) : null}
 
-            {reminder.processedAt ? (
-              <div>
-                <dt className="text-muted text-xs font-medium">
-                  Último procesamiento
-                </dt>
-                <dd className="text-foreground mt-1 text-sm font-semibold">
-                  {formatReminderDateTime(
-                    reminder.processedAt,
-                    reminder.timezone,
-                  )}
-                </dd>
-              </div>
-            ) : null}
+          {reminder.processedAt ? (
+            <div>
+              <dt className="text-muted text-xs font-medium">Último procesamiento</dt>
+              <dd className="text-foreground mt-1 text-sm font-semibold">
+                {formatReminderDateTime(reminder.processedAt, reminder.timezone)}
+              </dd>
+            </div>
+          ) : null}
 
-            {reminder.sentAt ? (
-              <div>
-                <dt className="text-muted text-xs font-medium">
-                  Envío confirmado
-                </dt>
-                <dd className="text-foreground mt-1 text-sm font-semibold">
-                  {formatReminderDateTime(reminder.sentAt, reminder.timezone)}
-                </dd>
-              </div>
-            ) : null}
-          </dl>
-        ) : null}
+          {reminder.sentAt ? (
+            <div>
+              <dt className="text-muted text-xs font-medium">Envío confirmado</dt>
+              <dd className="text-foreground mt-1 text-sm font-semibold">
+                {formatReminderDateTime(reminder.sentAt, reminder.timezone)}
+              </dd>
+            </div>
+          ) : null}
+        </dl>
+      ) : null}
       {reminder.status === "FAILED" ? (
         <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
           El procesamiento requiere revisión antes de volver a intentarlo.
