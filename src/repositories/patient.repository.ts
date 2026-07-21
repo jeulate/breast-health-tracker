@@ -2,6 +2,7 @@ import { getRedisClient } from "@/lib/redis/client";
 import type { PaginatedPatients, SortDirection } from "@/features/patients/patient-list.types";
 import type { Patient, PatientStatus } from "@/types";
 import { redisKeys } from "@/lib/redis/keys";
+import type { TelegramIdentity } from "@/features/telegram";
 
 export class PatientRepository {
   private get redis() {
@@ -48,6 +49,21 @@ export class PatientRepository {
   async updateStatus(id: string, status: PatientStatus): Promise<void> {
     const now = new Date().toISOString();
     await this.redis.hset(this.key(id), { status, updatedAt: now });
+  }
+
+  async updateTelegramLink(id: string, identity: TelegramIdentity): Promise<void> {
+    await this.redis.hset(this.key(id), {
+      telegramUserId: identity.telegramUserId,
+      telegramChatId: identity.telegramChatId,
+      updatedAt: new Date().toISOString(),
+    });
+  }
+
+  async clearTelegramLink(id: string): Promise<void> {
+    const pipeline = this.redis.pipeline();
+    pipeline.hdel(this.key(id), "telegramUserId", "telegramChatId");
+    pipeline.hset(this.key(id), { updatedAt: new Date().toISOString() });
+    await pipeline.exec();
   }
 
   async listAll(): Promise<Patient[]> {

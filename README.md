@@ -2,33 +2,33 @@
 
 Plataforma web para el seguimiento organizado de pacientes, hallazgos mamarios, controles clínicos y recordatorios asociados a casos BI-RADS.
 
-El proyecto combina un dashboard administrativo, persistencia en Redis, autenticación segura, automatización de calidad y una futura integración con Telegram.
+El proyecto combina un dashboard administrativo, persistencia en Redis, autenticación segura, automatización de calidad e integración con Telegram para la vinculación de pacientes y la entrega de recordatorios.
 
 > [!IMPORTANT]
 > Breast Health Tracker es una herramienta de registro, seguimiento y acompañamiento. No realiza diagnósticos, no prescribe tratamientos y no sustituye la evaluación de un profesional de salud.
 
 ## Estado del proyecto
 
-Las fases de arquitectura base, dashboard analítico, gestión avanzada de pacientes, hallazgos BI-RADS, timeline clínico y calendario se encuentran desplegadas. El bloque de recordatorios de la Fase 6 está terminado en `feature/reminders` y listo para integrarse mediante pull request hacia `develop`.
+Las fases de arquitectura base, dashboard analítico, gestión avanzada de pacientes, hallazgos BI-RADS, timeline clínico, calendario, recordatorios e integración con Telegram se encuentran completadas. La Fase 7 fue validada en `feature/telegram`, integrada en `develop` mediante el PR #16 y está lista para promoverse a `main` junto con esta actualización documental.
 
-| Área                          | Estado      | Implementación                                  |
-| ----------------------------- | ----------- | ----------------------------------------------- |
-| Arquitectura inicial          | Completada  | Next.js 16, App Router y TypeScript             |
-| Persistencia                  | Completada  | Upstash Redis con aislamiento por prefijo       |
-| Autenticación                 | Completada  | JWT, cookie HTTP-only y rutas protegidas        |
-| Gestión avanzada de pacientes | Completada  | Búsqueda, filtros, ordenamiento y paginación    |
-| Dashboard base                | Completada  | Header, sidebar y tarjetas reutilizables        |
-| Diseño responsive             | Completada  | Sidebar colapsable en escritorio y drawer móvil |
-| Modo oscuro                   | Completada  | Tema persistente y componentes adaptados        |
-| Calidad                       | Completada  | Formato, lint, typecheck, tests y build         |
-| CI/CD                         | Completada  | GitHub Actions y despliegue en Vercel           |
-| Dashboard analítico           | Completada  | KPIs reales, gráfica y actividad reciente       |
-| Perfil de paciente            | Completada  | Avatar, datos, estado y edición validada        |
-| Hallazgos BI-RADS             | Completada  | Registro, consulta, edición y seguimiento       |
-| Timeline clínico              | Completada  | Hallazgos, controles, síntomas y notas          |
-| Calendario                    | Completada  | Vista mensual, agenda móvil y filtros           |
-| Recordatorios                 | Completada  | Programación, ejecución y control de estados    |
-| Telegram                      | Planificado | Notificaciones y recordatorios automatizados    |
+| Área                          | Estado     | Implementación                                  |
+| ----------------------------- | ---------- | ----------------------------------------------- |
+| Arquitectura inicial          | Completada | Next.js 16, App Router y TypeScript             |
+| Persistencia                  | Completada | Upstash Redis con aislamiento por prefijo       |
+| Autenticación                 | Completada | JWT, cookie HTTP-only y rutas protegidas        |
+| Gestión avanzada de pacientes | Completada | Búsqueda, filtros, ordenamiento y paginación    |
+| Dashboard base                | Completada | Header, sidebar y tarjetas reutilizables        |
+| Diseño responsive             | Completada | Sidebar colapsable en escritorio y drawer móvil |
+| Modo oscuro                   | Completada | Tema persistente y componentes adaptados        |
+| Calidad                       | Completada | Formato, lint, typecheck, tests y build         |
+| CI/CD                         | Completada | GitHub Actions y despliegue en Vercel           |
+| Dashboard analítico           | Completada | KPIs reales, gráfica y actividad reciente       |
+| Perfil de paciente            | Completada | Avatar, datos, estado y edición validada        |
+| Hallazgos BI-RADS             | Completada | Registro, consulta, edición y seguimiento       |
+| Timeline clínico              | Completada | Hallazgos, controles, síntomas y notas          |
+| Calendario                    | Completada | Vista mensual, agenda móvil y filtros           |
+| Recordatorios                 | Completada | Programación, ejecución y control de estados    |
+| Telegram                      | Completada | Vinculación segura y entrega de recordatorios   |
 
 ## Tecnologías
 
@@ -48,7 +48,7 @@ Las fases de arquitectura base, dashboard analítico, gestión avanzada de pacie
 | Vitest         | Pruebas automatizadas                      |
 | GitHub Actions | Integración y entrega continua             |
 | Vercel         | Hosting y despliegue de producción         |
-| grammY         | Integración futura con Telegram            |
+| grammY         | Bot, webhook y entrega mediante Telegram   |
 
 ## Arquitectura
 
@@ -72,6 +72,20 @@ Next.js App Router
              │
              ▼
         Upstash Redis
+
+Telegram
+   │ webhook autenticado
+   ▼
+Route Handler del bot
+   ├── Vinculación mediante desafío temporal
+   └── Confirmación del chat autorizado
+
+Vercel Cron
+   │ Bearer CRON_SECRET
+   ▼
+Procesador de recordatorios
+   ├── Canal IN_APP
+   └── Canal TELEGRAM ──► API de Telegram
 ```
 
 ### Principios aplicados
@@ -98,7 +112,8 @@ breast-health-tracker/
 │   │   │   ├── auth/            # Login, logout y sesión actual
 │   │   │   ├── calendar/        # Proyección global autenticada del calendario
 │   │   │   ├── internal/        # Procesamiento interno protegido por secreto
-│   │   │   └── patients/        # Operaciones de pacientes
+│   │   │   ├── patients/        # Pacientes, recordatorios y vinculación
+│   │   │   └── telegram/        # Webhook autenticado del bot
 │   │   ├── dashboard/           # Layout, calendario y páginas protegidas
 │   │   ├── login/               # Inicio de sesión
 │   │   └── layout.tsx           # Layout raíz y tipografías
@@ -109,6 +124,7 @@ breast-health-tracker/
 │   │   ├── forms/               # LoginForm y PatientForm
 │   │   ├── patients/            # Filtros, tabla y paginación
 │   │   ├── reminders/           # Gestión visual de recordatorios
+│   │   ├── telegram/            # Gestión visual de la vinculación
 │   │   ├── timeline/             # Timeline y eventos clínicos
 │   │   └── ui/                  # Controles reutilizables
 │   ├── config/                  # Validación de entorno
@@ -119,7 +135,8 @@ breast-health-tracker/
 │   │   ├── dashboard/           # Contratos y métricas del dashboard
 │   │   ├── findings/            # Contratos del dominio BI-RADS
 │   │   ├── patients/            # API pública del módulo de pacientes
-│   │   └── reminders/           # Contratos, identidad y entrega
+│   │   ├── reminders/           # Contratos, identidad y entrega
+│   │   └── telegram/            # Contratos, tokens y mensajes del bot
 │   ├── lib/
 │   │   ├── auth/                # JWT, contraseñas y sesión
 │   │   ├── redis/               # Cliente y claves de Redis
@@ -239,12 +256,26 @@ breast-health-tracker/
 - Índices globales, por estado, por fecha programada y por paciente en Redis.
 - Motor de procesamiento con reclamación protegida mediante bloqueo temporal.
 - Reintentos limitados, registro de intentos y recuperación de procesos interrumpidos.
-- Canal interno `IN_APP` desacoplado para futuras integraciones.
+- Canales `IN_APP` y `TELEGRAM` desacoplados mediante adaptadores de entrega.
 - Endpoint interno protegido mediante `CRON_SECRET`.
 - Ejecución diaria configurada con Vercel Cron mediante `vercel.json`.
 - Procesamiento idempotente ante ejecuciones repetidas o simultáneas.
 - Pruebas de dominio, persistencia, servicio, API, interfaz y procesamiento.
-- Telegram permanece fuera de este alcance y se implementará de forma independiente.
+
+### Telegram
+
+- Vinculación de una paciente mediante un desafío temporal de un solo uso.
+- Generación, consulta y revocación del enlace desde el perfil administrativo.
+- Actualización automática del estado de vinculación sin recargar la página.
+- Webhook del bot implementado con grammY y protegido mediante `TELEGRAM_WEBHOOK_SECRET`.
+- Asociación del `chatId` únicamente después de validar el desafío pendiente.
+- Entrega de recordatorios mediante el canal `TELEGRAM`.
+- Mensajes breves que evitan incluir información clínica detallada.
+- Validación previa de que la paciente esté activa y tenga Telegram vinculado.
+- Registro del estado de entrega, intentos y errores mediante el motor de recordatorios.
+- Formato determinista de fecha y hora para evitar diferencias de hidratación entre servidor y navegador.
+- Visualización del canal real en cada tarjeta de recordatorio.
+- Pruebas de contratos, validaciones, repositorio, servicio, webhook, mensajes y entrega.
 
 ### Interfaz
 
@@ -268,6 +299,7 @@ breast-health-tracker/
 - Base de datos Upstash Redis.
 - Cuenta de Vercel para el despliegue.
 - Repositorio GitHub para CI/CD.
+- Bot de Telegram creado mediante BotFather para habilitar la Fase 7.
 
 ## Instalación local
 
@@ -303,6 +335,9 @@ La aplicación estará disponible en `http://localhost:3000`.
 | `ADMIN_INITIAL_EMAIL`         | Email utilizado por el seed del administrador              | Para seed  |
 | `ADMIN_INITIAL_PASSWORD`      | Contraseña inicial utilizada por el seed                   | Para seed  |
 | `CRON_SECRET`                 | Secreto Bearer del procesador de recordatorios             | Producción |
+| `TELEGRAM_BOT_TOKEN`          | Token privado del bot proporcionado por BotFather          | Telegram   |
+| `TELEGRAM_WEBHOOK_SECRET`     | Secreto usado para autenticar solicitudes de Telegram      | Telegram   |
+| `TELEGRAM_BOT_USERNAME`       | Nombre público del bot, sin el carácter `@`                | Telegram   |
 
 Ejemplo local:
 
@@ -318,20 +353,24 @@ HEALTH_APP_REDIS_PREFIX=bht:v1:
 ADMIN_INITIAL_EMAIL=admin@example.com
 ADMIN_INITIAL_PASSWORD=reemplazar-por-password-seguro
 CRON_SECRET=reemplazar-por-un-secreto-aleatorio-de-al-menos-32-caracteres
+TELEGRAM_BOT_TOKEN=reemplazar-por-el-token-del-bot
+TELEGRAM_WEBHOOK_SECRET=reemplazar-por-un-secreto-aleatorio
+TELEGRAM_BOT_USERNAME=nombre_publico_del_bot
 ```
 
 > [!WARNING]
 > No publiques `.env.local`, tokens, secretos ni credenciales reales en GitHub.
 
-### Variables previstas para Telegram
+### Configuración del webhook de Telegram
 
-Estas variables formarán parte de la fase de notificaciones y no deben considerarse activas hasta implementar el módulo correspondiente.
+Telegram envía las actualizaciones a `/api/telegram/webhook`. El webhook debe registrarse con una URL HTTPS y el mismo valor configurado en `TELEGRAM_WEBHOOK_SECRET` como `secret_token`.
 
-| Variable                  | Propósito futuro                      |
-| ------------------------- | ------------------------------------- |
-| `TELEGRAM_BOT_TOKEN`      | Token entregado por BotFather         |
-| `TELEGRAM_WEBHOOK_SECRET` | Validación de solicitudes del webhook |
-| `TELEGRAM_CHAT_ID`        | Chat autorizado para notificaciones   |
+En despliegues Preview protegidos de Vercel, el bypass puede incorporarse temporalmente como parámetro de la URL exclusivamente para las pruebas. Este valor no debe guardarse en Git, `.env.local`, documentación, capturas ni logs.
+
+Después de promover la versión a `main`, el webhook debe apuntar a la URL estable de producción y verificarse mediante `getWebhookInfo`. La validación esperada es: URL correcta, cero actualizaciones pendientes y ausencia de `last_error_message`.
+
+> [!IMPORTANT]
+> El `chatId` no se configura como una variable global. Se almacena por paciente en Redis después de completar correctamente el flujo de vinculación.
 
 ## Configuración de Redis
 
@@ -346,6 +385,17 @@ npm run migrate:patient-index
 ```
 
 El prefijo evita colisiones cuando una misma base Redis es compartida con otros proyectos.
+
+### Persistencia de Telegram
+
+La integración conserva la separación por responsabilidades y utiliza claves generadas centralmente en `src/lib/redis/keys.ts`:
+
+- Registro de vinculación por paciente.
+- Resolución del chat autorizado hacia la paciente vinculada.
+- Desafío temporal utilizado durante el flujo de asociación.
+- Expiración del desafío para impedir reutilizaciones posteriores.
+
+Las claves heredan `HEALTH_APP_REDIS_PREFIX`; no deben construirse manualmente fuera del módulo central. Los tokens del bot y del webhook nunca se almacenan en Redis como parte del vínculo del paciente.
 
 ## Datos iniciales
 
@@ -387,31 +437,36 @@ El código solo debe integrarse cuando todos los controles finalicen correctamen
 
 ## Endpoints actuales
 
-| Método   | Ruta                                        | Descripción                         | Acceso          |
-| -------- | ------------------------------------------- | ----------------------------------- | --------------- |
-| `POST`   | `/api/auth/login`                           | Iniciar sesión                      | Público         |
-| `POST`   | `/api/auth/logout`                          | Cerrar sesión                       | Autenticado     |
-| `GET`    | `/api/auth/me`                              | Consultar la sesión actual          | Autenticado     |
-| `GET`    | `/api/patients`                             | Buscar, filtrar y paginar pacientes | Autenticado     |
-| `POST`   | `/api/patients`                             | Registrar paciente                  | Autenticado     |
-| `GET`    | `/api/patients/[id]`                        | Consultar un paciente               | Autenticado     |
-| `PUT`    | `/api/patients/[id]`                        | Actualizar un paciente              | Autenticado     |
-| `GET`    | `/api/patients/[id]/findings`               | Listar hallazgos de una paciente    | Autenticado     |
-| `POST`   | `/api/patients/[id]/findings`               | Registrar un hallazgo               | Autenticado     |
-| `GET`    | `/api/patients/[id]/findings/[findingId]`   | Consultar un hallazgo               | Autenticado     |
-| `PUT`    | `/api/patients/[id]/findings/[findingId]`   | Actualizar un hallazgo              | Autenticado     |
-| `GET`    | `/api/patients/[id]/timeline`               | Consultar el timeline unificado     | Autenticado     |
-| `POST`   | `/api/patients/[id]/timeline`               | Registrar un evento clínico         | Autenticado     |
-| `GET`    | `/api/patients/[id]/timeline/[eventId]`     | Consultar un evento clínico         | Autenticado     |
-| `PUT`    | `/api/patients/[id]/timeline/[eventId]`     | Actualizar un evento clínico        | Autenticado     |
-| `DELETE` | `/api/patients/[id]/timeline/[eventId]`     | Eliminar un evento clínico          | Autenticado     |
-| `GET`    | `/api/calendar`                             | Consultar el calendario global      | Autenticado     |
-| `GET`    | `/api/patients/[id]/reminders`              | Listar recordatorios y candidatos   | Autenticado     |
-| `POST`   | `/api/patients/[id]/reminders`              | Crear un recordatorio               | Autenticado     |
-| `GET`    | `/api/patients/[id]/reminders/[reminderId]` | Consultar un recordatorio           | Autenticado     |
-| `PUT`    | `/api/patients/[id]/reminders/[reminderId]` | Reprogramar o cambiar su estado     | Autenticado     |
-| `GET`    | `/api/internal/reminders/process`           | Ejecutar el procesador programado   | Secreto interno |
-| `POST`   | `/api/internal/reminders/process`           | Ejecutar el procesador manualmente  | Secreto interno |
+| Método   | Ruta                                             | Descripción                         | Acceso           |
+| -------- | ------------------------------------------------ | ----------------------------------- | ---------------- |
+| `POST`   | `/api/auth/login`                                | Iniciar sesión                      | Público          |
+| `POST`   | `/api/auth/logout`                               | Cerrar sesión                       | Autenticado      |
+| `GET`    | `/api/auth/me`                                   | Consultar la sesión actual          | Autenticado      |
+| `GET`    | `/api/patients`                                  | Buscar, filtrar y paginar pacientes | Autenticado      |
+| `POST`   | `/api/patients`                                  | Registrar paciente                  | Autenticado      |
+| `GET`    | `/api/patients/[id]`                             | Consultar un paciente               | Autenticado      |
+| `PUT`    | `/api/patients/[id]`                             | Actualizar un paciente              | Autenticado      |
+| `GET`    | `/api/patients/[id]/findings`                    | Listar hallazgos de una paciente    | Autenticado      |
+| `POST`   | `/api/patients/[id]/findings`                    | Registrar un hallazgo               | Autenticado      |
+| `GET`    | `/api/patients/[id]/findings/[findingId]`        | Consultar un hallazgo               | Autenticado      |
+| `PUT`    | `/api/patients/[id]/findings/[findingId]`        | Actualizar un hallazgo              | Autenticado      |
+| `GET`    | `/api/patients/[id]/timeline`                    | Consultar el timeline unificado     | Autenticado      |
+| `POST`   | `/api/patients/[id]/timeline`                    | Registrar un evento clínico         | Autenticado      |
+| `GET`    | `/api/patients/[id]/timeline/[eventId]`          | Consultar un evento clínico         | Autenticado      |
+| `PUT`    | `/api/patients/[id]/timeline/[eventId]`          | Actualizar un evento clínico        | Autenticado      |
+| `DELETE` | `/api/patients/[id]/timeline/[eventId]`          | Eliminar un evento clínico          | Autenticado      |
+| `GET`    | `/api/calendar`                                  | Consultar el calendario global      | Autenticado      |
+| `GET`    | `/api/patients/[id]/reminders`                   | Listar recordatorios y candidatos   | Autenticado      |
+| `POST`   | `/api/patients/[id]/reminders`                   | Crear un recordatorio               | Autenticado      |
+| `GET`    | `/api/patients/[id]/reminders/[reminderId]`      | Consultar un recordatorio           | Autenticado      |
+| `PUT`    | `/api/patients/[id]/reminders/[reminderId]`      | Reprogramar o cambiar su estado     | Autenticado      |
+| `GET`    | `/api/internal/reminders/process`                | Ejecutar el procesador programado   | Secreto interno  |
+| `POST`   | `/api/internal/reminders/process`                | Ejecutar el procesador manualmente  | Secreto interno  |
+| `GET`    | `/api/patients/[id]/telegram-link`               | Consultar el estado de vinculación  | Autenticado      |
+| `POST`   | `/api/patients/[id]/telegram-link`               | Generar un desafío de vinculación   | Autenticado      |
+| `DELETE` | `/api/patients/[id]/telegram-link`               | Desvincular Telegram                | Autenticado      |
+| `GET`    | `/api/patients/[id]/telegram-link/[challengeId]` | Consultar un desafío pendiente      | Autenticado      |
+| `POST`   | `/api/telegram/webhook`                          | Procesar actualizaciones del bot    | Secreto Telegram |
 
 ## Estrategia Git
 
@@ -446,19 +501,19 @@ No se deben desarrollar funcionalidades directamente sobre `develop` ni `main`.
 
 ### Iteración actual
 
-La rama `feature/reminders` completó el bloque de recordatorios de la Fase 6:
+La rama `feature/telegram` completó la Fase 7 y fue integrada en `develop` mediante el PR #16:
 
-- Contratos, validaciones e identidad determinista.
-- Persistencia e índices especializados en Redis.
-- Servicio de candidatos, creación, reprogramación y control de estados.
+- Contratos, validaciones y persistencia de la vinculación.
+- Desafíos temporales para asociar de forma controlada una paciente con un chat.
 - API administrativa autenticada y aislada por paciente.
-- Interfaz responsive integrada en el perfil de la paciente.
-- Motor idempotente con bloqueo, reintentos y recuperación.
-- Endpoint interno autenticado mediante `CRON_SECRET`.
-- Programación diaria mediante Vercel Cron.
-- Pruebas automatizadas y validación manual de autorización e idempotencia.
+- Interfaz responsive de vinculación, consulta y desvinculación.
+- Webhook autenticado mediante `TELEGRAM_WEBHOOK_SECRET`.
+- Adaptador de entrega conectado al procesador idempotente de recordatorios.
+- Actualización automática del estado de vinculación.
+- Formato estable de fechas y visualización correcta del canal.
+- Pruebas automatizadas y validación manual en Vercel Preview.
 
-El siguiente paso es abrir un pull request hacia `develop` y verificar GitHub Actions y Vercel Preview. Telegram continuará posteriormente y de forma aislada en `feature/telegram`.
+La rama `docs/phase-7-readme`, creada desde `develop`, contiene esta actualización. Tras integrarla en `develop`, el siguiente paso es promover la versión completa mediante un pull request de `develop` hacia `main`.
 
 ## CI/CD
 
@@ -615,7 +670,7 @@ Bloque de recordatorios completado:
 - Endpoint interno protegido mediante secreto Bearer.
 - Procesamiento diario mediante Vercel Cron.
 - Registro de intentos, entregas y errores controlados.
-- Canal interno preparado para incorporar Telegram sin acoplar el dominio.
+- Canal interno y canal Telegram integrados sin acoplar el dominio al proveedor de entrega.
 
 Rama utilizada para el calendario: `feature/calendar`.
 
@@ -623,18 +678,26 @@ Rama utilizada para recordatorios: `feature/reminders`.
 
 ### Fase 7 — Bot de Telegram
 
-**Estado: planificada**
+**Estado: completada**
 
-- Integración mediante grammY.
-- Webhook protegido con secreto.
-- Asociación segura entre usuario y chat autorizado.
-- Envío de recordatorios.
-- Confirmación o actualización del estado de una actividad.
-- Manejo de errores y reintentos controlados.
-- Auditoría básica de mensajes enviados.
-- Protección de información sensible en las notificaciones.
+- Integración del bot mediante grammY.
+- Webhook protegido mediante `TELEGRAM_WEBHOOK_SECRET`.
+- Vinculación segura por desafío temporal de un solo uso.
+- Consulta y desvinculación desde el perfil de la paciente.
+- Actualización automática del estado después de completar `/start`.
+- Persistencia del chat autorizado por paciente en Redis.
+- Canal `TELEGRAM` integrado en el formulario de recordatorios.
+- Adaptador de entrega conectado al procesador existente.
+- Validación de paciente activa y vínculo vigente antes del envío.
+- Reintentos y estados de entrega administrados por el motor de recordatorios.
+- Mensajes limitados a información operativa para reducir exposición de datos sensibles.
+- Formato de fechas determinista entre servidor y navegador.
+- Pruebas unitarias y de contrato para tokens, validaciones, claves Redis, repositorios, servicios, endpoints, mensajes y entrega.
+- Validación manual de vinculación, desvinculación, refresco automático y recordatorios en Vercel Preview.
 
-Rama prevista: `feature/telegram`.
+Rama utilizada: `feature/telegram`.
+
+Integración en `develop`: PR #16.
 
 ### Fase 8 — Reportes y exportación
 
@@ -706,15 +769,16 @@ Cada fase deberá cumplir, como mínimo, con los siguientes criterios:
 
 ## Próximo paso
 
-El bloque de recordatorios de la Fase 6 está terminado en `feature/reminders`. El siguiente paso es completar su integración mediante un pull request hacia `develop`:
+La Fase 7 está integrada y validada en `develop`. Después de fusionar `docs/phase-7-readme` en esa rama, el siguiente paso es crear el pull request de lanzamiento hacia `main`:
 
 ```bash
 git status
-git log --oneline origin/develop..HEAD
-git diff --check origin/develop...HEAD
+git switch develop
+git pull origin develop
+git log --oneline --decorate -5
 ```
 
-Después del merge y la validación en `develop`, se podrá promover el cambio a `main`. La siguiente iteración funcional prevista es la integración de **Telegram**, que deberá comenzar en `feature/telegram` desde un `develop` actualizado.
+Después del merge en `main` se debe esperar el despliegue de producción, registrar el webhook con la URL productiva estable, repetir la prueba final con datos ficticios y eliminar `feature/telegram` local y remotamente. La siguiente iteración funcional prevista es la **Fase 8 — Reportes y exportación**.
 
 ## Licencia
 

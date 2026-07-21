@@ -55,6 +55,14 @@ export type {
   ReminderStatus,
 } from "@/features/reminders";
 
+export type {
+  TelegramIdentity,
+  TelegramLinkChallenge,
+  TelegramLinkStatus,
+  TelegramLinkToken,
+  TelegramPatientLink,
+} from "@/features/telegram";
+
 // ─── API Response ─────────────────────────────────────────────────────────────
 
 export interface ApiError {

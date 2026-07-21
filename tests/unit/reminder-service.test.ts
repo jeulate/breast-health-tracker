@@ -127,6 +127,22 @@ describe("ReminderService", () => {
     expect(mocks.reminder.save).not.toHaveBeenCalled();
   });
 
+  it("rejects Telegram reminders when the patient has no linked chat", async () => {
+    await expect(
+      ReminderService.create({ ...createInput, channel: "TELEGRAM" }),
+    ).resolves.toBeNull();
+    expect(mocks.reminder.save).not.toHaveBeenCalled();
+  });
+
+  it("creates Telegram reminders when the patient has a linked chat", async () => {
+    mocks.patient.findById.mockResolvedValue({ ...patient, telegramChatId: "987654321" });
+
+    const result = await ReminderService.create({ ...createInput, channel: "TELEGRAM" });
+
+    expect(result?.channel).toBe("TELEGRAM");
+    expect(mocks.reminder.save).toHaveBeenCalledWith(result);
+  });
+
   it("rejects controls that do not belong to the patient", async () => {
     mocks.clinicalEvent.findById.mockResolvedValue({ ...event, patientId: sourceId });
 

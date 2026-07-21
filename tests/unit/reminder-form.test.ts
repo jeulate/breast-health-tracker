@@ -32,7 +32,14 @@ describe("reminder form date helpers", () => {
       targetDate: "2026-07-25",
       scheduledFor: "2026-07-24T13:00:00.000Z",
       timezone: "America/La_Paz",
+      channel: "IN_APP",
     });
+  });
+
+  it("includes Telegram when it is selected as the delivery channel", () => {
+    expect(
+      buildReminderPayload(candidate, "2026-07-24T09:00", "America/La_Paz", "TELEGRAM"),
+    ).toEqual(expect.objectContaining({ channel: "TELEGRAM" }));
   });
 
   it("provides a same-day default that remains editable", () => {

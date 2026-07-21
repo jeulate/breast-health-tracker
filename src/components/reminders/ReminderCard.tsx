@@ -6,6 +6,11 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import type { Reminder, ReminderStatus } from "@/features/reminders";
 import { toDateTimeLocal, toZonedIsoDateTime } from "@/features/reminders/reminder-form";
+import {
+  formatReminderDateOnly,
+  formatReminderDateTime,
+  reminderChannelLabel,
+} from "@/features/reminders/reminder-display";
 import type { ApiResponse } from "@/types";
 
 const statusLabels: Record<ReminderStatus, string> = {
@@ -89,7 +94,9 @@ export function ReminderCard({
             {reminder.source === "CLINICAL_EVENT" ? "Control clínico" : "Seguimiento BI-RADS"}
           </p>
           <h3 className="text-foreground mt-1 font-semibold break-words">{sourceTitle}</h3>
-          <p className="text-muted mt-1 text-sm">Objetivo: {formatDateOnly(reminder.targetDate)}</p>
+          <p className="text-muted mt-1 text-sm">
+            Objetivo: {formatReminderDateOnly(reminder.targetDate)}
+          </p>
         </div>
         <span
           className={[
@@ -105,12 +112,14 @@ export function ReminderCard({
         <div>
           <dt className="text-muted text-xs font-medium">Aviso programado</dt>
           <dd className="text-foreground mt-1 text-sm font-semibold">
-            {formatDateTime(reminder.scheduledFor, reminder.timezone)}
+            {formatReminderDateTime(reminder.scheduledFor, reminder.timezone)}
           </dd>
         </div>
         <div>
           <dt className="text-muted text-xs font-medium">Canal</dt>
-          <dd className="text-foreground mt-1 text-sm font-semibold">Panel interno</dd>
+          <dd className="text-foreground mt-1 text-sm font-semibold">
+            {reminderChannelLabel(reminder.channel)}
+          </dd>
         </div>
         <div>
           <dt className="text-muted text-xs font-medium">Intentos</dt>
@@ -208,25 +217,4 @@ export function ReminderCard({
       ) : null}
     </article>
   );
-}
-
-function formatDateOnly(value: string): string {
-  const [year, month, day] = value.split("-").map(Number);
-  return new Intl.DateTimeFormat("es-BO", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(Date.UTC(year, month - 1, day)));
-}
-
-function formatDateTime(value: string, timezone: string): string {
-  return new Intl.DateTimeFormat("es-BO", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: timezone,
-  }).format(new Date(value));
 }
