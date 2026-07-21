@@ -44,4 +44,16 @@ describe("Redis keys", () => {
       "bht:test:reminders:reminder-1:processing-lock",
     );
   });
+
+  it("creates Telegram link keys without exposing a raw token", () => {
+    expect(redisKeys.telegramLinkChallenge("tgl_abc")).toBe(
+      "bht:test:telegram:link-challenges:tgl_abc",
+    );
+    expect(redisKeys.telegramLinkChallengeByTokenHash("hash-1")).toBe(
+      "bht:test:telegram:link-challenges:token:hash-1",
+    );
+    expect(redisKeys.telegramPatientByChatId("123456")).toBe(
+      "bht:test:telegram:chats:123456:patient",
+    );
+  });
 });

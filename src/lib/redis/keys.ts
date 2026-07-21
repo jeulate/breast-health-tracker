@@ -84,4 +84,16 @@ export const redisKeys = {
   reminderProcessingLock(id: string): string {
     return `${getPrefix()}reminders:${id}:processing-lock`;
   },
+
+  telegramLinkChallenge(id: string): string {
+    return `${getPrefix()}telegram:link-challenges:${id}`;
+  },
+
+  telegramLinkChallengeByTokenHash(tokenHash: string): string {
+    return `${getPrefix()}telegram:link-challenges:token:${tokenHash}`;
+  },
+
+  telegramPatientByChatId(chatId: string): string {
+    return `${getPrefix()}telegram:chats:${chatId}:patient`;
+  },
 };

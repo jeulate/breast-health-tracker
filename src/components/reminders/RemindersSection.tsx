@@ -8,12 +8,14 @@ export function RemindersSection({
   patientId,
   timezone,
   patientActive,
+  telegramLinked,
   reminders,
   candidates,
 }: {
   patientId: string;
   timezone: string;
   patientActive: boolean;
+  telegramLinked: boolean;
   reminders: Reminder[];
   candidates: ReminderCandidate[];
 }) {
@@ -22,8 +24,11 @@ export function RemindersSection({
       .filter((reminder) => reminder.status !== "COMPLETED" && reminder.status !== "CANCELLED")
       .map((reminder) => `${reminder.source}:${reminder.sourceId}:${reminder.channel}`),
   );
-  const availableCandidates = candidates.filter(
-    (candidate) => !activeSources.has(`${candidate.source}:${candidate.sourceId}:IN_APP`),
+  const unavailableSources = Array.from(activeSources);
+  const hasAvailableCandidate = candidates.some(
+    (candidate) =>
+      !activeSources.has(`${candidate.source}:${candidate.sourceId}:IN_APP`) ||
+      (telegramLinked && !activeSources.has(`${candidate.source}:${candidate.sourceId}:TELEGRAM`)),
   );
 
   function sourceTitle(reminder: Reminder): string {
@@ -73,7 +78,7 @@ export function RemindersSection({
           </p>
         </div>
         <div className="p-5 sm:p-6">
-          {availableCandidates.length === 0 ? (
+          {!hasAvailableCandidate ? (
             <p className="text-muted text-sm leading-6">
               No existen controles programados disponibles para crear recordatorios.
             </p>
@@ -81,7 +86,9 @@ export function RemindersSection({
             <ReminderForm
               patientId={patientId}
               timezone={timezone}
-              candidates={availableCandidates}
+              candidates={candidates}
+              telegramLinked={telegramLinked}
+              unavailableSources={unavailableSources}
               disabled={!patientActive}
             />
           )}

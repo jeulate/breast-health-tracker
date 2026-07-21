@@ -1,8 +1,10 @@
 import { timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import { getServerEnv } from "@/config/env";
+import { inAppReminderDelivery } from "@/features/reminders";
 import { fail, ok, toJsonResponse } from "@/lib/utils/api-response";
 import { ReminderProcessorService } from "@/services/reminder-processor.service";
+import { TelegramReminderDelivery } from "@/services/telegram-reminder-delivery.service";
 
 export const runtime = "nodejs";
 
@@ -24,7 +26,8 @@ function hasValidBearerToken(request: Request, secret: string): boolean {
 
 export async function POST(request: Request) {
   try {
-    const secret = getServerEnv().CRON_SECRET;
+    const env = getServerEnv();
+    const secret = env.CRON_SECRET;
 
     if (!secret) {
       return toJsonResponse(
@@ -46,7 +49,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const summary = await new ReminderProcessorService().processDue(parsed.data.limit);
+    const deliveries = env.TELEGRAM_BOT_TOKEN
+      ? [inAppReminderDelivery, new TelegramReminderDelivery({ token: env.TELEGRAM_BOT_TOKEN })]
+      : [inAppReminderDelivery];
+    const summary = await new ReminderProcessorService({ deliveries }).processDue(
+      parsed.data.limit,
+    );
     return toJsonResponse(ok(summary));
   } catch {
     return toJsonResponse(
