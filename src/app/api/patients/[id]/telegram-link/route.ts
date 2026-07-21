@@ -1,12 +1,33 @@
 import { getSession } from "@/lib/auth/session";
 import { fail, ok, toJsonResponse } from "@/lib/utils/api-response";
 import { createTelegramLinkChallengeSchema } from "@/lib/validations/telegram";
+import { PatientService } from "@/services/patient.service";
 import { TelegramLinkService } from "@/services/telegram-link.service";
 
 const telegramLinkService = new TelegramLinkService();
 
 interface Params {
   params: Promise<{ id: string }>;
+}
+
+export async function GET(_request: Request, { params }: Params) {
+  try {
+    if (!(await getSession()))
+      return toJsonResponse(fail("UNAUTHORIZED", "Debes iniciar sesión."), 401);
+
+    const { id } = await params;
+    const patient = await PatientService.getById(id);
+    if (!patient) return toJsonResponse(fail("NOT_FOUND", "No se encontró la paciente."), 404);
+
+    return toJsonResponse(
+      ok({ linked: Boolean(patient.telegramUserId && patient.telegramChatId) }),
+    );
+  } catch {
+    return toJsonResponse(
+      fail("INTERNAL_ERROR", "No fue posible consultar la vinculación de Telegram."),
+      500,
+    );
+  }
 }
 
 export async function POST(request: Request, { params }: Params) {

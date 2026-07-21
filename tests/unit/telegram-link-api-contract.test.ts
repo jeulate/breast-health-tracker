@@ -7,15 +7,20 @@ const mocks = vi.hoisted(() => ({
     unlinkPatient: vi.fn(),
     revoke: vi.fn(),
   },
+  patientService: { getById: vi.fn() },
 }));
 
 vi.mock("@/lib/auth/session", () => ({ getSession: mocks.getSession }));
 vi.mock("@/services/telegram-link.service", () => ({
   TelegramLinkService: vi.fn(() => mocks.service),
 }));
+vi.mock("@/services/patient.service", () => ({
+  PatientService: mocks.patientService,
+}));
 
 import {
   DELETE as unlinkTelegram,
+  GET as getTelegramLinkStatus,
   POST as createTelegramLink,
 } from "@/app/api/patients/[id]/telegram-link/route";
 import { DELETE as revokeTelegramLink } from "@/app/api/patients/[id]/telegram-link/[challengeId]/route";
@@ -42,11 +47,20 @@ describe("Telegram link admin API", () => {
     });
     mocks.service.unlinkPatient.mockResolvedValue(true);
     mocks.service.revoke.mockResolvedValue(true);
+    mocks.patientService.getById.mockResolvedValue({
+      id: patientId,
+      telegramUserId: undefined,
+      telegramChatId: undefined,
+    });
   });
 
   it("rejects every operation without a session", async () => {
     mocks.getSession.mockResolvedValue(null);
     const responses = await Promise.all([
+      getTelegramLinkStatus(
+        new Request(`http://localhost/api/patients/${patientId}/telegram-link`),
+        collectionParams(),
+      ),
       createTelegramLink(
         new Request(`http://localhost/api/patients/${patientId}/telegram-link`, {
           method: "POST",
@@ -67,7 +81,37 @@ describe("Telegram link admin API", () => {
         detailParams(),
       ),
     ]);
-    expect(responses.map((response) => response.status)).toEqual([401, 401, 401]);
+    expect(responses.map((response) => response.status)).toEqual([401, 401, 401, 401]);
+  });
+
+  it("returns only the current link status", async () => {
+    mocks.patientService.getById.mockResolvedValue({
+      id: patientId,
+      telegramUserId: "123456",
+      telegramChatId: "987654",
+    });
+
+    const response = await getTelegramLinkStatus(
+      new Request(`http://localhost/api/patients/${patientId}/telegram-link`),
+      collectionParams(),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({ success: true, data: { linked: true } });
+    expect(JSON.stringify(body)).not.toContain("123456");
+    expect(JSON.stringify(body)).not.toContain("987654");
+  });
+
+  it("returns not found when polling an unknown patient", async () => {
+    mocks.patientService.getById.mockResolvedValue(null);
+
+    const response = await getTelegramLinkStatus(
+      new Request(`http://localhost/api/patients/${patientId}/telegram-link`),
+      collectionParams(),
+    );
+
+    expect(response.status).toBe(404);
   });
 
   it("creates a temporary link without exposing its stored hash", async () => {

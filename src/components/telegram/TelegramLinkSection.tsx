@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import {
@@ -30,6 +30,50 @@ export function TelegramLinkSection({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const linked = Boolean(telegramUserId && telegramChatId);
+
+  useEffect(() => {
+    if (!createdLink || linked) return;
+
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    async function checkLinkStatus(): Promise<void> {
+      if (stopped || !createdLink) return;
+
+      if (Date.parse(createdLink.expiresAt) <= Date.now()) {
+        setCreatedLink(null);
+        setError("El enlace temporal venció. Genera uno nuevo para continuar.");
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/patients/${patientId}/telegram-link`, {
+          method: "GET",
+          cache: "no-store",
+        });
+        const body = (await response.json()) as ApiResponse<{ linked: boolean }>;
+
+        if (response.ok && body.data?.linked) {
+          stopped = true;
+          setCreatedLink(null);
+          setError(null);
+          setMessage("Telegram fue vinculado correctamente.");
+          router.refresh();
+          return;
+        }
+      } catch {
+        // A transient polling failure must not discard the one-time link.
+      }
+
+      if (!stopped) timer = setTimeout(checkLinkStatus, 2_000);
+    }
+
+    timer = setTimeout(checkLinkStatus, 1_000);
+    return () => {
+      stopped = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [createdLink, linked, patientId, router]);
 
   async function createLink() {
     setPendingAction("create");
