@@ -181,6 +181,10 @@ export const ReminderService = {
       scheduledFor,
       timezone,
       status: "PENDING",
+      attempts: 0,
+      lastAttemptAt: undefined,
+      processedAt: undefined,
+      sentAt: undefined,
       lastError: undefined,
     });
   },

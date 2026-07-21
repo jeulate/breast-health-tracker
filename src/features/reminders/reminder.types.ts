@@ -30,6 +30,7 @@ export interface Reminder {
   attempts: number;
   maxAttempts: number;
   lastAttemptAt?: string;
+  processedAt?: string;
   sentAt?: string;
   completedAt?: string;
   cancelledAt?: string;

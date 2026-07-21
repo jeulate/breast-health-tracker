@@ -84,8 +84,10 @@ export class ReminderProcessorService {
     for (const reminder of processing) {
       if (!reminder.lastAttemptAt || Date.parse(reminder.lastAttemptAt) > cutoff) continue;
       const exhausted = reminder.attempts >= reminder.maxAttempts;
+      const processedAt = this.now().toISOString();
       await this.repository.update(reminder.id, {
         status: exhausted ? "FAILED" : "PENDING",
+        processedAt,
         lastError: "Processing lease expired before delivery completed.",
       });
       recovered += 1;
@@ -98,22 +100,37 @@ export class ReminderProcessorService {
     const delivery = this.deliveries.get(reminder.channel);
 
     try {
-      if (!delivery) throw new Error(`No delivery adapter for channel ${reminder.channel}`);
+      if (!delivery) {
+        throw new Error(`No delivery adapter for channel ${reminder.channel}`);
+      }
+
       await delivery.deliver(reminder);
+
+      const processedAt = this.now().toISOString();
+
       await this.repository.update(reminder.id, {
         status: "SENT",
-        sentAt: this.now().toISOString(),
+        processedAt,
+        sentAt: processedAt,
         lastError: undefined,
       });
+
       summary.sent += 1;
     } catch (error) {
       const exhausted = reminder.attempts >= reminder.maxAttempts;
+      const processedAt = this.now().toISOString();
+
       await this.repository.update(reminder.id, {
         status: exhausted ? "FAILED" : "PENDING",
+        processedAt,
         lastError: safeErrorMessage(error),
       });
-      if (exhausted) summary.failed += 1;
-      else summary.retried += 1;
+
+      if (exhausted) {
+        summary.failed += 1;
+      } else {
+        summary.retried += 1;
+      }
     }
   }
 
