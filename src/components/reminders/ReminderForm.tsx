@@ -70,7 +70,11 @@ export function ReminderForm({
 
       setCandidateId("");
       setScheduledLocal("");
-      setSuccess("El recordatorio fue creado correctamente.");
+      setSuccess(
+        channel === "TELEGRAM"
+          ? "El recordatorio de Telegram fue programado correctamente."
+          : "El recordatorio interno fue programado correctamente.",
+      );
       router.refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No fue posible conectar con el servidor.");
@@ -171,6 +175,21 @@ export function ReminderForm({
           disabled={disabled || loading || !selected}
           required
         />
+      </div>
+
+       <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-blue-800 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200">
+        <p className="text-sm font-medium">
+          El recordatorio se enviará una sola vez.
+        </p>
+        <p className="mt-1 text-xs leading-5">
+          Si ocurre un error técnico, el sistema podrá realizar hasta 3 intentos
+          de procesamiento. Estos reintentos no representan varios mensajes para
+          la paciente.
+        </p>
+        <p className="mt-1 text-xs leading-5">
+          La fecha y hora seleccionadas se interpretarán usando la zona horaria{" "}
+          <span className="font-semibold">{timezone}</span>.
+        </p>
       </div>
 
       <div className="border-border flex justify-end border-t pt-5">

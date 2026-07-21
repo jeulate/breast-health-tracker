@@ -3,6 +3,7 @@ import type { Reminder, ReminderDelivery } from "@/features/reminders";
 import { ReminderProcessorService } from "@/services/reminder-processor.service";
 
 const now = new Date("2026-07-24T13:00:00.000Z");
+
 const reminder: Reminder = {
   id: "rem_0123456789abcdef0123456789abcdef",
   patientId: "45ae0fb2-dfd0-49a6-a426-eb492bcbad46",
@@ -26,10 +27,15 @@ describe("ReminderProcessorService", () => {
     claimForProcessing: vi.fn(),
     update: vi.fn(),
   };
-  const delivery: ReminderDelivery = { channel: "IN_APP", deliver: vi.fn() };
+
+  const delivery: ReminderDelivery = {
+    channel: "IN_APP",
+    deliver: vi.fn(),
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
+
     repository.listDue.mockResolvedValue([reminder]);
     repository.listByStatus.mockResolvedValue([]);
     repository.claimForProcessing.mockResolvedValue({
@@ -39,6 +45,7 @@ describe("ReminderProcessorService", () => {
       lastAttemptAt: now.toISOString(),
     });
     repository.update.mockResolvedValue(undefined);
+
     vi.mocked(delivery.deliver).mockResolvedValue({});
   });
 
@@ -59,28 +66,43 @@ describe("ReminderProcessorService", () => {
       skipped: 0,
       recovered: 0,
     });
-    expect(repository.claimForProcessing).toHaveBeenCalledWith(reminder.id, now.toISOString(), 300);
-    expect(repository.update).toHaveBeenCalledWith(
+
+    expect(repository.claimForProcessing).toHaveBeenCalledWith(
       reminder.id,
-      expect.objectContaining({ status: "SENT", sentAt: now.toISOString() }),
+      now.toISOString(),
+      300,
     );
+
+    expect(repository.update).toHaveBeenCalledWith(reminder.id, {
+      status: "SENT",
+      processedAt: now.toISOString(),
+      sentAt: now.toISOString(),
+      lastError: undefined,
+    });
   });
 
   it("skips a reminder claimed by another worker", async () => {
     repository.claimForProcessing.mockResolvedValue(null);
+
     const result = await processor().processDue();
+
     expect(result.skipped).toBe(1);
     expect(delivery.deliver).not.toHaveBeenCalled();
   });
 
   it("returns a failed delivery to pending while attempts remain", async () => {
-    vi.mocked(delivery.deliver).mockRejectedValue(new Error("temporary\nerror"));
-    const result = await processor().processDue();
-    expect(result.retried).toBe(1);
-    expect(repository.update).toHaveBeenCalledWith(
-      reminder.id,
-      expect.objectContaining({ status: "PENDING", lastError: "temporary error" }),
+    vi.mocked(delivery.deliver).mockRejectedValue(
+      new Error("temporary\nerror"),
     );
+
+    const result = await processor().processDue();
+
+    expect(result.retried).toBe(1);
+    expect(repository.update).toHaveBeenCalledWith(reminder.id, {
+      status: "PENDING",
+      processedAt: now.toISOString(),
+      lastError: "temporary error",
+    });
   });
 
   it("marks the reminder failed after the maximum attempts", async () => {
@@ -90,13 +112,19 @@ describe("ReminderProcessorService", () => {
       attempts: 3,
       lastAttemptAt: now.toISOString(),
     });
-    vi.mocked(delivery.deliver).mockRejectedValue(new Error("permanent error"));
-    const result = await processor().processDue();
-    expect(result.failed).toBe(1);
-    expect(repository.update).toHaveBeenCalledWith(
-      reminder.id,
-      expect.objectContaining({ status: "FAILED" }),
+
+    vi.mocked(delivery.deliver).mockRejectedValue(
+      new Error("permanent error"),
     );
+
+    const result = await processor().processDue();
+
+    expect(result.failed).toBe(1);
+    expect(repository.update).toHaveBeenCalledWith(reminder.id, {
+      status: "FAILED",
+      processedAt: now.toISOString(),
+      lastError: "permanent error",
+    });
   });
 
   it("recovers stale processing reminders", async () => {
@@ -109,11 +137,30 @@ describe("ReminderProcessorService", () => {
         lastAttemptAt: "2026-07-24T12:00:00.000Z",
       },
     ]);
+
     const result = await processor().processDue();
+
     expect(result.recovered).toBe(1);
-    expect(repository.update).toHaveBeenCalledWith(
-      reminder.id,
-      expect.objectContaining({ status: "PENDING" }),
-    );
+    expect(repository.update).toHaveBeenCalledWith(reminder.id, {
+      status: "PENDING",
+      processedAt: now.toISOString(),
+      lastError: "Processing lease expired before delivery completed.",
+    });
+  });
+
+  it("does not deliver a sent reminder again in a consecutive execution", async () => {
+    repository.listDue
+      .mockResolvedValueOnce([reminder])
+      .mockResolvedValueOnce([]);
+
+    const service = processor();
+
+    const firstResult = await service.processDue();
+    const secondResult = await service.processDue();
+
+    expect(firstResult.sent).toBe(1);
+    expect(secondResult.sent).toBe(0);
+    expect(delivery.deliver).toHaveBeenCalledTimes(1);
+    expect(repository.claimForProcessing).toHaveBeenCalledTimes(1);
   });
 });

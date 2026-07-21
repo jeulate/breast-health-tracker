@@ -60,6 +60,7 @@ function serialized(value: Reminder): Record<string, unknown> {
     attempts: String(value.attempts),
     maxAttempts: String(value.maxAttempts),
     lastAttemptAt: value.lastAttemptAt ?? "",
+    processedAt: value.processedAt ?? "",
     sentAt: value.sentAt ?? "",
     completedAt: value.completedAt ?? "",
     cancelledAt: value.cancelledAt ?? "",
@@ -156,13 +157,14 @@ describe("ReminderRepository", () => {
 
   it("moves a reminder between status indexes", async () => {
     mocks.redis.hgetall.mockResolvedValue(serialized(reminder));
-    const sentAt = "2026-07-24T13:01:00.000Z";
+    const processedAt = "2026-07-24T13:01:00.000Z";
 
     await new ReminderRepository().update(reminder.id, {
       status: "SENT",
       attempts: 1,
-      lastAttemptAt: sentAt,
-      sentAt,
+      lastAttemptAt: processedAt,
+      processedAt,
+      sentAt: processedAt,
     });
 
     expect(mocks.pipeline.srem).toHaveBeenCalledWith(
@@ -172,7 +174,12 @@ describe("ReminderRepository", () => {
     expect(mocks.pipeline.sadd).toHaveBeenCalledWith("bht:test:reminders:status:SENT", reminder.id);
     expect(mocks.pipeline.hset).toHaveBeenCalledWith(
       `bht:test:reminders:${reminder.id}`,
-      expect.objectContaining({ status: "SENT", attempts: "1", sentAt }),
+      expect.objectContaining({
+        status: "SENT",
+        attempts: "1",
+        processedAt,
+        sentAt: processedAt,
+      }),
     );
   });
 
@@ -181,12 +188,16 @@ describe("ReminderRepository", () => {
 
     await new ReminderRepository().update(reminder.id, {
       lastAttemptAt: undefined,
+      processedAt: undefined,
+      sentAt: undefined,
       lastError: undefined,
     });
 
     expect(mocks.pipeline.hdel).toHaveBeenCalledWith(
       `bht:test:reminders:${reminder.id}`,
       "lastAttemptAt",
+      "processedAt",
+      "sentAt",
       "lastError",
     );
   });

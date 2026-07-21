@@ -58,9 +58,28 @@ export function RemindersSection({
         </span>
       </div>
 
-      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+       <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
         Los recordatorios organizan fechas registradas y no sustituyen la indicación ni la consulta
         de un profesional de salud.
+      </div>
+
+      <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-blue-800 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200">
+        <p className="text-sm font-medium">
+          La hora programada representa el objetivo de envío.
+        </p>
+        <p className="mt-1 text-xs leading-5">
+          Los recordatorios son revisados automáticamente por un procesador periódico, por lo que
+          su ejecución puede producirse con un pequeño margen respecto a la hora seleccionada.
+        </p>
+        <p className="mt-1 text-xs leading-5">
+          Cada aviso se entrega una sola vez. Si ocurre un error técnico, el sistema puede
+          reintentar el procesamiento sin generar intencionalmente varios mensajes para la
+          paciente.
+        </p>
+        <p className="mt-1 text-xs leading-5">
+          Las fechas y horas se presentan usando la zona horaria{" "}
+          <span className="font-semibold">{timezone}</span>.
+        </p>
       </div>
 
       {!patientActive ? (
