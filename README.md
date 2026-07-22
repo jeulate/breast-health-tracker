@@ -9,7 +9,7 @@ El proyecto combina un dashboard administrativo, persistencia en Redis, autentic
 
 ## Estado del proyecto
 
-Las fases de arquitectura base, dashboard analítico, gestión avanzada de pacientes, hallazgos BI-RADS, timeline clínico, calendario, recordatorios e integración con Telegram se encuentran completadas. La Fase 7 fue validada en `feature/telegram`, integrada en `develop` mediante el PR #16 y está lista para promoverse a `main` junto con esta actualización documental.
+Las fases de arquitectura base, dashboard analítico, gestión avanzada de pacientes, hallazgos BI-RADS, timeline clínico, calendario, recordatorios, integración con Telegram y reportes se encuentran completadas y publicadas en `main`. La Fase 8 incorporó el dashboard de reportes, filtros reutilizables y exportaciones CSV/PDF protegidas.
 
 | Área                          | Estado     | Implementación                                  |
 | ----------------------------- | ---------- | ----------------------------------------------- |
@@ -29,6 +29,8 @@ Las fases de arquitectura base, dashboard analítico, gestión avanzada de pacie
 | Calendario                    | Completada | Vista mensual, agenda móvil y filtros           |
 | Recordatorios                 | Completada | Programación, ejecución y control de estados    |
 | Telegram                      | Completada | Vinculación segura y entrega de recordatorios   |
+| Reportes                      | Completada | Resumen, filtros y tabla administrativa         |
+| Exportaciones                 | Completada | Descargas CSV UTF-8 y PDF protegidas            |
 
 ## Tecnologías
 
@@ -49,6 +51,7 @@ Las fases de arquitectura base, dashboard analítico, gestión avanzada de pacie
 | GitHub Actions | Integración y entrega continua             |
 | Vercel         | Hosting y despliegue de producción         |
 | grammY         | Bot, webhook y entrega mediante Telegram   |
+| pdf-lib        | Generación de reportes PDF en el servidor  |
 
 ## Arquitectura
 
@@ -86,6 +89,20 @@ Vercel Cron
 Procesador de recordatorios
    ├── Canal IN_APP
    └── Canal TELEGRAM ──► API de Telegram
+
+Dashboard de reportes
+   │ filtros validados
+   ▼
+Route Handlers protegidos
+   ├── Resumen JSON
+   ├── Exportación CSV UTF-8
+   └── Exportación PDF con pdf-lib
+             │
+             ▼
+       Servicio de reportes
+             │
+             ▼
+        Datos consolidados
 ```
 
 ### Principios aplicados
@@ -113,6 +130,7 @@ breast-health-tracker/
 │   │   │   ├── calendar/        # Proyección global autenticada del calendario
 │   │   │   ├── internal/        # Procesamiento interno protegido por secreto
 │   │   │   ├── patients/        # Pacientes, recordatorios y vinculación
+│   │   │   ├── reports/         # Resumen y exportaciones CSV/PDF
 │   │   │   └── telegram/        # Webhook autenticado del bot
 │   │   ├── dashboard/           # Layout, calendario y páginas protegidas
 │   │   ├── login/               # Inicio de sesión
@@ -124,6 +142,7 @@ breast-health-tracker/
 │   │   ├── forms/               # LoginForm y PatientForm
 │   │   ├── patients/            # Filtros, tabla y paginación
 │   │   ├── reminders/           # Gestión visual de recordatorios
+│   │   ├── reports/             # Filtros, indicadores, tabla y descargas
 │   │   ├── telegram/            # Gestión visual de la vinculación
 │   │   ├── timeline/             # Timeline y eventos clínicos
 │   │   └── ui/                  # Controles reutilizables
@@ -136,6 +155,7 @@ breast-health-tracker/
 │   │   ├── findings/            # Contratos del dominio BI-RADS
 │   │   ├── patients/            # API pública del módulo de pacientes
 │   │   ├── reminders/           # Contratos, identidad y entrega
+│   │   ├── reports/             # Contratos, cálculos, filtros y exportación
 │   │   └── telegram/            # Contratos, tokens y mensajes del bot
 │   ├── lib/
 │   │   ├── auth/                # JWT, contraseñas y sesión
@@ -276,6 +296,23 @@ breast-health-tracker/
 - Formato determinista de fecha y hora para evitar diferencias de hidratación entre servidor y navegador.
 - Visualización del canal real en cada tarjeta de recordatorio.
 - Pruebas de contratos, validaciones, repositorio, servicio, webhook, mensajes y entrega.
+
+### Reportes y exportaciones
+
+- Dashboard disponible en `/dashboard/reports`.
+- Filtros por fecha inicial, fecha final, estado e identificador de paciente.
+- Estado de los filtros conservado en la URL para compartir y repetir consultas.
+- Indicadores consolidados y tabla de resultados construidos desde una misma lógica de dominio.
+- Endpoint de resumen JSON en `/api/reports/summary`.
+- Exportación CSV con separador compatible con Excel y BOM UTF-8 para conservar tildes y `ñ`.
+- Exportación PDF generada en el servidor mediante `pdf-lib`.
+- Nombres de archivo basados en el periodo seleccionado.
+- Encabezados de descarga y política `no-store` para evitar caché de información sensible.
+- Exportaciones restringidas a los roles `ADMIN` y `PROFESSIONAL`.
+- Estados de carga, error y resultados vacíos.
+- Diseño responsive y compatible con modo claro y oscuro.
+- Pruebas de cálculo, validación, filtros URL, servicio, exportación y contratos API.
+- Validación local de ambas descargas y respuestas HTTP `200`.
 
 ### Interfaz
 
@@ -467,6 +504,9 @@ El código solo debe integrarse cuando todos los controles finalicen correctamen
 | `DELETE` | `/api/patients/[id]/telegram-link`               | Desvincular Telegram                | Autenticado      |
 | `GET`    | `/api/patients/[id]/telegram-link/[challengeId]` | Consultar un desafío pendiente      | Autenticado      |
 | `POST`   | `/api/telegram/webhook`                          | Procesar actualizaciones del bot    | Secreto Telegram |
+| `GET`    | `/api/reports/summary`                           | Consultar el resumen de reportes    | Autorizado       |
+| `GET`    | `/api/reports/export/csv`                        | Descargar el reporte en CSV         | Autorizado       |
+| `GET`    | `/api/reports/export/pdf`                        | Descargar el reporte en PDF         | Autorizado       |
 
 ## Estrategia Git
 
@@ -501,19 +541,15 @@ No se deben desarrollar funcionalidades directamente sobre `develop` ni `main`.
 
 ### Iteración actual
 
-La rama `feature/telegram` completó la Fase 7 y fue integrada en `develop` mediante el PR #16:
+La Fase 8 se desarrolló en dos bloques y ya está integrada en producción:
 
-- Contratos, validaciones y persistencia de la vinculación.
-- Desafíos temporales para asociar de forma controlada una paciente con un chat.
-- API administrativa autenticada y aislada por paciente.
-- Interfaz responsive de vinculación, consulta y desvinculación.
-- Webhook autenticado mediante `TELEGRAM_WEBHOOK_SECRET`.
-- Adaptador de entrega conectado al procesador idempotente de recordatorios.
-- Actualización automática del estado de vinculación.
-- Formato estable de fechas y visualización correcta del canal.
-- Pruebas automatizadas y validación manual en Vercel Preview.
+- `feature/reports`: dashboard, filtros, indicadores, tabla, servicio y endpoint de resumen; integrada en `develop` mediante el PR #21.
+- `feature/report-exports`: exportaciones CSV/PDF, controles de descarga y pruebas; integrada en `develop` mediante el PR #22.
+- `develop` fue promovida a `main` mediante el PR #23.
+- Commit de producción: `6423858`.
+- Validación final: 347 pruebas aprobadas en 57 archivos, TypeScript, ESLint y build de producción sin errores.
 
-La rama `docs/phase-7-readme`, creada desde `develop`, contiene esta actualización. Tras integrarla en `develop`, el siguiente paso es promover la versión completa mediante un pull request de `develop` hacia `main`.
+La rama documental `docs/update-readme-phase-8` registra el cierre de esta fase. El siguiente bloque funcional previsto es la Fase 9.
 
 ## CI/CD
 
@@ -701,16 +737,34 @@ Integración en `develop`: PR #16.
 
 ### Fase 8 — Reportes y exportación
 
-**Estado: planificada**
+**Estado: completada y publicada en producción**
 
-- Reportes por paciente y periodo.
-- Resumen de seguimientos.
-- Indicadores administrativos.
-- Exportación a formatos definidos por el proyecto.
-- Filtros y rangos de fechas.
-- Controles de acceso a información exportada.
+Objetivo: ofrecer una vista administrativa consolidada y permitir la descarga controlada de la misma información, respetando los filtros activos.
 
-Ramas previstas: `feature/reports` y `feature/export`.
+- Página protegida `/dashboard/reports` incorporada al sidebar.
+- Filtros por periodo, estado e identificador de paciente.
+- Parámetros normalizados y conservados en la URL.
+- Tarjetas de resumen y tabla de resultados.
+- Cálculos de dominio separados de la interfaz y del acceso a datos.
+- Endpoint `GET /api/reports/summary` para el resumen consolidado.
+- Endpoint `GET /api/reports/export/csv` para descargas compatibles con Excel.
+- Endpoint `GET /api/reports/export/pdf` para documentos generados con `pdf-lib`.
+- CSV codificado en UTF-8 con BOM y separador `;`.
+- PDF con periodo, indicadores y desglose del reporte.
+- Nombres de archivo derivados del rango de fechas.
+- Encabezados seguros de descarga y respuesta sin caché.
+- Acceso restringido a `ADMIN` y `PROFESSIONAL`.
+- Botones de exportación que reutilizan los filtros de la vista.
+- Estados de carga, error y vacío.
+- Pruebas de cálculo, URL, validación, servicio, generación de archivos y contrato HTTP.
+- 347 pruebas aprobadas en 57 archivos, además de typecheck, lint y build.
+- Descargas CSV/PDF verificadas localmente con estado HTTP `200`.
+
+Ramas utilizadas: `feature/reports` y `feature/report-exports`.
+
+Integraciones: PR #21 y PR #22 hacia `develop`; PR #23 de `develop` hacia `main`.
+
+Mejora futura no bloqueante: incorporar procesamiento por lotes o generación asíncrona si el volumen de información supera la capacidad adecuada para una respuesta HTTP directa.
 
 ### Fase 9 — Perfil, configuración y auditoría
 
@@ -769,7 +823,7 @@ Cada fase deberá cumplir, como mínimo, con los siguientes criterios:
 
 ## Próximo paso
 
-La Fase 7 está integrada y validada en `develop`. Después de fusionar `docs/phase-7-readme` en esa rama, el siguiente paso es crear el pull request de lanzamiento hacia `main`:
+La Fase 8 está integrada y publicada en `main`. El siguiente paso inmediato es integrar esta actualización documental desde `docs/update-readme-phase-8` hacia `develop` y después promoverla a `main` mediante pull requests.
 
 ```bash
 git status
@@ -778,7 +832,7 @@ git pull origin develop
 git log --oneline --decorate -5
 ```
 
-Después del merge en `main` se debe esperar el despliegue de producción, registrar el webhook con la URL productiva estable, repetir la prueba final con datos ficticios y eliminar `feature/telegram` local y remotamente. La siguiente iteración funcional prevista es la **Fase 8 — Reportes y exportación**.
+Una vez publicada la documentación, la siguiente iteración funcional prevista es la **Fase 9 — Perfil, configuración y auditoría**. Antes de trabajar con datos reales también deben definirse las políticas de privacidad, respaldo, retención, eliminación y auditoría indicadas en este documento.
 
 ## Licencia
 
