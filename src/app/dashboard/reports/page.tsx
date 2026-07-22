@@ -4,6 +4,7 @@ import { ReportSummaryCards } from "@/components/reports/ReportSummaryCards";
 import type { ReportFilters as ReportFiltersValue } from "@/features/reports";
 import { reportFiltersSchema } from "@/lib/validations/report";
 import { ReportService } from "@/services/report.service";
+import { ReportExportButtons } from "@/components/reports/ReportExportButtons";
 
 interface ReportsPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -41,6 +42,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
         </div>
       )}
       <ReportFilters filters={filters} />
+      <ReportExportButtons filters={filters} />
       <ReportSummaryCards summary={summary} />
       <ReportResultsTable summary={summary} />
     </div>
