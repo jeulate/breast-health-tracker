@@ -14,6 +14,7 @@ const navItems = [
   { href: "/dashboard", label: "Inicio", icon: "⊞" },
   { href: "/dashboard/patients", label: "Pacientes", icon: "♡" },
   { href: "/dashboard/calendar", label: "Calendario", icon: "▦" },
+  { href: "/dashboard/reports", label: "Reportes", icon: "▤" },
 ];
 
 export function Sidebar({ isMobileOpen, isDesktopCollapsed, onMobileClose }: SidebarProps) {
