@@ -14,6 +14,7 @@ export interface ReminderUpdateFields {
   attempts?: number;
   maxAttempts?: number;
   lastAttemptAt?: string | undefined;
+  processedAt?: string | undefined;
   sentAt?: string | undefined;
   completedAt?: string | undefined;
   cancelledAt?: string | undefined;
@@ -22,6 +23,7 @@ export interface ReminderUpdateFields {
 
 const optionalFields = [
   "lastAttemptAt",
+  "processedAt",
   "sentAt",
   "completedAt",
   "cancelledAt",
@@ -239,6 +241,7 @@ export class ReminderRepository {
       attempts: this.requiredNumber(data.attempts),
       maxAttempts: this.requiredNumber(data.maxAttempts),
       lastAttemptAt: this.optionalString(data.lastAttemptAt),
+      processedAt: this.optionalString(data.processedAt),
       sentAt: this.optionalString(data.sentAt),
       completedAt: this.optionalString(data.completedAt),
       cancelledAt: this.optionalString(data.cancelledAt),

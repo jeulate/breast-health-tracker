@@ -63,6 +63,22 @@ export function RemindersSection({
         de un profesional de salud.
       </div>
 
+      <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-blue-800 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200">
+        <p className="text-sm font-medium">La hora programada representa el objetivo de envío.</p>
+        <p className="mt-1 text-xs leading-5">
+          Los recordatorios son revisados automáticamente por un procesador periódico, por lo que su
+          ejecución puede producirse con un pequeño margen respecto a la hora seleccionada.
+        </p>
+        <p className="mt-1 text-xs leading-5">
+          Cada aviso se entrega una sola vez. Si ocurre un error técnico, el sistema puede
+          reintentar el procesamiento sin generar intencionalmente varios mensajes para la paciente.
+        </p>
+        <p className="mt-1 text-xs leading-5">
+          Las fechas y horas se presentan usando la zona horaria{" "}
+          <span className="font-semibold">{timezone}</span>.
+        </p>
+      </div>
+
       {!patientActive ? (
         <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300">
           La paciente está inactiva. Puedes consultar el historial, pero no crear nuevos

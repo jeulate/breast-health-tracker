@@ -52,6 +52,7 @@ export const reminderSchema = createReminderSchema
     status: z.enum(REMINDER_STATUSES),
     attempts: z.number().int().min(0),
     lastAttemptAt: dateTimeSchema.optional(),
+    processedAt: z.string().datetime().optional(),
     sentAt: dateTimeSchema.optional(),
     completedAt: dateTimeSchema.optional(),
     cancelledAt: dateTimeSchema.optional(),

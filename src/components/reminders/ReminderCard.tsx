@@ -53,6 +53,10 @@ export function ReminderCard({
   const canReschedule = reminder.status === "PENDING" || reminder.status === "FAILED";
   const canCancel = reminder.status === "PENDING" || reminder.status === "FAILED";
   const canComplete = reminder.status === "PENDING" || reminder.status === "SENT";
+  const remainingAttempts = Math.max(reminder.maxAttempts - reminder.attempts, 0);
+  const hasProcessingHistory = Boolean(
+    reminder.lastAttemptAt || reminder.processedAt || reminder.sentAt,
+  );
 
   async function performAction(body: Record<string, unknown>): Promise<void> {
     setLoading(true);
@@ -108,27 +112,79 @@ export function ReminderCard({
         </span>
       </div>
 
-      <dl className="border-border mt-4 grid gap-4 border-t pt-4 sm:grid-cols-3">
+      <dl className="border-border mt-4 grid gap-4 border-t pt-4 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <dt className="text-muted text-xs font-medium">Aviso programado</dt>
           <dd className="text-foreground mt-1 text-sm font-semibold">
             {formatReminderDateTime(reminder.scheduledFor, reminder.timezone)}
           </dd>
         </div>
+
+        <div>
+          <dt className="text-muted text-xs font-medium">Zona horaria</dt>
+          <dd className="text-foreground mt-1 text-sm font-semibold">{reminder.timezone}</dd>
+        </div>
+
         <div>
           <dt className="text-muted text-xs font-medium">Canal</dt>
           <dd className="text-foreground mt-1 text-sm font-semibold">
             {reminderChannelLabel(reminder.channel)}
           </dd>
         </div>
+
         <div>
-          <dt className="text-muted text-xs font-medium">Intentos</dt>
+          <dt className="text-muted text-xs font-medium">Intentos técnicos</dt>
           <dd className="text-foreground mt-1 text-sm font-semibold">
-            {reminder.attempts} de {reminder.maxAttempts}
+            {reminder.attempts} de {reminder.maxAttempts} utilizados
           </dd>
+          <p className="text-muted mt-1 text-xs">
+            {remainingAttempts === 0
+              ? "No quedan reintentos disponibles."
+              : remainingAttempts === 1
+                ? "Queda 1 reintento disponible."
+                : `Quedan ${remainingAttempts} reintentos disponibles.`}
+          </p>
         </div>
       </dl>
 
+      <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200">
+        <p className="font-medium">Este recordatorio se entrega una sola vez.</p>
+        <p className="mt-1 text-xs leading-5">
+          Los {reminder.maxAttempts} intentos disponibles son reintentos técnicos ante errores de
+          procesamiento; no representan varios mensajes para el paciente.
+        </p>
+      </div>
+
+      {hasProcessingHistory ? (
+        <dl className="border-border mt-4 grid gap-4 rounded-xl border p-4 sm:grid-cols-2 lg:grid-cols-3">
+          {reminder.lastAttemptAt ? (
+            <div>
+              <dt className="text-muted text-xs font-medium">Inicio del último intento</dt>
+              <dd className="text-foreground mt-1 text-sm font-semibold">
+                {formatReminderDateTime(reminder.lastAttemptAt, reminder.timezone)}
+              </dd>
+            </div>
+          ) : null}
+
+          {reminder.processedAt ? (
+            <div>
+              <dt className="text-muted text-xs font-medium">Último procesamiento</dt>
+              <dd className="text-foreground mt-1 text-sm font-semibold">
+                {formatReminderDateTime(reminder.processedAt, reminder.timezone)}
+              </dd>
+            </div>
+          ) : null}
+
+          {reminder.sentAt ? (
+            <div>
+              <dt className="text-muted text-xs font-medium">Envío confirmado</dt>
+              <dd className="text-foreground mt-1 text-sm font-semibold">
+                {formatReminderDateTime(reminder.sentAt, reminder.timezone)}
+              </dd>
+            </div>
+          ) : null}
+        </dl>
+      ) : null}
       {reminder.status === "FAILED" ? (
         <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
           El procesamiento requiere revisión antes de volver a intentarlo.
