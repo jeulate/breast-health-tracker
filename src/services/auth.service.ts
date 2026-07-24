@@ -14,7 +14,6 @@ export const AuthService = {
     if (!valid) throw new Error("INVALID_CREDENTIALS");
 
     if (user.status !== "ACTIVE") throw new Error("ACCOUNT_INACTIVE");
-    if (user.role !== "ADMIN") throw new Error("FORBIDDEN");
 
     await createSession({ sub: user.id, email: user.email, role: user.role });
 
