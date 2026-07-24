@@ -9,7 +9,7 @@ El proyecto combina un dashboard administrativo, persistencia en Redis, autentic
 
 ## Estado del proyecto
 
-Las fases de arquitectura base, dashboard analítico, gestión avanzada de pacientes, hallazgos BI-RADS, timeline clínico, calendario, recordatorios, integración con Telegram y reportes se encuentran completadas y publicadas en `main`. La Fase 8 incorporó el dashboard de reportes, filtros reutilizables y exportaciones CSV/PDF protegidas.
+Las fases de arquitectura base, dashboard analítico, gestión avanzada de pacientes, hallazgos BI-RADS, timeline clínico, calendario, recordatorios, integración con Telegram y reportes se encuentran completadas y publicadas en `main`. La Fase 9 se encuentra en desarrollo sobre `feature/phase-9`; sus bloques de dominio/API de perfil y de interfaz de preferencias ya fueron implementados, probados y publicados en la rama remota, pero todavía no fueron integrados en `develop` ni en producción.
 
 | Área                          | Estado     | Implementación                                  |
 | ----------------------------- | ---------- | ----------------------------------------------- |
@@ -31,6 +31,9 @@ Las fases de arquitectura base, dashboard analítico, gestión avanzada de pacie
 | Telegram                      | Completada | Vinculación segura y entrega de recordatorios   |
 | Reportes                      | Completada | Resumen, filtros y tabla administrativa         |
 | Exportaciones                 | Completada | Descargas CSV UTF-8 y PDF protegidas            |
+| Perfil de usuario             | En rama    | Datos de cuenta y preferencias persistentes     |
+| Preferencias de interfaz      | En rama    | Tema, idioma, zona horaria y notificaciones     |
+| Sincronización de tema        | En rama    | Modos claro, oscuro y sistema sin sobrescrituras |
 
 ## Tecnologías
 
@@ -75,6 +78,19 @@ Next.js App Router
              │
              ▼
         Upstash Redis
+
+Perfil del usuario
+   │ sesión autenticada
+   ▼
+Route Handler /api/profile
+   ├── Consulta de cuenta y preferencias
+   └── Actualización validada
+             │
+             ▼
+       Servicio de perfil
+             │
+             ▼
+        Repositorio Redis
 
 Telegram
    │ webhook autenticado
@@ -143,6 +159,7 @@ breast-health-tracker/
 │   │   ├── patients/            # Filtros, tabla y paginación
 │   │   ├── reminders/           # Gestión visual de recordatorios
 │   │   ├── reports/             # Filtros, indicadores, tabla y descargas
+│   │   ├── profile/             # Perfil, preferencias y sincronización del tema
 │   │   ├── telegram/            # Gestión visual de la vinculación
 │   │   ├── timeline/             # Timeline y eventos clínicos
 │   │   └── ui/                  # Controles reutilizables
@@ -154,6 +171,7 @@ breast-health-tracker/
 │   │   ├── dashboard/           # Contratos y métricas del dashboard
 │   │   ├── findings/            # Contratos del dominio BI-RADS
 │   │   ├── patients/            # API pública del módulo de pacientes
+│   │   ├── profile/             # Contratos, validación y reglas del perfil
 │   │   ├── reminders/           # Contratos, identidad y entrega
 │   │   ├── reports/             # Contratos, cálculos, filtros y exportación
 │   │   └── telegram/            # Contratos, tokens y mensajes del bot
@@ -314,6 +332,28 @@ breast-health-tracker/
 - Pruebas de cálculo, validación, filtros URL, servicio, exportación y contratos API.
 - Validación local de ambas descargas y respuestas HTTP `200`.
 
+### Perfil y preferencias del usuario
+
+- Página protegida disponible en `/dashboard/profile`.
+- Acceso “Mi perfil” incorporado al Sidebar.
+- Consulta del nombre, correo, rol y estado de la cuenta autenticada.
+- Edición permitida únicamente para el nombre dentro de los datos de cuenta.
+- Preferencias persistentes de tema, idioma y zona horaria.
+- Temas `LIGHT`, `DARK` y `SYSTEM`, aplicados inmediatamente en el navegador.
+- Preferencias de notificación mediante tres controles independientes.
+- Confirmación visible después de guardar los cambios.
+- Estados de carga y error específicos para la página de perfil.
+- Endpoint autenticado `GET /api/profile` para consultar el perfil.
+- Endpoint autenticado `PATCH /api/profile` para actualizar datos y preferencias.
+- Validación compartida entre dominio, API e interfaz.
+- Sincronización inicial de la preferencia almacenada en Redis.
+- Prioridad de la selección local después de inicializar el navegador, evitando que Redis sobrescriba cambios posteriores.
+- Uso unificado de la clave `theme` de `next-themes`; la clave anterior `birads-tracker-theme` fue retirada.
+- Cambio estable entre modo claro y oscuro desde el encabezado y el formulario de perfil.
+- Persistencia del tema después de recargar y navegar entre páginas.
+- Diseño responsive y compatible con los estilos globales del dashboard.
+- Pruebas unitarias para las conversiones y funciones auxiliares del formulario.
+
 ### Interfaz
 
 - Diseño inspirado en TailAdmin.
@@ -328,6 +368,8 @@ breast-health-tracker/
 - Componentes reutilizables para futuras fases.
 - Tabla con desplazamiento horizontal contenido en dispositivos pequeños.
 - Perfil de paciente adaptado a escritorio y móvil.
+- Perfil del usuario con datos de cuenta y preferencias configurables.
+- Sincronización consistente del tema entre encabezado, perfil, navegador y Redis.
 
 ## Requisitos
 
@@ -507,6 +549,8 @@ El código solo debe integrarse cuando todos los controles finalicen correctamen
 | `GET`    | `/api/reports/summary`                           | Consultar el resumen de reportes    | Autorizado       |
 | `GET`    | `/api/reports/export/csv`                        | Descargar el reporte en CSV         | Autorizado       |
 | `GET`    | `/api/reports/export/pdf`                        | Descargar el reporte en PDF         | Autorizado       |
+| `GET`    | `/api/profile`                                   | Consultar perfil y preferencias      | Autenticado      |
+| `PATCH`  | `/api/profile`                                   | Actualizar perfil y preferencias     | Autenticado      |
 
 ## Estrategia Git
 
@@ -541,15 +585,16 @@ No se deben desarrollar funcionalidades directamente sobre `develop` ni `main`.
 
 ### Iteración actual
 
-La Fase 8 se desarrolló en dos bloques y ya está integrada en producción:
+La Fase 8 permanece integrada en producción. La Fase 9 se desarrolla de forma incremental en `feature/phase-9`:
 
-- `feature/reports`: dashboard, filtros, indicadores, tabla, servicio y endpoint de resumen; integrada en `develop` mediante el PR #21.
-- `feature/report-exports`: exportaciones CSV/PDF, controles de descarga y pruebas; integrada en `develop` mediante el PR #22.
-- `develop` fue promovida a `main` mediante el PR #23.
-- Commit de producción: `6423858`.
-- Validación final: 347 pruebas aprobadas en 57 archivos, TypeScript, ESLint y build de producción sin errores.
+- Bloque 9.1: dominio, persistencia, servicio y API autenticada del perfil y sus preferencias.
+- Bloque 9.2: página `/dashboard/profile`, formulario, navegación, preferencias de interfaz y sincronización del tema.
+- Commit del Bloque 9.2: `9ee3221` (`feat: add profile preferences UI and theme synchronization`).
+- Rama local y remota sincronizadas después del push.
+- Validación final del bloque: 356 pruebas aprobadas en 59 archivos, TypeScript, ESLint y build de producción sin errores.
+- Prueba manual completada para el cambio `DARK ↔ LIGHT`, navegación y persistencia local.
 
-La rama documental `docs/update-readme-phase-8` registra el cierre de esta fase. El siguiente bloque funcional previsto es la Fase 9.
+Estos cambios todavía deben pasar por pull request antes de integrarse en `develop` y posteriormente en `main`.
 
 ## CI/CD
 
@@ -768,16 +813,49 @@ Mejora futura no bloqueante: incorporar procesamiento por lotes o generación as
 
 ### Fase 9 — Perfil, configuración y auditoría
 
-**Estado: planificada**
+**Estado: en desarrollo**
 
-- Perfil del usuario.
-- Preferencias de interfaz y notificación.
+Objetivo: incorporar un perfil administrativo persistente, preferencias personales y las bases necesarias para configuración, permisos, auditoría y observabilidad.
+
+Bloque 9.1 — Dominio, persistencia y API de perfil:
+
+- Modelo de perfil asociado al usuario autenticado.
+- Datos de cuenta: nombre, correo, rol y estado.
+- Preferencias de tema, idioma y zona horaria.
+- Preferencias independientes de notificación.
+- Validación de consultas y actualizaciones.
+- Separación entre contratos, repositorio, servicio y Route Handler.
+- Endpoints autenticados `GET /api/profile` y `PATCH /api/profile`.
+- Conservación de los campos no enviados en actualizaciones parciales.
+
+Bloque 9.2 — Interfaz y sincronización de preferencias:
+
+- Página protegida `/dashboard/profile`.
+- Entrada “Mi perfil” en el Sidebar.
+- Formulario responsive con estados de carga, error y confirmación.
+- Nombre editable; correo, rol y estado visibles como datos de cuenta.
+- Selectores de tema, idioma y zona horaria.
+- Tres interruptores independientes para notificaciones.
+- Aplicación inmediata del tema desde el formulario y el encabezado.
+- Modos claro, oscuro y sistema mediante `next-themes`.
+- Sincronización inicial con la preferencia persistida en Redis.
+- Respeto de la selección local después de inicializar el tema.
+- Eliminación de la clave heredada `birads-tracker-theme`.
+- Persistencia unificada mediante la clave local `theme`.
+- Pruebas manuales del ciclo `DARK → LIGHT → DARK` y persistencia tras recargar.
+- 356 pruebas aprobadas en 59 archivos, además de typecheck, lint y build.
+
+Pendiente dentro de la Fase 9:
+
 - Configuración administrativa.
-- Gestión futura de roles y permisos.
+- Gestión de roles y permisos.
 - Registro de acciones relevantes.
 - Observabilidad y trazabilidad de errores.
+- Integración de la rama mediante pull request hacia `develop`.
 
-Ramas previstas: `feature/profile`, `feature/settings` y `feature/audit-log`.
+Rama actual: `feature/phase-9`.
+
+Commit del Bloque 9.2: `9ee3221`.
 
 ### Fase 10 — Asistencia con IA
 
@@ -823,16 +901,17 @@ Cada fase deberá cumplir, como mínimo, con los siguientes criterios:
 
 ## Próximo paso
 
-La Fase 8 está integrada y publicada en `main`. El siguiente paso inmediato es integrar esta actualización documental desde `docs/update-readme-phase-8` hacia `develop` y después promoverla a `main` mediante pull requests.
+Los bloques 9.1 y 9.2 están implementados y publicados en `origin/feature/phase-9`. El siguiente paso es definir e implementar el próximo bloque de la Fase 9 en la misma rama o cerrar el alcance actual mediante un pull request hacia `develop`, según la estrategia acordada para la fase.
 
 ```bash
 git status
-git switch develop
-git pull origin develop
-git log --oneline --decorate -5
+git branch --show-current
+git log -1 --oneline
 ```
 
-Una vez publicada la documentación, la siguiente iteración funcional prevista es la **Fase 9 — Perfil, configuración y auditoría**. Antes de trabajar con datos reales también deben definirse las políticas de privacidad, respaldo, retención, eliminación y auditoría indicadas en este documento.
+Antes del pull request deben volver a ejecutarse los controles de calidad y confirmarse que la rama no contenga cambios sin registrar. No se debe afirmar que la Fase 9 está en producción hasta completar la integración `feature/phase-9 → develop → main` y verificar el despliegue.
+
+Antes de trabajar con datos reales también deben definirse las políticas de privacidad, respaldo, retención, eliminación y auditoría indicadas en este documento.
 
 ## Licencia
 
