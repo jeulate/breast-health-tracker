@@ -13,6 +13,7 @@ export interface User {
   passwordHash: string;
   role: UserRole;
   status: UserStatus;
+  profilePhotoPath?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -23,6 +24,7 @@ export interface Patient {
   birthDate?: string;
   timezone: string;
   status: PatientStatus;
+  profilePhotoPath?: string;
   /** Reserved for Telegram integration – Phase 7 */
   telegramUserId?: string;
   /** Reserved for Telegram integration – Phase 7 */

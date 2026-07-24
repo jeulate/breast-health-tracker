@@ -48,6 +48,26 @@ export class UserRepository {
     });
   }
 
+  async updateProfilePhoto(
+    id: string,
+    profilePhotoPath: string | null,
+  ): Promise<void> {
+    const now = new Date().toISOString();
+
+    if (profilePhotoPath !== null) {
+      await this.redis.hset(this.key(id), {
+        profilePhotoPath,
+        updatedAt: now,
+      });
+      return;
+    }
+
+    const pipeline = this.redis.pipeline();
+    pipeline.hdel(this.key(id), "profilePhotoPath");
+    pipeline.hset(this.key(id), { updatedAt: now });
+    await pipeline.exec();
+  }
+
   async listAll(): Promise<User[]> {
     const ids = await this.redis.smembers(redisKeys.usersIndex());
     if (ids.length === 0) return [];
@@ -56,7 +76,7 @@ export class UserRepository {
   }
 
   private serialize(user: User): Record<string, string> {
-    return {
+    const record: Record<string, string> = {
       id: user.id,
       name: user.name,
       email: user.email,
@@ -66,6 +86,12 @@ export class UserRepository {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
+
+    if (user.profilePhotoPath) {
+      record.profilePhotoPath = user.profilePhotoPath;
+    }
+
+    return record;
   }
 
   private deserialize(data: Record<string, string>): User {
@@ -76,6 +102,7 @@ export class UserRepository {
       passwordHash: data.passwordHash,
       role: data.role as User["role"],
       status: data.status as User["status"],
+      profilePhotoPath: data.profilePhotoPath || undefined,
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
     };

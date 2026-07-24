@@ -51,6 +51,26 @@ export class PatientRepository {
     await this.redis.hset(this.key(id), { status, updatedAt: now });
   }
 
+  async updateProfilePhoto(
+    id: string,
+    profilePhotoPath: string | null,
+  ): Promise<void> {
+    const now = new Date().toISOString();
+
+    if (profilePhotoPath !== null) {
+      await this.redis.hset(this.key(id), {
+        profilePhotoPath,
+        updatedAt: now,
+      });
+      return;
+    }
+
+    const pipeline = this.redis.pipeline();
+    pipeline.hdel(this.key(id), "profilePhotoPath");
+    pipeline.hset(this.key(id), { updatedAt: now });
+    await pipeline.exec();
+  }
+
   async updateTelegramLink(id: string, identity: TelegramIdentity): Promise<void> {
     await this.redis.hset(this.key(id), {
       telegramUserId: identity.telegramUserId,
@@ -127,6 +147,9 @@ export class PatientRepository {
     if (patient.birthDate) record.birthDate = patient.birthDate;
     if (patient.telegramUserId) record.telegramUserId = patient.telegramUserId;
     if (patient.telegramChatId) record.telegramChatId = patient.telegramChatId;
+    if (patient.profilePhotoPath) {
+      record.profilePhotoPath = patient.profilePhotoPath;
+    }
     return record;
   }
 
@@ -137,6 +160,7 @@ export class PatientRepository {
       birthDate: data.birthDate || undefined,
       timezone: data.timezone,
       status: data.status as PatientStatus,
+      profilePhotoPath: data.profilePhotoPath || undefined,
       telegramUserId: data.telegramUserId || undefined,
       telegramChatId: data.telegramChatId || undefined,
       createdAt: data.createdAt,
