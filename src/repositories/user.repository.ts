@@ -40,6 +40,14 @@ export class UserRepository {
     await this.redis.hset(this.key(id), { status, updatedAt: now });
   }
 
+  async updateProfile(id: string, fields: { name: string }): Promise<void> {
+    const now = new Date().toISOString();
+    await this.redis.hset(this.key(id), {
+      name: fields.name,
+      updatedAt: now,
+    });
+  }
+
   async listAll(): Promise<User[]> {
     const ids = await this.redis.smembers(redisKeys.usersIndex());
     if (ids.length === 0) return [];

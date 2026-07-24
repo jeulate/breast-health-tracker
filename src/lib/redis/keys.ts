@@ -25,6 +25,10 @@ export const redisKeys = {
     return `${getPrefix()}users:index`;
   },
 
+  userPreferences(userId: string): string {
+    return `${getPrefix()}users:${userId}:preferences`;
+  },
+
   patient(id: string): string {
     return `${getPrefix()}patients:${id}`;
   },
