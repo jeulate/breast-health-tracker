@@ -40,3 +40,8 @@ export interface ProfilePhotoStorage {
 
   remove(pathname: string): Promise<void>;
 }
+
+export interface ProfilePhotoMutationResult {
+  pathname: string | null;
+  previousPhotoCleanupFailed: boolean;
+}

@@ -3,6 +3,7 @@ export type ProfilePhotoErrorCode =
   | "FILE_TOO_LARGE"
   | "UNSUPPORTED_FILE_TYPE"
   | "INVALID_OWNER_ID"
+  | "OWNER_NOT_FOUND"
   | "BLOB_CONFIGURATION_ERROR"
   | "STORAGE_ERROR";
 
