@@ -1,8 +1,4 @@
-import type {
-  UpdateUserProfileInput,
-  UserPreferences,
-  UserProfile,
-} from "@/features/profile";
+import type { UpdateUserProfileInput, UserPreferences, UserProfile } from "@/features/profile";
 import { updateUserProfileSchema } from "@/lib/validations/profile";
 import { UserPreferencesRepository } from "@/repositories/user-preferences.repository";
 import { UserRepository } from "@/repositories/user.repository";

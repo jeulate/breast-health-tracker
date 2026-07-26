@@ -11,28 +11,28 @@ El proyecto combina un dashboard administrativo, persistencia en Redis, autentic
 
 Las fases de arquitectura base, dashboard analítico, gestión avanzada de pacientes, hallazgos BI-RADS, timeline clínico, calendario, recordatorios, integración con Telegram y reportes se encuentran completadas y publicadas en `main`. La Fase 9 se encuentra en desarrollo sobre `feature/phase-9`; sus bloques de dominio/API de perfil y de interfaz de preferencias ya fueron implementados, probados y publicados en la rama remota, pero todavía no fueron integrados en `develop` ni en producción.
 
-| Área                          | Estado     | Implementación                                  |
-| ----------------------------- | ---------- | ----------------------------------------------- |
-| Arquitectura inicial          | Completada | Next.js 16, App Router y TypeScript             |
-| Persistencia                  | Completada | Upstash Redis con aislamiento por prefijo       |
-| Autenticación                 | Completada | JWT, cookie HTTP-only y rutas protegidas        |
-| Gestión avanzada de pacientes | Completada | Búsqueda, filtros, ordenamiento y paginación    |
-| Dashboard base                | Completada | Header, sidebar y tarjetas reutilizables        |
-| Diseño responsive             | Completada | Sidebar colapsable en escritorio y drawer móvil |
-| Modo oscuro                   | Completada | Tema persistente y componentes adaptados        |
-| Calidad                       | Completada | Formato, lint, typecheck, tests y build         |
-| CI/CD                         | Completada | GitHub Actions y despliegue en Vercel           |
-| Dashboard analítico           | Completada | KPIs reales, gráfica y actividad reciente       |
-| Perfil de paciente            | Completada | Avatar, datos, estado y edición validada        |
-| Hallazgos BI-RADS             | Completada | Registro, consulta, edición y seguimiento       |
-| Timeline clínico              | Completada | Hallazgos, controles, síntomas y notas          |
-| Calendario                    | Completada | Vista mensual, agenda móvil y filtros           |
-| Recordatorios                 | Completada | Programación, ejecución y control de estados    |
-| Telegram                      | Completada | Vinculación segura y entrega de recordatorios   |
-| Reportes                      | Completada | Resumen, filtros y tabla administrativa         |
-| Exportaciones                 | Completada | Descargas CSV UTF-8 y PDF protegidas            |
-| Perfil de usuario             | En rama    | Datos de cuenta y preferencias persistentes     |
-| Preferencias de interfaz      | En rama    | Tema, idioma, zona horaria y notificaciones     |
+| Área                          | Estado     | Implementación                                   |
+| ----------------------------- | ---------- | ------------------------------------------------ |
+| Arquitectura inicial          | Completada | Next.js 16, App Router y TypeScript              |
+| Persistencia                  | Completada | Upstash Redis con aislamiento por prefijo        |
+| Autenticación                 | Completada | JWT, cookie HTTP-only y rutas protegidas         |
+| Gestión avanzada de pacientes | Completada | Búsqueda, filtros, ordenamiento y paginación     |
+| Dashboard base                | Completada | Header, sidebar y tarjetas reutilizables         |
+| Diseño responsive             | Completada | Sidebar colapsable en escritorio y drawer móvil  |
+| Modo oscuro                   | Completada | Tema persistente y componentes adaptados         |
+| Calidad                       | Completada | Formato, lint, typecheck, tests y build          |
+| CI/CD                         | Completada | GitHub Actions y despliegue en Vercel            |
+| Dashboard analítico           | Completada | KPIs reales, gráfica y actividad reciente        |
+| Perfil de paciente            | Completada | Avatar, datos, estado y edición validada         |
+| Hallazgos BI-RADS             | Completada | Registro, consulta, edición y seguimiento        |
+| Timeline clínico              | Completada | Hallazgos, controles, síntomas y notas           |
+| Calendario                    | Completada | Vista mensual, agenda móvil y filtros            |
+| Recordatorios                 | Completada | Programación, ejecución y control de estados     |
+| Telegram                      | Completada | Vinculación segura y entrega de recordatorios    |
+| Reportes                      | Completada | Resumen, filtros y tabla administrativa          |
+| Exportaciones                 | Completada | Descargas CSV UTF-8 y PDF protegidas             |
+| Perfil de usuario             | En rama    | Datos de cuenta y preferencias persistentes      |
+| Preferencias de interfaz      | En rama    | Tema, idioma, zona horaria y notificaciones      |
 | Sincronización de tema        | En rama    | Modos claro, oscuro y sistema sin sobrescrituras |
 
 ## Tecnologías
@@ -549,8 +549,8 @@ El código solo debe integrarse cuando todos los controles finalicen correctamen
 | `GET`    | `/api/reports/summary`                           | Consultar el resumen de reportes    | Autorizado       |
 | `GET`    | `/api/reports/export/csv`                        | Descargar el reporte en CSV         | Autorizado       |
 | `GET`    | `/api/reports/export/pdf`                        | Descargar el reporte en PDF         | Autorizado       |
-| `GET`    | `/api/profile`                                   | Consultar perfil y preferencias      | Autenticado      |
-| `PATCH`  | `/api/profile`                                   | Actualizar perfil y preferencias     | Autenticado      |
+| `GET`    | `/api/profile`                                   | Consultar perfil y preferencias     | Autenticado      |
+| `PATCH`  | `/api/profile`                                   | Actualizar perfil y preferencias    | Autenticado      |
 
 ## Estrategia Git
 

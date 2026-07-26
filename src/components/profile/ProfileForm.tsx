@@ -42,9 +42,7 @@ export function ProfileForm() {
         }
       } catch (loadError) {
         if (active) {
-          setError(
-            loadError instanceof Error ? loadError.message : "No se pudo cargar el perfil.",
-          );
+          setError(loadError instanceof Error ? loadError.message : "No se pudo cargar el perfil.");
         }
       } finally {
         if (active) setLoading(false);
@@ -115,7 +113,12 @@ export function ProfileForm() {
               required
               onChange={(event) => setValues({ ...values, name: event.target.value })}
             />
-            <Input id="profile-email" label="Correo electrónico" value={profile.user.email} disabled />
+            <Input
+              id="profile-email"
+              label="Correo electrónico"
+              value={profile.user.email}
+              disabled
+            />
           </div>
           <p className="text-muted mt-3 text-xs">
             El correo, rol y estado de la cuenta solo pueden modificarse mediante administración.
@@ -131,9 +134,7 @@ export function ProfileForm() {
               id="profile-theme"
               label="Tema"
               value={values.theme}
-              onChange={(value) =>
-                setValues({ ...values, theme: value as ProfileTheme })
-              }
+              onChange={(value) => setValues({ ...values, theme: value as ProfileTheme })}
               options={[
                 ["SYSTEM", "Usar sistema"],
                 ["LIGHT", "Claro"],
@@ -144,9 +145,7 @@ export function ProfileForm() {
               id="profile-language"
               label="Idioma"
               value={values.language}
-              onChange={(value) =>
-                setValues({ ...values, language: value as ProfileLanguage })
-              }
+              onChange={(value) => setValues({ ...values, language: value as ProfileLanguage })}
               options={[
                 ["es", "Español"],
                 ["en", "Inglés"],
@@ -194,8 +193,14 @@ export function ProfileForm() {
 
       <aside className="space-y-6">
         <Section title="Cuenta" description="Información de acceso actual.">
-          <AccountRow label="Rol" value={profile.user.role === "ADMIN" ? "Administrador" : "Profesional"} />
-          <AccountRow label="Estado" value={profile.user.status === "ACTIVE" ? "Activa" : "Inactiva"} />
+          <AccountRow
+            label="Rol"
+            value={profile.user.role === "ADMIN" ? "Administrador" : "Profesional"}
+          />
+          <AccountRow
+            label="Estado"
+            value={profile.user.status === "ACTIVE" ? "Activa" : "Inactiva"}
+          />
           <AccountRow label="Creada" value={formatDate(profile.user.createdAt)} />
           <AccountRow label="Actualizada" value={formatDate(profile.user.updatedAt)} />
         </Section>
@@ -280,7 +285,10 @@ function PreferenceSwitch({
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <label htmlFor={id} className="flex cursor-pointer items-center justify-between gap-5 py-4 first:pt-0 last:pb-0">
+    <label
+      htmlFor={id}
+      className="flex cursor-pointer items-center justify-between gap-5 py-4 first:pt-0 last:pb-0"
+    >
       <span>
         <span className="text-foreground block text-sm font-medium">{label}</span>
         <span className="text-muted mt-1 block text-xs">{description}</span>
@@ -293,7 +301,7 @@ function PreferenceSwitch({
           checked={checked}
           onChange={(event) => onChange(event.target.checked)}
         />
-        <span className="bg-border peer-checked:bg-rose-600 peer-focus-visible:ring-2 peer-focus-visible:ring-rose-500/30 block h-6 w-11 rounded-full transition" />
+        <span className="bg-border block h-6 w-11 rounded-full transition peer-checked:bg-rose-600 peer-focus-visible:ring-2 peer-focus-visible:ring-rose-500/30" />
         <span className="absolute top-1 left-1 size-4 rounded-full bg-white shadow transition peer-checked:translate-x-5" />
       </span>
     </label>
@@ -309,7 +317,13 @@ function AccountRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function StatusMessage({ tone, children }: { tone: "success" | "error"; children: React.ReactNode }) {
+function StatusMessage({
+  tone,
+  children,
+}: {
+  tone: "success" | "error";
+  children: React.ReactNode;
+}) {
   return (
     <div
       role={tone === "error" ? "alert" : "status"}

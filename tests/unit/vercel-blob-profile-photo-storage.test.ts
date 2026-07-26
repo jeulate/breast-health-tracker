@@ -29,9 +29,7 @@ describe("VercelBlobProfilePhotoStorage", () => {
       BLOB_READ_WRITE_TOKEN: "test-blob-token",
     });
 
-    mocks.randomUUID.mockReturnValue(
-      "11111111-2222-4333-8444-555555555555",
-    );
+    mocks.randomUUID.mockReturnValue("11111111-2222-4333-8444-555555555555");
 
     vi.stubGlobal("crypto", {
       randomUUID: mocks.randomUUID,
@@ -42,8 +40,7 @@ describe("VercelBlobProfilePhotoStorage", () => {
     const body = new Blob(["photo"], { type: "image/jpeg" });
 
     mocks.put.mockResolvedValue({
-      pathname:
-        "profile-photos/patients/patient-1/11111111-2222-4333-8444-555555555555.jpg",
+      pathname: "profile-photos/patients/patient-1/11111111-2222-4333-8444-555555555555.jpg",
     });
 
     const storage = new VercelBlobProfilePhotoStorage();
@@ -66,8 +63,7 @@ describe("VercelBlobProfilePhotoStorage", () => {
     );
 
     expect(result).toEqual({
-      pathname:
-        "profile-photos/patients/patient-1/11111111-2222-4333-8444-555555555555.jpg",
+      pathname: "profile-photos/patients/patient-1/11111111-2222-4333-8444-555555555555.jpg",
       contentType: "image/jpeg",
       size: body.size,
     });
@@ -77,68 +73,60 @@ describe("VercelBlobProfilePhotoStorage", () => {
     ["image/jpeg", "jpg"],
     ["image/png", "png"],
     ["image/webp", "webp"],
-  ] as const)(
-    "uses the correct extension for %s",
-    async (contentType, extension) => {
-      const body = new Blob(["photo"], { type: contentType });
-      const pathname =
-        `profile-photos/users/user-1/` +
-        `11111111-2222-4333-8444-555555555555.${extension}`;
+  ] as const)("uses the correct extension for %s", async (contentType, extension) => {
+    const body = new Blob(["photo"], { type: contentType });
+    const pathname =
+      `profile-photos/users/user-1/` + `11111111-2222-4333-8444-555555555555.${extension}`;
 
-      mocks.put.mockResolvedValue({ pathname });
+    mocks.put.mockResolvedValue({ pathname });
 
-      const storage = new VercelBlobProfilePhotoStorage();
-
-      await storage.upload("users", "user-1", {
-        body,
-        contentType,
-        size: body.size,
-      });
-
-      expect(mocks.put).toHaveBeenCalledWith(
-        pathname,
-        body,
-        expect.objectContaining({
-          access: "private",
-          contentType,
-        }),
-      );
-    },
-  );
-
-  it.each([
-    "",
-    "owner with spaces",
-    "../patient",
-    "patient/photo",
-    "a".repeat(129),
-  ])("rejects the invalid owner ID %j", async (ownerId) => {
     const storage = new VercelBlobProfilePhotoStorage();
 
-    await expect(
-      storage.upload("patients", ownerId, {
-        body: new Blob(["photo"]),
-        contentType: "image/jpeg",
-        size: 5,
-      }),
-    ).rejects.toMatchObject({
-      code: "INVALID_OWNER_ID",
+    await storage.upload("users", "user-1", {
+      body,
+      contentType,
+      size: body.size,
     });
 
-    expect(mocks.put).not.toHaveBeenCalled();
+    expect(mocks.put).toHaveBeenCalledWith(
+      pathname,
+      body,
+      expect.objectContaining({
+        access: "private",
+        contentType,
+      }),
+    );
   });
+
+  it.each(["", "owner with spaces", "../patient", "patient/photo", "a".repeat(129)])(
+    "rejects the invalid owner ID %j",
+    async (ownerId) => {
+      const storage = new VercelBlobProfilePhotoStorage();
+
+      await expect(
+        storage.upload("patients", ownerId, {
+          body: new Blob(["photo"]),
+          contentType: "image/jpeg",
+          size: 5,
+        }),
+      ).rejects.toMatchObject({
+        code: "INVALID_OWNER_ID",
+      });
+
+      expect(mocks.put).not.toHaveBeenCalled();
+    },
+  );
 
   it("downloads a private profile photo", async () => {
     const stream = new ReadableStream<Uint8Array>();
 
     mocks.get.mockResolvedValue({
-    statusCode: 200,
-    stream,
-    headers: new Headers(),
-    blob: {
+      statusCode: 200,
+      stream,
+      headers: new Headers(),
+      blob: {
         url: "https://example.public.blob.vercel-storage.com/photo.webp",
-        downloadUrl:
-        "https://example.public.blob.vercel-storage.com/photo.webp?download=1",
+        downloadUrl: "https://example.public.blob.vercel-storage.com/photo.webp?download=1",
         pathname: "profile-photos/patients/patient-1/photo.webp",
         contentType: "image/webp",
         contentDisposition: 'inline; filename="photo.webp"',
@@ -146,22 +134,17 @@ describe("VercelBlobProfilePhotoStorage", () => {
         uploadedAt: new Date("2026-07-24T00:00:00.000Z"),
         etag: '"test-etag"',
         cacheControl: "public, max-age=0",
-    },
+      },
     });
 
     const storage = new VercelBlobProfilePhotoStorage();
 
-    const result = await storage.download(
-      "profile-photos/patients/patient-1/photo.webp",
-    );
+    const result = await storage.download("profile-photos/patients/patient-1/photo.webp");
 
-    expect(mocks.get).toHaveBeenCalledWith(
-      "profile-photos/patients/patient-1/photo.webp",
-      {
-        access: "private",
-        token: "test-blob-token",
-      },
-    );
+    expect(mocks.get).toHaveBeenCalledWith("profile-photos/patients/patient-1/photo.webp", {
+      access: "private",
+      token: "test-blob-token",
+    });
 
     expect(result).toEqual({
       body: stream,
@@ -170,25 +153,23 @@ describe("VercelBlobProfilePhotoStorage", () => {
     });
   });
 
-it("returns null when the response has no readable stream", async () => {
+  it("returns null when the response has no readable stream", async () => {
     mocks.get.mockResolvedValue({
-        statusCode: 304,
-        stream: null,
-        headers: new Headers(),
-        blob: {
+      statusCode: 304,
+      stream: null,
+      headers: new Headers(),
+      blob: {
         contentType: "image/webp",
         size: 2048,
-        },
+      },
     });
 
     const storage = new VercelBlobProfilePhotoStorage();
 
     await expect(
-        storage.download(
-        "profile-photos/patients/patient-1/photo.webp",
-        ),
+      storage.download("profile-photos/patients/patient-1/photo.webp"),
     ).resolves.toBeNull();
-});
+  });
 
   it("returns null when the profile photo does not exist", async () => {
     mocks.get.mockResolvedValue(null);
@@ -196,9 +177,7 @@ it("returns null when the response has no readable stream", async () => {
     const storage = new VercelBlobProfilePhotoStorage();
 
     await expect(
-      storage.download(
-        "profile-photos/patients/patient-1/missing.webp",
-      ),
+      storage.download("profile-photos/patients/patient-1/missing.webp"),
     ).resolves.toBeNull();
   });
 
@@ -207,16 +186,11 @@ it("returns null when the response has no readable stream", async () => {
 
     const storage = new VercelBlobProfilePhotoStorage();
 
-    await storage.remove(
-      "profile-photos/patients/patient-1/photo.webp",
-    );
+    await storage.remove("profile-photos/patients/patient-1/photo.webp");
 
-    expect(mocks.del).toHaveBeenCalledWith(
-      "profile-photos/patients/patient-1/photo.webp",
-      {
-        token: "test-blob-token",
-      },
-    );
+    expect(mocks.del).toHaveBeenCalledWith("profile-photos/patients/patient-1/photo.webp", {
+      token: "test-blob-token",
+    });
   });
 
   it("converts SDK upload failures into storage errors", async () => {

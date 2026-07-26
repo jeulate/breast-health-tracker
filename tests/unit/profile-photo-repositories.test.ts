@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => {
     sadd: vi.fn(),
     zadd: vi.fn(),
     exec: vi.fn(),
-};
+  };
 
   return {
     pipeline,
@@ -79,9 +79,7 @@ describe("profile photo persistence", () => {
       ...user,
     });
 
-    await expect(
-      new UserRepository().findById(user.id),
-    ).resolves.toEqual(user);
+    await expect(new UserRepository().findById(user.id)).resolves.toEqual(user);
   });
 
   it("keeps old user records compatible without a photo", async () => {
@@ -89,9 +87,7 @@ describe("profile photo persistence", () => {
     delete userWithoutPhoto.profilePhotoPath;
     mocks.redis.hgetall.mockResolvedValue(userWithoutPhoto);
 
-    await expect(
-      new UserRepository().findById(user.id),
-    ).resolves.toEqual({
+    await expect(new UserRepository().findById(user.id)).resolves.toEqual({
       ...userWithoutPhoto,
       profilePhotoPath: undefined,
     });
@@ -100,10 +96,7 @@ describe("profile photo persistence", () => {
   it("updates and removes a user profile photo path", async () => {
     const repository = new UserRepository();
 
-    await repository.updateProfilePhoto(
-      user.id,
-      "users/user-1/profile/new-photo.webp",
-    );
+    await repository.updateProfilePhoto(user.id, "users/user-1/profile/new-photo.webp");
 
     expect(mocks.redis.hset).toHaveBeenCalledWith(
       "bht:test:users:user-1",
@@ -114,10 +107,7 @@ describe("profile photo persistence", () => {
 
     await repository.updateProfilePhoto(user.id, null);
 
-    expect(mocks.pipeline.hdel).toHaveBeenCalledWith(
-      "bht:test:users:user-1",
-      "profilePhotoPath",
-    );
+    expect(mocks.pipeline.hdel).toHaveBeenCalledWith("bht:test:users:user-1", "profilePhotoPath");
     expect(mocks.pipeline.exec).toHaveBeenCalledOnce();
   });
 
@@ -137,9 +127,7 @@ describe("profile photo persistence", () => {
       ...patient,
     });
 
-    await expect(
-      new PatientRepository().findById(patient.id),
-    ).resolves.toEqual(patient);
+    await expect(new PatientRepository().findById(patient.id)).resolves.toEqual(patient);
   });
 
   it("keeps old patient records compatible without a photo", async () => {
@@ -147,9 +135,7 @@ describe("profile photo persistence", () => {
     delete patientWithoutPhoto.profilePhotoPath;
     mocks.redis.hgetall.mockResolvedValue(patientWithoutPhoto);
 
-    await expect(
-      new PatientRepository().findById(patient.id),
-    ).resolves.toEqual({
+    await expect(new PatientRepository().findById(patient.id)).resolves.toEqual({
       ...patientWithoutPhoto,
       profilePhotoPath: undefined,
     });
@@ -158,10 +144,7 @@ describe("profile photo persistence", () => {
   it("updates and removes a patient profile photo path", async () => {
     const repository = new PatientRepository();
 
-    await repository.updateProfilePhoto(
-      patient.id,
-      "patients/patient-1/profile/new-photo.webp",
-    );
+    await repository.updateProfilePhoto(patient.id, "patients/patient-1/profile/new-photo.webp");
 
     expect(mocks.redis.hset).toHaveBeenCalledWith(
       "bht:test:patients:patient-1",

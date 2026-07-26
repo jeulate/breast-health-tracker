@@ -8,9 +8,7 @@ import {
 } from "@/features/profile-photo/api/profile-photo-api";
 import { ProfilePhotoError } from "@/features/profile-photo/profile-photo.errors";
 
-function createUploadRequest(
-  value?: Blob | string,
-): Request {
+function createUploadRequest(value?: Blob | string): Request {
   const formData = new FormData();
 
   if (value !== undefined) {
@@ -26,9 +24,7 @@ function createUploadRequest(
 describe("profile photo API helpers", () => {
   it("parses and validates the photo field", async () => {
     const result = await parseProfilePhotoUpload(
-      createUploadRequest(
-        new Blob(["photo"], { type: "image/jpeg" }),
-      ),
+      createUploadRequest(new Blob(["photo"], { type: "image/jpeg" })),
     );
 
     expect(result.contentType).toBe("image/jpeg");
@@ -37,19 +33,13 @@ describe("profile photo API helpers", () => {
   });
 
   it("rejects a missing photo field", async () => {
-    await expect(
-      parseProfilePhotoUpload(createUploadRequest()),
-    ).rejects.toMatchObject({
+    await expect(parseProfilePhotoUpload(createUploadRequest())).rejects.toMatchObject({
       code: "EMPTY_FILE",
     });
   });
 
   it("rejects a textual photo field", async () => {
-    await expect(
-      parseProfilePhotoUpload(
-        createUploadRequest("not-a-file"),
-      ),
-    ).rejects.toMatchObject({
+    await expect(parseProfilePhotoUpload(createUploadRequest("not-a-file"))).rejects.toMatchObject({
       code: "EMPTY_FILE",
     });
   });
@@ -62,28 +52,21 @@ describe("profile photo API helpers", () => {
     ["OWNER_NOT_FOUND", 404],
     ["BLOB_CONFIGURATION_ERROR", 500],
     ["STORAGE_ERROR", 500],
-  ] as const)(
-    "maps %s to HTTP %s",
-    async (code, expectedStatus) => {
-      const response = toProfilePhotoErrorResponse(
-        new ProfilePhotoError(code, "Photo error"),
-      );
+  ] as const)("maps %s to HTTP %s", async (code, expectedStatus) => {
+    const response = toProfilePhotoErrorResponse(new ProfilePhotoError(code, "Photo error"));
 
-      expect(response.status).toBe(expectedStatus);
-      expect(await response.json()).toEqual({
-        success: false,
-        error: {
-          code,
-          message: "Photo error",
-        },
-      });
-    },
-  );
+    expect(response.status).toBe(expectedStatus);
+    expect(await response.json()).toEqual({
+      success: false,
+      error: {
+        code,
+        message: "Photo error",
+      },
+    });
+  });
 
   it("hides unexpected internal errors", async () => {
-    const response = toProfilePhotoErrorResponse(
-      new Error("Redis credentials"),
-    );
+    const response = toProfilePhotoErrorResponse(new Error("Redis credentials"));
 
     expect(response.status).toBe(500);
     expect(await response.json()).toEqual({
@@ -105,24 +88,17 @@ describe("profile photo API helpers", () => {
     });
 
     expect(response.status).toBe(200);
-    expect(response.headers.get("content-type")).toBe(
-      "image/jpeg",
-    );
+    expect(response.headers.get("content-type")).toBe("image/jpeg");
     expect(response.headers.get("content-length")).toBe("5");
-    expect(response.headers.get("cache-control")).toBe(
-      "private, no-store",
-    );
-    expect(
-      response.headers.get("x-content-type-options"),
-    ).toBe("nosniff");
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(response.headers.get("x-content-type-options")).toBe("nosniff");
     expect(await response.text()).toBe("photo");
   });
 
   it("does not expose the private Blob pathname", () => {
     expect(
       toProfilePhotoMutationData({
-        pathname:
-          "profile-photos/users/user-1/private.jpg",
+        pathname: "profile-photos/users/user-1/private.jpg",
         previousPhotoCleanupFailed: false,
       }),
     ).toEqual({

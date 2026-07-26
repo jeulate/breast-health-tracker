@@ -1,13 +1,8 @@
 export const PROFILE_PHOTO_MAX_SIZE_BYTES = 5 * 1024 * 1024;
 
-export const PROFILE_PHOTO_ALLOWED_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-] as const;
+export const PROFILE_PHOTO_ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 
-export type ProfilePhotoMimeType =
-  (typeof PROFILE_PHOTO_ALLOWED_TYPES)[number];
+export type ProfilePhotoMimeType = (typeof PROFILE_PHOTO_ALLOWED_TYPES)[number];
 
 export type ProfilePhotoOwnerType = "users" | "patients";
 

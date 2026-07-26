@@ -39,14 +39,12 @@ describe("ProfilePhotoService", () => {
 
   const user = {
     id: "user-1",
-    profilePhotoPath:
-      "profile-photos/users/user-1/previous-photo.jpg",
+    profilePhotoPath: "profile-photos/users/user-1/previous-photo.jpg",
   } as User;
 
   const patient = {
     id: "patient-1",
-    profilePhotoPath:
-      "profile-photos/patients/patient-1/previous-photo.jpg",
+    profilePhotoPath: "profile-photos/patients/patient-1/previous-photo.jpg",
   } as Patient;
 
   const createService = () =>
@@ -72,11 +70,11 @@ describe("ProfilePhotoService", () => {
 
   it("downloads a user profile photo from its persisted pathname", async () => {
     const downloadedPhoto = {
-        body: new Blob(["stored-photo"], {
+      body: new Blob(["stored-photo"], {
         type: "image/jpeg",
-        }).stream(),
-        contentType: "image/jpeg",
-        size: 12,
+      }).stream(),
+      contentType: "image/jpeg",
+      size: 12,
     };
 
     vi.mocked(storage.download).mockResolvedValue(downloadedPhoto);
@@ -86,44 +84,35 @@ describe("ProfilePhotoService", () => {
     const result = await service.download("users", "user-1");
 
     expect(users.findById).toHaveBeenCalledWith("user-1");
-    expect(storage.download).toHaveBeenCalledWith(
-        user.profilePhotoPath,
-    );
+    expect(storage.download).toHaveBeenCalledWith(user.profilePhotoPath);
     expect(result).toBe(downloadedPhoto);
-    });
+  });
 
-    it("downloads a patient profile photo using the patient repository", async () => {
+  it("downloads a patient profile photo using the patient repository", async () => {
     const downloadedPhoto = {
-        body: new Blob(["stored-photo"], {
+      body: new Blob(["stored-photo"], {
         type: "image/jpeg",
-        }).stream(),
-        contentType: "image/jpeg",
-        size: 12,
+      }).stream(),
+      contentType: "image/jpeg",
+      size: 12,
     };
 
     vi.mocked(storage.download).mockResolvedValue(downloadedPhoto);
 
     const service = createService();
 
-    const result = await service.download(
-        "patients",
-        "patient-1",
-    );
+    const result = await service.download("patients", "patient-1");
 
-    expect(patients.findById).toHaveBeenCalledWith(
-        "patient-1",
-    );
+    expect(patients.findById).toHaveBeenCalledWith("patient-1");
     expect(users.findById).not.toHaveBeenCalled();
-    expect(storage.download).toHaveBeenCalledWith(
-        patient.profilePhotoPath,
-    );
+    expect(storage.download).toHaveBeenCalledWith(patient.profilePhotoPath);
     expect(result).toBe(downloadedPhoto);
-    });
+  });
 
-    it("returns null when the owner has no profile photo", async () => {
+  it("returns null when the owner has no profile photo", async () => {
     users.findById.mockResolvedValue({
-        ...user,
-        profilePhotoPath: undefined,
+      ...user,
+      profilePhotoPath: undefined,
     });
 
     const service = createService();
@@ -132,57 +121,40 @@ describe("ProfilePhotoService", () => {
 
     expect(result).toBeNull();
     expect(storage.download).not.toHaveBeenCalled();
-    });
+  });
 
-    it("returns null when the persisted photo no longer exists in storage", async () => {
+  it("returns null when the persisted photo no longer exists in storage", async () => {
     vi.mocked(storage.download).mockResolvedValue(null);
 
     const service = createService();
 
     const result = await service.download("users", "user-1");
 
-    expect(storage.download).toHaveBeenCalledWith(
-        user.profilePhotoPath,
-    );
+    expect(storage.download).toHaveBeenCalledWith(user.profilePhotoPath);
     expect(result).toBeNull();
-    });
+  });
 
-    it("rejects download when the owner does not exist", async () => {
+  it("rejects download when the owner does not exist", async () => {
     users.findById.mockResolvedValue(null);
 
     const service = createService();
 
-    await expect(
-        service.download("users", "missing-user"),
-    ).rejects.toMatchObject({
-        code: "OWNER_NOT_FOUND",
+    await expect(service.download("users", "missing-user")).rejects.toMatchObject({
+      code: "OWNER_NOT_FOUND",
     } satisfies Partial<ProfilePhotoError>);
 
     expect(storage.download).not.toHaveBeenCalled();
-    });
+  });
 
   it("replaces a user profile photo and removes the previous one", async () => {
     const service = createService();
 
-    const result = await service.replace(
-      "users",
-      "user-1",
-      photo,
-    );
+    const result = await service.replace("users", "user-1", photo);
 
     expect(users.findById).toHaveBeenCalledWith("user-1");
-    expect(storage.upload).toHaveBeenCalledWith(
-      "users",
-      "user-1",
-      photo,
-    );
-    expect(users.updateProfilePhoto).toHaveBeenCalledWith(
-      "user-1",
-      uploadedPhoto.pathname,
-    );
-    expect(storage.remove).toHaveBeenCalledWith(
-      user.profilePhotoPath,
-    );
+    expect(storage.upload).toHaveBeenCalledWith("users", "user-1", photo);
+    expect(users.updateProfilePhoto).toHaveBeenCalledWith("user-1", uploadedPhoto.pathname);
+    expect(storage.remove).toHaveBeenCalledWith(user.profilePhotoPath);
     expect(result).toEqual({
       pathname: uploadedPhoto.pathname,
       previousPhotoCleanupFailed: false,
@@ -192,31 +164,19 @@ describe("ProfilePhotoService", () => {
   it("replaces a patient profile photo using the patient repository", async () => {
     const patientUpload = {
       ...uploadedPhoto,
-      pathname:
-        "profile-photos/patients/patient-1/new-photo.jpg",
+      pathname: "profile-photos/patients/patient-1/new-photo.jpg",
     };
 
     vi.mocked(storage.upload).mockResolvedValue(patientUpload);
 
     const service = createService();
 
-    const result = await service.replace(
-      "patients",
-      "patient-1",
-      photo,
-    );
+    const result = await service.replace("patients", "patient-1", photo);
 
-    expect(patients.findById).toHaveBeenCalledWith(
-      "patient-1",
-    );
+    expect(patients.findById).toHaveBeenCalledWith("patient-1");
     expect(users.findById).not.toHaveBeenCalled();
-    expect(patients.updateProfilePhoto).toHaveBeenCalledWith(
-      "patient-1",
-      patientUpload.pathname,
-    );
-    expect(storage.remove).toHaveBeenCalledWith(
-      patient.profilePhotoPath,
-    );
+    expect(patients.updateProfilePhoto).toHaveBeenCalledWith("patient-1", patientUpload.pathname);
+    expect(storage.remove).toHaveBeenCalledWith(patient.profilePhotoPath);
     expect(result.pathname).toBe(patientUpload.pathname);
   });
 
@@ -225,11 +185,7 @@ describe("ProfilePhotoService", () => {
 
     const service = createService();
 
-    const operation = service.replace(
-      "users",
-      "missing-user",
-      photo,
-    );
+    const operation = service.replace("users", "missing-user", photo);
 
     await expect(operation).rejects.toMatchObject({
       code: "OWNER_NOT_FOUND",
@@ -242,63 +198,40 @@ describe("ProfilePhotoService", () => {
   it("removes the newly uploaded photo when persistence fails", async () => {
     const persistenceError = new Error("Redis unavailable");
 
-    users.updateProfilePhoto.mockRejectedValue(
-      persistenceError,
-    );
+    users.updateProfilePhoto.mockRejectedValue(persistenceError);
 
     const service = createService();
 
-    await expect(
-      service.replace("users", "user-1", photo),
-    ).rejects.toBe(persistenceError);
+    await expect(service.replace("users", "user-1", photo)).rejects.toBe(persistenceError);
 
     expect(storage.remove).toHaveBeenCalledTimes(1);
-    expect(storage.remove).toHaveBeenCalledWith(
-      uploadedPhoto.pathname,
-    );
-    expect(storage.remove).not.toHaveBeenCalledWith(
-      user.profilePhotoPath,
-    );
+    expect(storage.remove).toHaveBeenCalledWith(uploadedPhoto.pathname);
+    expect(storage.remove).not.toHaveBeenCalledWith(user.profilePhotoPath);
   });
 
   it("preserves the persistence error when compensation cleanup also fails", async () => {
     const persistenceError = new Error("Redis unavailable");
 
-    users.updateProfilePhoto.mockRejectedValue(
-      persistenceError,
-    );
-    vi.mocked(storage.remove).mockRejectedValue(
-      new Error("Blob unavailable"),
-    );
+    users.updateProfilePhoto.mockRejectedValue(persistenceError);
+    vi.mocked(storage.remove).mockRejectedValue(new Error("Blob unavailable"));
 
     const service = createService();
 
-    await expect(
-      service.replace("users", "user-1", photo),
-    ).rejects.toBe(persistenceError);
+    await expect(service.replace("users", "user-1", photo)).rejects.toBe(persistenceError);
   });
 
   it("reports a non-blocking failure when the previous photo cannot be removed", async () => {
-    vi.mocked(storage.remove).mockRejectedValue(
-      new Error("Blob unavailable"),
-    );
+    vi.mocked(storage.remove).mockRejectedValue(new Error("Blob unavailable"));
 
     const service = createService();
 
-    const result = await service.replace(
-      "users",
-      "user-1",
-      photo,
-    );
+    const result = await service.replace("users", "user-1", photo);
 
     expect(result).toEqual({
       pathname: uploadedPhoto.pathname,
       previousPhotoCleanupFailed: true,
     });
-    expect(users.updateProfilePhoto).toHaveBeenCalledWith(
-      "user-1",
-      uploadedPhoto.pathname,
-    );
+    expect(users.updateProfilePhoto).toHaveBeenCalledWith("user-1", uploadedPhoto.pathname);
   });
 
   it("removes the profile photo reference before deleting the stored file", async () => {
@@ -314,18 +247,10 @@ describe("ProfilePhotoService", () => {
 
     const service = createService();
 
-    const result = await service.remove(
-      "users",
-      "user-1",
-    );
+    const result = await service.remove("users", "user-1");
 
-    expect(users.updateProfilePhoto).toHaveBeenCalledWith(
-      "user-1",
-      null,
-    );
-    expect(storage.remove).toHaveBeenCalledWith(
-      user.profilePhotoPath,
-    );
+    expect(users.updateProfilePhoto).toHaveBeenCalledWith("user-1", null);
+    expect(storage.remove).toHaveBeenCalledWith(user.profilePhotoPath);
     expect(callOrder).toEqual(["persistence", "storage"]);
     expect(result).toEqual({
       pathname: null,
@@ -341,10 +266,7 @@ describe("ProfilePhotoService", () => {
 
     const service = createService();
 
-    const result = await service.remove(
-      "users",
-      "user-1",
-    );
+    const result = await service.remove("users", "user-1");
 
     expect(users.updateProfilePhoto).not.toHaveBeenCalled();
     expect(storage.remove).not.toHaveBeenCalled();
@@ -357,35 +279,23 @@ describe("ProfilePhotoService", () => {
   it("does not delete the stored photo when removing its reference fails", async () => {
     const persistenceError = new Error("Redis unavailable");
 
-    users.updateProfilePhoto.mockRejectedValue(
-      persistenceError,
-    );
+    users.updateProfilePhoto.mockRejectedValue(persistenceError);
 
     const service = createService();
 
-    await expect(
-      service.remove("users", "user-1"),
-    ).rejects.toBe(persistenceError);
+    await expect(service.remove("users", "user-1")).rejects.toBe(persistenceError);
 
     expect(storage.remove).not.toHaveBeenCalled();
   });
 
   it("reports cleanup failure after removing the persisted reference", async () => {
-    vi.mocked(storage.remove).mockRejectedValue(
-      new Error("Blob unavailable"),
-    );
+    vi.mocked(storage.remove).mockRejectedValue(new Error("Blob unavailable"));
 
     const service = createService();
 
-    const result = await service.remove(
-      "users",
-      "user-1",
-    );
+    const result = await service.remove("users", "user-1");
 
-    expect(users.updateProfilePhoto).toHaveBeenCalledWith(
-      "user-1",
-      null,
-    );
+    expect(users.updateProfilePhoto).toHaveBeenCalledWith("user-1", null);
     expect(result).toEqual({
       pathname: null,
       previousPhotoCleanupFailed: true,

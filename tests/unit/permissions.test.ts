@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  PERMISSIONS,
-  ROLE_PERMISSIONS,
-  hasPermission,
-  type Permission,
-} from "@/features/auth";
+import { PERMISSIONS, ROLE_PERMISSIONS, hasPermission, type Permission } from "@/features/auth";
 
 describe("role permissions", () => {
   it("grants shared permissions to administrators and professionals", () => {
@@ -47,12 +42,8 @@ describe("role permissions", () => {
   });
 
   it("does not contain duplicated permissions in either role", () => {
-    expect(new Set(ROLE_PERMISSIONS.ADMIN).size).toBe(
-      ROLE_PERMISSIONS.ADMIN.length,
-    );
+    expect(new Set(ROLE_PERMISSIONS.ADMIN).size).toBe(ROLE_PERMISSIONS.ADMIN.length);
 
-    expect(new Set(ROLE_PERMISSIONS.PROFESSIONAL).size).toBe(
-      ROLE_PERMISSIONS.PROFESSIONAL.length,
-    );
+    expect(new Set(ROLE_PERMISSIONS.PROFESSIONAL).size).toBe(ROLE_PERMISSIONS.PROFESSIONAL.length);
   });
 });

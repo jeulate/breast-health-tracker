@@ -48,10 +48,7 @@ export class UserRepository {
     });
   }
 
-  async updateProfilePhoto(
-    id: string,
-    profilePhotoPath: string | null,
-  ): Promise<void> {
+  async updateProfilePhoto(id: string, profilePhotoPath: string | null): Promise<void> {
     const now = new Date().toISOString();
 
     if (profilePhotoPath !== null) {

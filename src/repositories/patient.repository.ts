@@ -51,10 +51,7 @@ export class PatientRepository {
     await this.redis.hset(this.key(id), { status, updatedAt: now });
   }
 
-  async updateProfilePhoto(
-    id: string,
-    profilePhotoPath: string | null,
-  ): Promise<void> {
+  async updateProfilePhoto(id: string, profilePhotoPath: string | null): Promise<void> {
     const now = new Date().toISOString();
 
     if (profilePhotoPath !== null) {

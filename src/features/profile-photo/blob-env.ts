@@ -3,9 +3,7 @@ import { z } from "zod";
 import { ProfilePhotoError } from "./profile-photo.errors";
 
 const blobEnvSchema = z.object({
-  BLOB_READ_WRITE_TOKEN: z
-    .string()
-    .min(1, "BLOB_READ_WRITE_TOKEN is required"),
+  BLOB_READ_WRITE_TOKEN: z.string().min(1, "BLOB_READ_WRITE_TOKEN is required"),
 });
 
 export type BlobEnv = z.infer<typeof blobEnvSchema>;

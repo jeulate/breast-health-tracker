@@ -40,9 +40,7 @@ describe("ProfilePhotoEditor", () => {
       />,
     );
 
-    const input = screen.getByLabelText(
-      "Seleccionar fotografía de perfil",
-    );
+    const input = screen.getByLabelText("Seleccionar fotografía de perfil");
 
     const file = new File(["contenido"], "documento.pdf", {
       type: "application/pdf",
@@ -54,9 +52,9 @@ describe("ProfilePhotoEditor", () => {
       },
     });
 
-    expect(
-      screen.getByRole("alert").textContent,
-    ).toContain("Selecciona una imagen JPEG, PNG o WebP.");
+    expect(screen.getByRole("alert").textContent).toContain(
+      "Selecciona una imagen JPEG, PNG o WebP.",
+    );
   });
 
   it("rechaza una fotografía superior a 5 MB", () => {
@@ -69,17 +67,11 @@ describe("ProfilePhotoEditor", () => {
       />,
     );
 
-    const input = screen.getByLabelText(
-      "Seleccionar fotografía de perfil",
-    );
+    const input = screen.getByLabelText("Seleccionar fotografía de perfil");
 
-    const file = new File(
-      [new Uint8Array(5 * 1024 * 1024 + 1)],
-      "fotografia.jpg",
-      {
-        type: "image/jpeg",
-      },
-    );
+    const file = new File([new Uint8Array(5 * 1024 * 1024 + 1)], "fotografia.jpg", {
+      type: "image/jpeg",
+    });
 
     fireEvent.change(input, {
       target: {
@@ -87,30 +79,28 @@ describe("ProfilePhotoEditor", () => {
       },
     });
 
-    expect(
-      screen.getByRole("alert").textContent,
-    ).toContain("La fotografía no puede superar los 5 MB.");
+    expect(screen.getByRole("alert").textContent).toContain(
+      "La fotografía no puede superar los 5 MB.",
+    );
   });
 
   it("carga una fotografía válida mediante el endpoint protegido", async () => {
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValue(
-        new Response(
-          JSON.stringify({
-            data: {
-              hasPhoto: true,
-              previousPhotoCleanupFailed: false,
-            },
-          }),
-          {
-            status: 200,
-            headers: {
-              "Content-Type": "application/json",
-            },
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: {
+            hasPhoto: true,
+            previousPhotoCleanupFailed: false,
           },
-        ),
-      );
+        }),
+        {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      ),
+    );
 
     const user = userEvent.setup();
 
@@ -123,9 +113,7 @@ describe("ProfilePhotoEditor", () => {
       />,
     );
 
-    const input = screen.getByLabelText(
-      "Seleccionar fotografía de perfil",
-    );
+    const input = screen.getByLabelText("Seleccionar fotografía de perfil");
 
     const file = new File(["imagen"], "fotografia.png", {
       type: "image/png",
@@ -141,9 +129,7 @@ describe("ProfilePhotoEditor", () => {
     expect(options?.method).toBe("POST");
     expect(options?.body).toBeInstanceOf(FormData);
 
-    expect(
-      await screen.findByRole("status"),
-    ).toHaveTextContent(
+    expect(await screen.findByRole("status")).toHaveTextContent(
       "La fotografía fue actualizada correctamente.",
     );
 
@@ -157,24 +143,22 @@ describe("ProfilePhotoEditor", () => {
   it("elimina una fotografía después de confirmar la acción", async () => {
     vi.spyOn(window, "confirm").mockReturnValue(true);
 
-    const fetchMock = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValue(
-        new Response(
-          JSON.stringify({
-            data: {
-              hasPhoto: false,
-              previousPhotoCleanupFailed: false,
-            },
-          }),
-          {
-            status: 200,
-            headers: {
-              "Content-Type": "application/json",
-            },
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: {
+            hasPhoto: false,
+            previousPhotoCleanupFailed: false,
           },
-        ),
-      );
+        }),
+        {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      ),
+    );
 
     const user = userEvent.setup();
 
@@ -194,16 +178,11 @@ describe("ProfilePhotoEditor", () => {
     );
 
     expect(window.confirm).toHaveBeenCalledOnce();
-    expect(fetchMock).toHaveBeenCalledWith(
-      "/api/patients/patient-1/photo",
-      {
-        method: "DELETE",
-      },
-    );
+    expect(fetchMock).toHaveBeenCalledWith("/api/patients/patient-1/photo", {
+      method: "DELETE",
+    });
 
-    expect(
-      await screen.findByRole("status"),
-    ).toHaveTextContent(
+    expect(await screen.findByRole("status")).toHaveTextContent(
       "La fotografía fue eliminada correctamente.",
     );
 

@@ -58,10 +58,7 @@ describe("AuthService.login", () => {
     const result = await AuthService.login(user.email, "correct-password");
 
     expect(mocks.findByEmail).toHaveBeenCalledWith(user.email);
-    expect(mocks.verifyPassword).toHaveBeenCalledWith(
-      "correct-password",
-      user.passwordHash,
-    );
+    expect(mocks.verifyPassword).toHaveBeenCalledWith("correct-password", user.passwordHash);
     expect(mocks.createSession).toHaveBeenCalledWith({
       sub: user.id,
       email: user.email,
@@ -104,9 +101,9 @@ describe("AuthService.login", () => {
   it("rejects a nonexistent user", async () => {
     mocks.findByEmail.mockResolvedValue(null);
 
-    await expect(
-      AuthService.login("missing@example.com", "password"),
-    ).rejects.toThrow("INVALID_CREDENTIALS");
+    await expect(AuthService.login("missing@example.com", "password")).rejects.toThrow(
+      "INVALID_CREDENTIALS",
+    );
 
     expect(mocks.verifyPassword).not.toHaveBeenCalled();
     expect(mocks.createSession).not.toHaveBeenCalled();
@@ -118,9 +115,9 @@ describe("AuthService.login", () => {
     mocks.findByEmail.mockResolvedValue(user);
     mocks.verifyPassword.mockResolvedValue(false);
 
-    await expect(
-      AuthService.login(user.email, "incorrect-password"),
-       ).rejects.toThrow("INVALID_CREDENTIALS");
+    await expect(AuthService.login(user.email, "incorrect-password")).rejects.toThrow(
+      "INVALID_CREDENTIALS",
+    );
 
     expect(mocks.createSession).not.toHaveBeenCalled();
   });
@@ -134,9 +131,9 @@ describe("AuthService.login", () => {
     mocks.findByEmail.mockResolvedValue(user);
     mocks.verifyPassword.mockResolvedValue(true);
 
-    await expect(
-      AuthService.login(user.email, "correct-password"),
-    ).rejects.toThrow("ACCOUNT_INACTIVE");
+    await expect(AuthService.login(user.email, "correct-password")).rejects.toThrow(
+      "ACCOUNT_INACTIVE",
+    );
 
     expect(mocks.createSession).not.toHaveBeenCalled();
   });

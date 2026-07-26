@@ -33,29 +33,29 @@ export function ThemeToggle() {
   const isDark = resolvedTheme === "dark";
 
   async function handleToggle(): Promise<void> {
-  const nextTheme = isDark ? "light" : "dark";
+    const nextTheme = isDark ? "light" : "dark";
 
-  // Aplicar inmediatamente en el navegador.
-  setTheme(nextTheme);
+    // Aplicar inmediatamente en el navegador.
+    setTheme(nextTheme);
 
-  try {
-    const response = await fetch("/api/profile", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        theme: nextTheme.toUpperCase(),
-      }),
-    });
+    try {
+      const response = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          theme: nextTheme.toUpperCase(),
+        }),
+      });
 
-    const payload = (await response.json()) as ApiResponse<UserProfile>;
+      const payload = (await response.json()) as ApiResponse<UserProfile>;
 
-    if (!response.ok || !payload.success) {
-      console.error("No se pudo guardar la preferencia de tema:", payload);
+      if (!response.ok || !payload.success) {
+        console.error("No se pudo guardar la preferencia de tema:", payload);
+      }
+    } catch (error) {
+      console.error("Error al guardar la preferencia de tema:", error);
     }
-  } catch (error) {
-    console.error("Error al guardar la preferencia de tema:", error);
   }
-}
 
   return (
     <button

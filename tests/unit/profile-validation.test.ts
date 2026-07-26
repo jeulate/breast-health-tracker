@@ -31,8 +31,6 @@ describe("updateUserProfileSchema", () => {
   });
 
   it("rejects an invalid timezone", () => {
-    expect(
-      updateUserProfileSchema.safeParse({ timezone: "Invalid/Timezone" }).success,
-    ).toBe(false);
+    expect(updateUserProfileSchema.safeParse({ timezone: "Invalid/Timezone" }).success).toBe(false);
   });
 });

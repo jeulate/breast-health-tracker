@@ -18,10 +18,7 @@ interface ProfilePhotoOwner {
 interface ProfilePhotoOwnerRepository<T extends ProfilePhotoOwner> {
   findById(id: string): Promise<T | null>;
 
-  updateProfilePhoto(
-    id: string,
-    pathname: string | null,
-  ): Promise<void>;
+  updateProfilePhoto(id: string, pathname: string | null): Promise<void>;
 }
 
 export interface ProfilePhotoServiceDependencies {
@@ -36,13 +33,12 @@ export class ProfilePhotoService {
   private readonly patients: ProfilePhotoOwnerRepository<Patient>;
 
   constructor(dependencies: ProfilePhotoServiceDependencies = {}) {
-    this.storage =
-      dependencies.storage ?? new VercelBlobProfilePhotoStorage();
+    this.storage = dependencies.storage ?? new VercelBlobProfilePhotoStorage();
     this.users = dependencies.users ?? new UserRepository();
     this.patients = dependencies.patients ?? new PatientRepository();
   }
 
-   async download(
+  async download(
     ownerType: ProfilePhotoOwnerType,
     ownerId: string,
   ): Promise<DownloadedProfilePhoto | null> {
@@ -50,10 +46,7 @@ export class ProfilePhotoService {
     const owner = await repository.findById(ownerId);
 
     if (!owner) {
-      throw new ProfilePhotoError(
-        "OWNER_NOT_FOUND",
-        "The profile photo owner does not exist.",
-      );
+      throw new ProfilePhotoError("OWNER_NOT_FOUND", "The profile photo owner does not exist.");
     }
 
     if (!owner.profilePhotoPath) {
@@ -72,32 +65,21 @@ export class ProfilePhotoService {
     const owner = await repository.findById(ownerId);
 
     if (!owner) {
-      throw new ProfilePhotoError(
-        "OWNER_NOT_FOUND",
-        "The profile photo owner does not exist.",
-      );
+      throw new ProfilePhotoError("OWNER_NOT_FOUND", "The profile photo owner does not exist.");
     }
 
     const previousPathname = owner.profilePhotoPath;
-    const uploaded = await this.storage.upload(
-      ownerType,
-      ownerId,
-      photo,
-    );
+    const uploaded = await this.storage.upload(ownerType, ownerId, photo);
 
     try {
-      await repository.updateProfilePhoto(
-        ownerId,
-        uploaded.pathname,
-      );
+      await repository.updateProfilePhoto(ownerId, uploaded.pathname);
     } catch (error) {
       await this.removeIgnoringFailure(uploaded.pathname);
       throw error;
     }
 
     const previousPhotoCleanupFailed =
-      previousPathname !== undefined &&
-      previousPathname !== uploaded.pathname
+      previousPathname !== undefined && previousPathname !== uploaded.pathname
         ? !(await this.tryRemove(previousPathname))
         : false;
 
@@ -115,10 +97,7 @@ export class ProfilePhotoService {
     const owner = await repository.findById(ownerId);
 
     if (!owner) {
-      throw new ProfilePhotoError(
-        "OWNER_NOT_FOUND",
-        "The profile photo owner does not exist.",
-      );
+      throw new ProfilePhotoError("OWNER_NOT_FOUND", "The profile photo owner does not exist.");
     }
 
     const previousPathname = owner.profilePhotoPath;
@@ -134,17 +113,14 @@ export class ProfilePhotoService {
 
     return {
       pathname: null,
-      previousPhotoCleanupFailed:
-        !(await this.tryRemove(previousPathname)),
+      previousPhotoCleanupFailed: !(await this.tryRemove(previousPathname)),
     };
   }
 
   private getRepository(
     ownerType: ProfilePhotoOwnerType,
   ): ProfilePhotoOwnerRepository<ProfilePhotoOwner> {
-    return ownerType === "users"
-      ? this.users
-      : this.patients;
+    return ownerType === "users" ? this.users : this.patients;
   }
 
   private async tryRemove(pathname: string): Promise<boolean> {
@@ -156,9 +132,7 @@ export class ProfilePhotoService {
     }
   }
 
-  private async removeIgnoringFailure(
-    pathname: string,
-  ): Promise<void> {
+  private async removeIgnoringFailure(pathname: string): Promise<void> {
     await this.tryRemove(pathname);
   }
 }

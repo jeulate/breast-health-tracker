@@ -27,10 +27,7 @@ export async function PATCH(request: Request) {
     const body: unknown = await request.json();
     const result = updateUserProfileSchema.safeParse(body);
     if (!result.success) {
-      return toJsonResponse(
-        fail("VALIDATION_ERROR", "Invalid input", result.error.issues),
-        400,
-      );
+      return toJsonResponse(fail("VALIDATION_ERROR", "Invalid input", result.error.issues), 400);
     }
 
     const profile = await UserProfileService.update(session.sub, result.data);

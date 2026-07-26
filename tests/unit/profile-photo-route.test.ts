@@ -1,10 +1,4 @@
-import {
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   getSession: vi.fn(),
@@ -19,18 +13,11 @@ vi.mock("@/lib/auth/session", () => ({
   getSession: mocks.getSession,
 }));
 
-vi.mock(
-  "@/features/profile-photo/profile-photo.service",
-  () => ({
-    ProfilePhotoService: vi.fn(() => mocks.service),
-  }),
-);
+vi.mock("@/features/profile-photo/profile-photo.service", () => ({
+  ProfilePhotoService: vi.fn(() => mocks.service),
+}));
 
-import {
-  DELETE,
-  GET,
-  POST,
-} from "@/app/api/profile/photo/route";
+import { DELETE, GET, POST } from "@/app/api/profile/photo/route";
 
 const session = {
   sub: "user-1",
@@ -46,13 +33,10 @@ function createUploadRequest(
   const formData = new FormData();
   formData.set("photo", photo);
 
-  return new Request(
-    "http://localhost/api/profile/photo",
-    {
-      method: "POST",
-      body: formData,
-    },
-  );
+  return new Request("http://localhost/api/profile/photo", {
+    method: "POST",
+    body: formData,
+  });
 }
 
 describe("profile photo route", () => {
@@ -61,8 +45,7 @@ describe("profile photo route", () => {
     mocks.getSession.mockResolvedValue(session);
     mocks.service.download.mockResolvedValue(null);
     mocks.service.replace.mockResolvedValue({
-      pathname:
-        "profile-photos/users/user-1/private.jpg",
+      pathname: "profile-photos/users/user-1/private.jpg",
       previousPhotoCleanupFailed: false,
     });
     mocks.service.remove.mockResolvedValue({
@@ -74,15 +57,9 @@ describe("profile photo route", () => {
   it("rejects every operation without a session", async () => {
     mocks.getSession.mockResolvedValue(null);
 
-    const responses = await Promise.all([
-      GET(),
-      POST(createUploadRequest()),
-      DELETE(),
-    ]);
+    const responses = await Promise.all([GET(), POST(createUploadRequest()), DELETE()]);
 
-    expect(
-      responses.map((response) => response.status),
-    ).toEqual([401, 401, 401]);
+    expect(responses.map((response) => response.status)).toEqual([401, 401, 401]);
 
     expect(mocks.service.download).not.toHaveBeenCalled();
     expect(mocks.service.replace).not.toHaveBeenCalled();
@@ -101,14 +78,9 @@ describe("profile photo route", () => {
     const response = await GET();
 
     expect(response.status).toBe(200);
-    expect(response.headers.get("content-type")).toBe(
-      "image/jpeg",
-    );
+    expect(response.headers.get("content-type")).toBe("image/jpeg");
     expect(await response.text()).toBe("photo");
-    expect(mocks.service.download).toHaveBeenCalledWith(
-      "users",
-      session.sub,
-    );
+    expect(mocks.service.download).toHaveBeenCalledWith("users", session.sub);
   });
 
   it("returns 404 when the user has no photo", async () => {
@@ -119,8 +91,7 @@ describe("profile photo route", () => {
       success: false,
       error: {
         code: "PHOTO_NOT_FOUND",
-        message:
-          "El usuario no tiene una fotografía de perfil.",
+        message: "El usuario no tiene una fotografía de perfil.",
       },
     });
   });
@@ -145,20 +116,15 @@ describe("profile photo route", () => {
         previousPhotoCleanupFailed: false,
       },
     });
-    expect(JSON.stringify(body)).not.toContain(
-      "profile-photos/",
-    );
+    expect(JSON.stringify(body)).not.toContain("profile-photos/");
   });
 
   it("rejects an invalid upload", async () => {
     const response = await POST(
-      new Request(
-        "http://localhost/api/profile/photo",
-        {
-          method: "POST",
-          body: new FormData(),
-        },
-      ),
+      new Request("http://localhost/api/profile/photo", {
+        method: "POST",
+        body: new FormData(),
+      }),
     );
 
     expect(response.status).toBe(400);
@@ -169,10 +135,7 @@ describe("profile photo route", () => {
     const response = await DELETE();
 
     expect(response.status).toBe(200);
-    expect(mocks.service.remove).toHaveBeenCalledWith(
-      "users",
-      session.sub,
-    );
+    expect(mocks.service.remove).toHaveBeenCalledWith("users", session.sub);
     expect(await response.json()).toEqual({
       success: true,
       data: {
@@ -183,9 +146,7 @@ describe("profile photo route", () => {
   });
 
   it("hides unexpected internal errors", async () => {
-    mocks.service.download.mockRejectedValue(
-      new Error("Redis credentials"),
-    );
+    mocks.service.download.mockRejectedValue(new Error("Redis credentials"));
 
     const response = await GET();
     const body = await response.json();
@@ -193,11 +154,8 @@ describe("profile photo route", () => {
     expect(response.status).toBe(500);
     expect(body.error).toEqual({
       code: "INTERNAL_ERROR",
-      message:
-        "No fue posible procesar la fotografía.",
+      message: "No fue posible procesar la fotografía.",
     });
-    expect(JSON.stringify(body)).not.toContain(
-      "Redis credentials",
-    );
+    expect(JSON.stringify(body)).not.toContain("Redis credentials");
   });
 });

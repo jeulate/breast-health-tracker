@@ -12,29 +12,19 @@ export interface ProfilePhotoFileLike {
   arrayBuffer(): Promise<ArrayBuffer>;
 }
 
-export function isProfilePhotoMimeType(
-  contentType: string,
-): contentType is ProfilePhotoMimeType {
-  return PROFILE_PHOTO_ALLOWED_TYPES.some(
-    (allowedType) => allowedType === contentType,
-  );
+export function isProfilePhotoMimeType(contentType: string): contentType is ProfilePhotoMimeType {
+  return PROFILE_PHOTO_ALLOWED_TYPES.some((allowedType) => allowedType === contentType);
 }
 
 export async function validateProfilePhoto(
   file: ProfilePhotoFileLike,
 ): Promise<ProfilePhotoUpload> {
   if (file.size <= 0) {
-    throw new ProfilePhotoError(
-      "EMPTY_FILE",
-      "The profile photo cannot be empty.",
-    );
+    throw new ProfilePhotoError("EMPTY_FILE", "The profile photo cannot be empty.");
   }
 
   if (file.size > PROFILE_PHOTO_MAX_SIZE_BYTES) {
-    throw new ProfilePhotoError(
-      "FILE_TOO_LARGE",
-      "The profile photo cannot exceed 5 MB.",
-    );
+    throw new ProfilePhotoError("FILE_TOO_LARGE", "The profile photo cannot exceed 5 MB.");
   }
 
   if (!isProfilePhotoMimeType(file.type)) {

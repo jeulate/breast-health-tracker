@@ -20,15 +20,8 @@ const CONTENT_TYPE_EXTENSIONS: Record<ProfilePhotoMimeType, string> = {
 };
 
 function validateOwnerId(ownerId: string): void {
-  if (
-    ownerId.length === 0 ||
-    ownerId.length > 128 ||
-    !/^[a-zA-Z0-9_-]+$/.test(ownerId)
-  ) {
-    throw new ProfilePhotoError(
-      "INVALID_OWNER_ID",
-      "The profile photo owner ID is invalid.",
-    );
+  if (ownerId.length === 0 || ownerId.length > 128 || !/^[a-zA-Z0-9_-]+$/.test(ownerId)) {
+    throw new ProfilePhotoError("INVALID_OWNER_ID", "The profile photo owner ID is invalid.");
   }
 }
 
@@ -42,18 +35,10 @@ function createProfilePhotoPathname(
   const extension = CONTENT_TYPE_EXTENSIONS[contentType];
   const photoId = crypto.randomUUID();
 
-  return [
-    PROFILE_PHOTO_PATH_PREFIX,
-    ownerType,
-    ownerId,
-    `${photoId}.${extension}`,
-  ].join("/");
+  return [PROFILE_PHOTO_PATH_PREFIX, ownerType, ownerId, `${photoId}.${extension}`].join("/");
 }
 
-function toStorageError(
-  message: string,
-  cause: unknown,
-): ProfilePhotoError {
+function toStorageError(message: string, cause: unknown): ProfilePhotoError {
   if (cause instanceof ProfilePhotoError) {
     return cause;
   }
@@ -61,9 +46,7 @@ function toStorageError(
   return new ProfilePhotoError("STORAGE_ERROR", message, { cause });
 }
 
-export class VercelBlobProfilePhotoStorage
-  implements ProfilePhotoStorage
-{
+export class VercelBlobProfilePhotoStorage implements ProfilePhotoStorage {
   async upload(
     ownerType: ProfilePhotoOwnerType,
     ownerId: string,
@@ -72,11 +55,7 @@ export class VercelBlobProfilePhotoStorage
     try {
       const { BLOB_READ_WRITE_TOKEN } = getBlobEnv();
 
-      const pathname = createProfilePhotoPathname(
-        ownerType,
-        ownerId,
-        photo.contentType,
-      );
+      const pathname = createProfilePhotoPathname(ownerType, ownerId, photo.contentType);
 
       const result = await put(pathname, photo.body, {
         access: "private",
@@ -91,44 +70,36 @@ export class VercelBlobProfilePhotoStorage
         size: photo.size,
       };
     } catch (error) {
-      throw toStorageError(
-        "The profile photo could not be uploaded.",
-        error,
-      );
+      throw toStorageError("The profile photo could not be uploaded.", error);
     }
   }
 
-  async download(
-  pathname: string,
-    ): Promise<DownloadedProfilePhoto | null> {
+  async download(pathname: string): Promise<DownloadedProfilePhoto | null> {
     try {
-        const { BLOB_READ_WRITE_TOKEN } = getBlobEnv();
+      const { BLOB_READ_WRITE_TOKEN } = getBlobEnv();
 
-        const result = await get(pathname, {
+      const result = await get(pathname, {
         access: "private",
         token: BLOB_READ_WRITE_TOKEN,
-        });
+      });
 
-        if (result === null) {
+      if (result === null) {
         return null;
-        }
+      }
 
-        if (result.statusCode !== 200 || result.stream === null) {
+      if (result.statusCode !== 200 || result.stream === null) {
         return null;
-        }
+      }
 
-        return {
+      return {
         body: result.stream,
         contentType: result.blob.contentType,
         size: result.blob.size,
-        };
+      };
     } catch (error) {
-        throw toStorageError(
-        "The profile photo could not be downloaded.",
-        error,
-        );
+      throw toStorageError("The profile photo could not be downloaded.", error);
     }
-}
+  }
 
   async remove(pathname: string): Promise<void> {
     try {
@@ -138,10 +109,7 @@ export class VercelBlobProfilePhotoStorage
         token: BLOB_READ_WRITE_TOKEN,
       });
     } catch (error) {
-      throw toStorageError(
-        "The profile photo could not be removed.",
-        error,
-      );
+      throw toStorageError("The profile photo could not be removed.", error);
     }
   }
 }

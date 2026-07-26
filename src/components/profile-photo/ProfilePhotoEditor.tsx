@@ -1,11 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import {
-  type ChangeEvent,
-  useRef,
-  useState,
-} from "react";
+import { type ChangeEvent, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import {
   PROFILE_PHOTO_ALLOWED_TYPES,
@@ -34,24 +30,17 @@ export function ProfilePhotoEditor({
   compact = false,
 }: ProfilePhotoEditorProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [hasPhoto, setHasPhoto] =
-    useState(initialHasPhoto);
-  const [imageVersion, setImageVersion] =
-    useState(0);
-  const [pendingAction, setPendingAction] =
-    useState<"upload" | "delete" | null>(null);
-  const [message, setMessage] =
-    useState<string | null>(null);
-  const [error, setError] =
-    useState<string | null>(null);
+  const [hasPhoto, setHasPhoto] = useState(initialHasPhoto);
+  const [imageVersion, setImageVersion] = useState(0);
+  const [pendingAction, setPendingAction] = useState<"upload" | "delete" | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   function openFilePicker(): void {
     inputRef.current?.click();
   }
 
-  async function handleFileChange(
-    event: ChangeEvent<HTMLInputElement>,
-  ): Promise<void> {
+  async function handleFileChange(event: ChangeEvent<HTMLInputElement>): Promise<void> {
     const file = event.target.files?.[0];
 
     event.target.value = "";
@@ -66,17 +55,13 @@ export function ProfilePhotoEditor({
       )
     ) {
       setMessage(null);
-      setError(
-        "Selecciona una imagen JPEG, PNG o WebP.",
-      );
+      setError("Selecciona una imagen JPEG, PNG o WebP.");
       return;
     }
 
     if (file.size > PROFILE_PHOTO_MAX_SIZE_BYTES) {
       setMessage(null);
-      setError(
-        "La fotografía no puede superar los 5 MB.",
-      );
+      setError("La fotografía no puede superar los 5 MB.");
       return;
     }
 
@@ -93,14 +78,10 @@ export function ProfilePhotoEditor({
         body: formData,
       });
 
-      const body =
-        (await response.json()) as ApiResponse<ProfilePhotoMutationData>;
+      const body = (await response.json()) as ApiResponse<ProfilePhotoMutationData>;
 
       if (!response.ok || !body.data) {
-        throw new Error(
-          body.error?.message ??
-            "No fue posible guardar la fotografía.",
-        );
+        throw new Error(body.error?.message ?? "No fue posible guardar la fotografía.");
       }
 
       setHasPhoto(body.data.hasPhoto);
@@ -112,22 +93,14 @@ export function ProfilePhotoEditor({
           : "La fotografía fue actualizada correctamente.",
       );
     } catch (cause) {
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "No fue posible guardar la fotografía.",
-      );
+      setError(cause instanceof Error ? cause.message : "No fue posible guardar la fotografía.");
     } finally {
       setPendingAction(null);
     }
   }
 
   async function removePhoto(): Promise<void> {
-    if (
-      !window.confirm(
-        "¿Deseas eliminar esta fotografía de perfil?",
-      )
-    ) {
+    if (!window.confirm("¿Deseas eliminar esta fotografía de perfil?")) {
       return;
     }
 
@@ -140,14 +113,10 @@ export function ProfilePhotoEditor({
         method: "DELETE",
       });
 
-      const body =
-        (await response.json()) as ApiResponse<ProfilePhotoMutationData>;
+      const body = (await response.json()) as ApiResponse<ProfilePhotoMutationData>;
 
       if (!response.ok || !body.data) {
-        throw new Error(
-          body.error?.message ??
-            "No fue posible eliminar la fotografía.",
-        );
+        throw new Error(body.error?.message ?? "No fue posible eliminar la fotografía.");
       }
 
       setHasPhoto(false);
@@ -158,21 +127,14 @@ export function ProfilePhotoEditor({
           : "La fotografía fue eliminada correctamente.",
       );
     } catch (cause) {
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "No fue posible eliminar la fotografía.",
-      );
+      setError(cause instanceof Error ? cause.message : "No fue posible eliminar la fotografía.");
     } finally {
       setPendingAction(null);
     }
   }
 
   const imageSize = compact ? 80 : 96;
-  const imageUrl =
-    imageVersion > 0
-      ? `${endpoint}?v=${imageVersion}`
-      : endpoint;
+  const imageUrl = imageVersion > 0 ? `${endpoint}?v=${imageVersion}` : endpoint;
 
   return (
     <div className="flex flex-col gap-3">
@@ -180,9 +142,7 @@ export function ProfilePhotoEditor({
         <div
           className={[
             "border-surface relative flex shrink-0 items-center justify-center overflow-hidden rounded-2xl border-4 bg-rose-600 font-bold text-white shadow-md",
-            compact
-              ? "h-20 w-20 text-2xl"
-              : "h-24 w-24 text-3xl",
+            compact ? "h-20 w-20 text-2xl" : "h-24 w-24 text-3xl",
           ].join(" ")}
         >
           {hasPhoto ? (
@@ -202,11 +162,7 @@ export function ProfilePhotoEditor({
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            onClick={openFilePicker}
-            disabled={pendingAction !== null}
-          >
+          <Button type="button" onClick={openFilePicker} disabled={pendingAction !== null}>
             {pendingAction === "upload"
               ? "Guardando..."
               : hasPhoto
@@ -221,9 +177,7 @@ export function ProfilePhotoEditor({
               onClick={removePhoto}
               disabled={pendingAction !== null}
             >
-              {pendingAction === "delete"
-                ? "Eliminando..."
-                : "Eliminar"}
+              {pendingAction === "delete" ? "Eliminando..." : "Eliminar"}
             </Button>
           ) : null}
         </div>
@@ -240,8 +194,7 @@ export function ProfilePhotoEditor({
       />
 
       <p className="text-muted text-xs">
-        Formatos permitidos: JPEG, PNG y WebP. Tamaño
-        máximo: 5 MB.
+        Formatos permitidos: JPEG, PNG y WebP. Tamaño máximo: 5 MB.
       </p>
 
       {message ? (
