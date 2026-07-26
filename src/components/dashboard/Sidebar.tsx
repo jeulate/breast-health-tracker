@@ -15,6 +15,7 @@ const navItems = [
   { href: "/dashboard/patients", label: "Pacientes", icon: "♡" },
   { href: "/dashboard/calendar", label: "Calendario", icon: "▦" },
   { href: "/dashboard/reports", label: "Reportes", icon: "▤" },
+  { href: "/dashboard/profile", label: "Mi perfil", icon: "○" },
 ];
 
 export function Sidebar({ isMobileOpen, isDesktopCollapsed, onMobileClose }: SidebarProps) {
@@ -101,7 +102,7 @@ export function Sidebar({ isMobileOpen, isDesktopCollapsed, onMobileClose }: Sid
       <footer className="border-border bg-surface mt-auto shrink-0 border-t p-4">
         <div className="bg-surface-secondary rounded-xl px-3 py-3">
           <p className="text-foreground text-xs font-medium">BI-RADS Tracker</p>
-          <p className="text-muted mt-0.5 text-xs">v0.1.0 · Fase 6</p>
+          <p className="text-muted mt-0.5 text-xs">v0.1.0 · Fase 9</p>
         </div>
       </footer>
     </aside>

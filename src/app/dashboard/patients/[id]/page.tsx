@@ -12,6 +12,7 @@ import { ClinicalTimelineService } from "@/services/clinical-timeline.service";
 import { ReminderService } from "@/services/reminder.service";
 import type { Reminder, ReminderCandidate } from "@/features/reminders";
 import type { Finding, Patient, TimelineEntry } from "@/types";
+import { ProfilePhotoEditor } from "@/components/profile-photo/ProfilePhotoEditor";
 
 export const metadata: Metadata = {
   title: "Detalle paciente | BI-RADS Tracker",
@@ -87,11 +88,13 @@ export default async function PatientDetailPage({ params, searchParams }: Patien
         <div className="px-5 pb-5 sm:px-6 sm:pb-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end">
-              <div
-                aria-hidden="true"
-                className="border-surface -mt-10 flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl border-4 bg-rose-600 text-2xl font-bold text-white shadow-md sm:h-24 sm:w-24 sm:text-3xl"
-              >
-                {initials}
+              <div className="-mt-10 shrink-0">
+                <ProfilePhotoEditor
+                  endpoint={`/api/patients/${patient.id}/photo`}
+                  initials={initials}
+                  alt={`Fotografía de ${patient.fullName}`}
+                  initialHasPhoto={Boolean(patient.profilePhotoPath)}
+                />
               </div>
 
               <div className="min-w-0 pb-1">

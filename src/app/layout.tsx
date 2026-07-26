@@ -38,7 +38,6 @@ export default function RootLayout({ children }: Readonly<RootLayoutProps>) {
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
-          storageKey="birads-tracker-theme"
         >
           {children}
         </ThemeProvider>
