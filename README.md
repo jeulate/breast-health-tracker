@@ -9,7 +9,9 @@ El proyecto combina un dashboard administrativo, persistencia en Redis, autentic
 
 ## Estado del proyecto
 
-Las fases de arquitectura base, dashboard analítico, gestión avanzada de pacientes, hallazgos BI-RADS, timeline clínico, calendario, recordatorios, integración con Telegram y reportes se encuentran completadas y publicadas en `main`. La Fase 9 se encuentra en desarrollo sobre `feature/phase-9`; sus bloques de dominio/API de perfil y de interfaz de preferencias ya fueron implementados, probados y publicados en la rama remota, pero todavía no fueron integrados en `develop` ni en producción.
+Las fases de arquitectura base, dashboard analítico, gestión avanzada de pacientes, hallazgos BI-RADS, timeline clínico, calendario, recordatorios, integración con Telegram y reportes se encuentran completadas y publicadas en `main`.
+
+La Fase 9 continúa en desarrollo por bloques. Los bloques 9.1, 9.2 y 9.3 —perfil y API, interfaz y preferencias, y fotografías de perfil— fueron implementados, validados e integrados en `develop` mediante el PR #26. Todavía no fueron promovidos a `main` ni a producción. Permanecen pendientes la configuración administrativa, la ampliación de permisos, la auditoría y la observabilidad.
 
 | Área                          | Estado     | Implementación                                   |
 | ----------------------------- | ---------- | ------------------------------------------------ |
@@ -31,30 +33,35 @@ Las fases de arquitectura base, dashboard analítico, gestión avanzada de pacie
 | Telegram                      | Completada | Vinculación segura y entrega de recordatorios    |
 | Reportes                      | Completada | Resumen, filtros y tabla administrativa          |
 | Exportaciones                 | Completada | Descargas CSV UTF-8 y PDF protegidas             |
-| Perfil de usuario             | En rama    | Datos de cuenta y preferencias persistentes      |
-| Preferencias de interfaz      | En rama    | Tema, idioma, zona horaria y notificaciones      |
-| Sincronización de tema        | En rama    | Modos claro, oscuro y sistema sin sobrescrituras |
+| Perfil de usuario             | En develop | Datos de cuenta y preferencias persistentes      |
+| Preferencias de interfaz      | En develop | Tema, idioma, zona horaria y notificaciones      |
+| Sincronización de tema        | En develop | Modos claro, oscuro y sistema sin sobrescrituras |
+| Fotografías de perfil         | En develop | Usuario y pacientes mediante Vercel Blob         |
+| Auditoría y observabilidad    | Pendiente  | Registro de acciones y trazabilidad de errores   |
 
 ## Tecnologías
 
-| Tecnología     | Uso                                        |
-| -------------- | ------------------------------------------ |
-| Next.js 16     | Framework web con App Router               |
-| React          | Construcción de la interfaz                |
-| TypeScript     | Tipado estático                            |
-| Tailwind CSS 4 | Sistema de estilos                         |
-| Recharts       | Gráficas interactivas del dashboard        |
-| Outfit         | Tipografía principal de la interfaz        |
-| JetBrains Mono | Tipografía para datos técnicos y código    |
-| Upstash Redis  | Persistencia mediante API REST             |
-| Zod            | Validación de datos y variables de entorno |
-| jose           | Creación y verificación de JWT             |
-| bcryptjs       | Hash seguro de contraseñas                 |
-| Vitest         | Pruebas automatizadas                      |
-| GitHub Actions | Integración y entrega continua             |
-| Vercel         | Hosting y despliegue de producción         |
-| grammY         | Bot, webhook y entrega mediante Telegram   |
-| pdf-lib        | Generación de reportes PDF en el servidor  |
+| Tecnología      | Uso                                        |
+| --------------- | ------------------------------------------ |
+| Next.js 16      | Framework web con App Router               |
+| React           | Construcción de la interfaz                |
+| TypeScript      | Tipado estático                            |
+| Tailwind CSS 4  | Sistema de estilos                         |
+| Recharts        | Gráficas interactivas del dashboard        |
+| Outfit          | Tipografía principal de la interfaz        |
+| JetBrains Mono  | Tipografía para datos técnicos y código    |
+| Upstash Redis   | Persistencia mediante API REST             |
+| Zod             | Validación de datos y variables de entorno |
+| jose            | Creación y verificación de JWT             |
+| bcryptjs        | Hash seguro de contraseñas                 |
+| Vitest          | Pruebas automatizadas                      |
+| GitHub Actions  | Integración y entrega continua             |
+| Vercel          | Hosting y despliegue de producción         |
+| Vercel Blob     | Almacenamiento privado de fotografías      |
+| grammY          | Bot, webhook y entrega mediante Telegram   |
+| pdf-lib         | Generación de reportes PDF en el servidor  |
+| Testing Library | Pruebas de componentes React               |
+| jsdom 26.1.0    | Entorno DOM para pruebas de interfaz       |
 
 ## Arquitectura
 
@@ -91,6 +98,19 @@ Route Handler /api/profile
              │
              ▼
         Repositorio Redis
+
+Fotografías de perfil
+   │ solicitud autenticada y autorizada
+   ▼
+Route Handlers de usuario y paciente
+   ├── Validación de formato y tamaño
+   ├── Carga o sustitución
+   └── Eliminación confirmada
+             │
+             ▼
+      Servicio de fotografías
+        ├── Metadatos en Redis
+        └── Archivo en Vercel Blob
 
 Telegram
    │ webhook autenticado
@@ -145,7 +165,8 @@ breast-health-tracker/
 │   │   │   ├── auth/            # Login, logout y sesión actual
 │   │   │   ├── calendar/        # Proyección global autenticada del calendario
 │   │   │   ├── internal/        # Procesamiento interno protegido por secreto
-│   │   │   ├── patients/        # Pacientes, recordatorios y vinculación
+│   │   │   ├── patients/        # Pacientes, fotografías, recordatorios y vinculación
+│   │   │   ├── profile/         # Perfil autenticado y fotografía del usuario
 │   │   │   ├── reports/         # Resumen y exportaciones CSV/PDF
 │   │   │   └── telegram/        # Webhook autenticado del bot
 │   │   ├── dashboard/           # Layout, calendario y páginas protegidas
@@ -157,6 +178,7 @@ breast-health-tracker/
 │   │   ├── findings/            # Formularios y tarjetas BI-RADS
 │   │   ├── forms/               # LoginForm y PatientForm
 │   │   ├── patients/            # Filtros, tabla y paginación
+│   │   ├── profile-photo/       # Editor reutilizable de fotografías
 │   │   ├── reminders/           # Gestión visual de recordatorios
 │   │   ├── reports/             # Filtros, indicadores, tabla y descargas
 │   │   ├── profile/             # Perfil, preferencias y sincronización del tema
@@ -172,6 +194,7 @@ breast-health-tracker/
 │   │   ├── findings/            # Contratos del dominio BI-RADS
 │   │   ├── patients/            # API pública del módulo de pacientes
 │   │   ├── profile/             # Contratos, validación y reglas del perfil
+│   │   ├── profile-photo/       # Validación, almacenamiento y API cliente
 │   │   ├── reminders/           # Contratos, identidad y entrega
 │   │   ├── reports/             # Contratos, cálculos, filtros y exportación
 │   │   └── telegram/            # Contratos, tokens y mensajes del bot
@@ -354,6 +377,23 @@ breast-health-tracker/
 - Diseño responsive y compatible con los estilos globales del dashboard.
 - Pruebas unitarias para las conversiones y funciones auxiliares del formulario.
 
+### Fotografías de perfil
+
+- Fotografía propia disponible desde el perfil del usuario autenticado.
+- Fotografía individual disponible en la ficha de cada paciente.
+- Componente reutilizable con vista previa e iniciales como fallback.
+- Carga, sustitución y eliminación con confirmación.
+- Formatos admitidos: JPEG, PNG y WebP.
+- Tamaño máximo validado: 5 MB por archivo.
+- Validación compartida entre interfaz, Route Handlers y servicio.
+- Archivos almacenados de forma privada mediante Vercel Blob.
+- Metadatos y referencias persistidos en Redis.
+- Lectura de imágenes mediante endpoints protegidos, sin exponer directamente el almacenamiento.
+- Autorización por rol para administrar fotografías de pacientes.
+- Eliminación segura de la referencia anterior al reemplazar o borrar una imagen.
+- Manejo visible de progreso, éxito y errores accesibles.
+- Pruebas de validación, repositorios, servicio, almacenamiento, contratos API y componente React.
+
 ### Interfaz
 
 - Diseño inspirado en TailAdmin.
@@ -369,6 +409,7 @@ breast-health-tracker/
 - Tabla con desplazamiento horizontal contenido en dispositivos pequeños.
 - Perfil de paciente adaptado a escritorio y móvil.
 - Perfil del usuario con datos de cuenta y preferencias configurables.
+- Editor de fotografías adaptado a los perfiles de usuario y paciente.
 - Sincronización consistente del tema entre encabezado, perfil, navegador y Redis.
 
 ## Requisitos
@@ -379,6 +420,7 @@ breast-health-tracker/
 - Cuenta de Vercel para el despliegue.
 - Repositorio GitHub para CI/CD.
 - Bot de Telegram creado mediante BotFather para habilitar la Fase 7.
+- Almacén privado de Vercel Blob para habilitar fotografías de perfil.
 
 ## Instalación local
 
@@ -403,20 +445,21 @@ La aplicación estará disponible en `http://localhost:3000`.
 
 ### Variables actuales
 
-| Variable                      | Descripción                                                | Requerida  |
-| ----------------------------- | ---------------------------------------------------------- | ---------- |
-| `KV_REST_API_URL`             | URL REST de Upstash Redis                                  | Sí         |
-| `KV_REST_API_TOKEN`           | Token de acceso a Upstash Redis                            | Sí         |
-| `KV_REST_API_READ_ONLY_TOKEN` | Token opcional de solo lectura                             | No         |
-| `HEALTH_APP_REDIS_PREFIX`     | Prefijo de aislamiento; recomendado: `bht:v1:`             | Sí         |
-| `NEXT_PUBLIC_APP_URL`         | URL pública de la aplicación                               | Sí         |
-| `AUTH_SECRET`                 | Clave para firmar JWT; mínimo recomendado de 32 caracteres | Sí         |
-| `ADMIN_INITIAL_EMAIL`         | Email utilizado por el seed del administrador              | Para seed  |
-| `ADMIN_INITIAL_PASSWORD`      | Contraseña inicial utilizada por el seed                   | Para seed  |
-| `CRON_SECRET`                 | Secreto Bearer del procesador de recordatorios             | Producción |
-| `TELEGRAM_BOT_TOKEN`          | Token privado del bot proporcionado por BotFather          | Telegram   |
-| `TELEGRAM_WEBHOOK_SECRET`     | Secreto usado para autenticar solicitudes de Telegram      | Telegram   |
-| `TELEGRAM_BOT_USERNAME`       | Nombre público del bot, sin el carácter `@`                | Telegram   |
+| Variable                      | Descripción                                                | Requerida   |
+| ----------------------------- | ---------------------------------------------------------- | ----------- |
+| `KV_REST_API_URL`             | URL REST de Upstash Redis                                  | Sí          |
+| `KV_REST_API_TOKEN`           | Token de acceso a Upstash Redis                            | Sí          |
+| `KV_REST_API_READ_ONLY_TOKEN` | Token opcional de solo lectura                             | No          |
+| `HEALTH_APP_REDIS_PREFIX`     | Prefijo de aislamiento; recomendado: `bht:v1:`             | Sí          |
+| `NEXT_PUBLIC_APP_URL`         | URL pública de la aplicación                               | Sí          |
+| `AUTH_SECRET`                 | Clave para firmar JWT; mínimo recomendado de 32 caracteres | Sí          |
+| `ADMIN_INITIAL_EMAIL`         | Email utilizado por el seed del administrador              | Para seed   |
+| `ADMIN_INITIAL_PASSWORD`      | Contraseña inicial utilizada por el seed                   | Para seed   |
+| `CRON_SECRET`                 | Secreto Bearer del procesador de recordatorios             | Producción  |
+| `TELEGRAM_BOT_TOKEN`          | Token privado del bot proporcionado por BotFather          | Telegram    |
+| `TELEGRAM_WEBHOOK_SECRET`     | Secreto usado para autenticar solicitudes de Telegram      | Telegram    |
+| `TELEGRAM_BOT_USERNAME`       | Nombre público del bot, sin el carácter `@`                | Telegram    |
+| `BLOB_READ_WRITE_TOKEN`       | Token privado de lectura y escritura de Vercel Blob        | Fotografías |
 
 Ejemplo local:
 
@@ -435,6 +478,7 @@ CRON_SECRET=reemplazar-por-un-secreto-aleatorio-de-al-menos-32-caracteres
 TELEGRAM_BOT_TOKEN=reemplazar-por-el-token-del-bot
 TELEGRAM_WEBHOOK_SECRET=reemplazar-por-un-secreto-aleatorio
 TELEGRAM_BOT_USERNAME=nombre_publico_del_bot
+BLOB_READ_WRITE_TOKEN=reemplazar-por-el-token-privado-de-vercel-blob
 ```
 
 > [!WARNING]
@@ -516,41 +560,47 @@ El código solo debe integrarse cuando todos los controles finalicen correctamen
 
 ## Endpoints actuales
 
-| Método   | Ruta                                             | Descripción                         | Acceso           |
-| -------- | ------------------------------------------------ | ----------------------------------- | ---------------- |
-| `POST`   | `/api/auth/login`                                | Iniciar sesión                      | Público          |
-| `POST`   | `/api/auth/logout`                               | Cerrar sesión                       | Autenticado      |
-| `GET`    | `/api/auth/me`                                   | Consultar la sesión actual          | Autenticado      |
-| `GET`    | `/api/patients`                                  | Buscar, filtrar y paginar pacientes | Autenticado      |
-| `POST`   | `/api/patients`                                  | Registrar paciente                  | Autenticado      |
-| `GET`    | `/api/patients/[id]`                             | Consultar un paciente               | Autenticado      |
-| `PUT`    | `/api/patients/[id]`                             | Actualizar un paciente              | Autenticado      |
-| `GET`    | `/api/patients/[id]/findings`                    | Listar hallazgos de una paciente    | Autenticado      |
-| `POST`   | `/api/patients/[id]/findings`                    | Registrar un hallazgo               | Autenticado      |
-| `GET`    | `/api/patients/[id]/findings/[findingId]`        | Consultar un hallazgo               | Autenticado      |
-| `PUT`    | `/api/patients/[id]/findings/[findingId]`        | Actualizar un hallazgo              | Autenticado      |
-| `GET`    | `/api/patients/[id]/timeline`                    | Consultar el timeline unificado     | Autenticado      |
-| `POST`   | `/api/patients/[id]/timeline`                    | Registrar un evento clínico         | Autenticado      |
-| `GET`    | `/api/patients/[id]/timeline/[eventId]`          | Consultar un evento clínico         | Autenticado      |
-| `PUT`    | `/api/patients/[id]/timeline/[eventId]`          | Actualizar un evento clínico        | Autenticado      |
-| `DELETE` | `/api/patients/[id]/timeline/[eventId]`          | Eliminar un evento clínico          | Autenticado      |
-| `GET`    | `/api/calendar`                                  | Consultar el calendario global      | Autenticado      |
-| `GET`    | `/api/patients/[id]/reminders`                   | Listar recordatorios y candidatos   | Autenticado      |
-| `POST`   | `/api/patients/[id]/reminders`                   | Crear un recordatorio               | Autenticado      |
-| `GET`    | `/api/patients/[id]/reminders/[reminderId]`      | Consultar un recordatorio           | Autenticado      |
-| `PUT`    | `/api/patients/[id]/reminders/[reminderId]`      | Reprogramar o cambiar su estado     | Autenticado      |
-| `GET`    | `/api/internal/reminders/process`                | Ejecutar el procesador programado   | Secreto interno  |
-| `POST`   | `/api/internal/reminders/process`                | Ejecutar el procesador manualmente  | Secreto interno  |
-| `GET`    | `/api/patients/[id]/telegram-link`               | Consultar el estado de vinculación  | Autenticado      |
-| `POST`   | `/api/patients/[id]/telegram-link`               | Generar un desafío de vinculación   | Autenticado      |
-| `DELETE` | `/api/patients/[id]/telegram-link`               | Desvincular Telegram                | Autenticado      |
-| `GET`    | `/api/patients/[id]/telegram-link/[challengeId]` | Consultar un desafío pendiente      | Autenticado      |
-| `POST`   | `/api/telegram/webhook`                          | Procesar actualizaciones del bot    | Secreto Telegram |
-| `GET`    | `/api/reports/summary`                           | Consultar el resumen de reportes    | Autorizado       |
-| `GET`    | `/api/reports/export/csv`                        | Descargar el reporte en CSV         | Autorizado       |
-| `GET`    | `/api/reports/export/pdf`                        | Descargar el reporte en PDF         | Autorizado       |
-| `GET`    | `/api/profile`                                   | Consultar perfil y preferencias     | Autenticado      |
-| `PATCH`  | `/api/profile`                                   | Actualizar perfil y preferencias    | Autenticado      |
+| Método   | Ruta                                             | Descripción                           | Acceso           |
+| -------- | ------------------------------------------------ | ------------------------------------- | ---------------- |
+| `POST`   | `/api/auth/login`                                | Iniciar sesión                        | Público          |
+| `POST`   | `/api/auth/logout`                               | Cerrar sesión                         | Autenticado      |
+| `GET`    | `/api/auth/me`                                   | Consultar la sesión actual            | Autenticado      |
+| `GET`    | `/api/patients`                                  | Buscar, filtrar y paginar pacientes   | Autenticado      |
+| `POST`   | `/api/patients`                                  | Registrar paciente                    | Autenticado      |
+| `GET`    | `/api/patients/[id]`                             | Consultar un paciente                 | Autenticado      |
+| `PUT`    | `/api/patients/[id]`                             | Actualizar un paciente                | Autenticado      |
+| `GET`    | `/api/patients/[id]/findings`                    | Listar hallazgos de una paciente      | Autenticado      |
+| `POST`   | `/api/patients/[id]/findings`                    | Registrar un hallazgo                 | Autenticado      |
+| `GET`    | `/api/patients/[id]/findings/[findingId]`        | Consultar un hallazgo                 | Autenticado      |
+| `PUT`    | `/api/patients/[id]/findings/[findingId]`        | Actualizar un hallazgo                | Autenticado      |
+| `GET`    | `/api/patients/[id]/timeline`                    | Consultar el timeline unificado       | Autenticado      |
+| `POST`   | `/api/patients/[id]/timeline`                    | Registrar un evento clínico           | Autenticado      |
+| `GET`    | `/api/patients/[id]/timeline/[eventId]`          | Consultar un evento clínico           | Autenticado      |
+| `PUT`    | `/api/patients/[id]/timeline/[eventId]`          | Actualizar un evento clínico          | Autenticado      |
+| `DELETE` | `/api/patients/[id]/timeline/[eventId]`          | Eliminar un evento clínico            | Autenticado      |
+| `GET`    | `/api/calendar`                                  | Consultar el calendario global        | Autenticado      |
+| `GET`    | `/api/patients/[id]/reminders`                   | Listar recordatorios y candidatos     | Autenticado      |
+| `POST`   | `/api/patients/[id]/reminders`                   | Crear un recordatorio                 | Autenticado      |
+| `GET`    | `/api/patients/[id]/reminders/[reminderId]`      | Consultar un recordatorio             | Autenticado      |
+| `PUT`    | `/api/patients/[id]/reminders/[reminderId]`      | Reprogramar o cambiar su estado       | Autenticado      |
+| `GET`    | `/api/internal/reminders/process`                | Ejecutar el procesador programado     | Secreto interno  |
+| `POST`   | `/api/internal/reminders/process`                | Ejecutar el procesador manualmente    | Secreto interno  |
+| `GET`    | `/api/patients/[id]/telegram-link`               | Consultar el estado de vinculación    | Autenticado      |
+| `POST`   | `/api/patients/[id]/telegram-link`               | Generar un desafío de vinculación     | Autenticado      |
+| `DELETE` | `/api/patients/[id]/telegram-link`               | Desvincular Telegram                  | Autenticado      |
+| `GET`    | `/api/patients/[id]/telegram-link/[challengeId]` | Consultar un desafío pendiente        | Autenticado      |
+| `POST`   | `/api/telegram/webhook`                          | Procesar actualizaciones del bot      | Secreto Telegram |
+| `GET`    | `/api/reports/summary`                           | Consultar el resumen de reportes      | Autorizado       |
+| `GET`    | `/api/reports/export/csv`                        | Descargar el reporte en CSV           | Autorizado       |
+| `GET`    | `/api/reports/export/pdf`                        | Descargar el reporte en PDF           | Autorizado       |
+| `GET`    | `/api/profile`                                   | Consultar perfil y preferencias       | Autenticado      |
+| `PATCH`  | `/api/profile`                                   | Actualizar perfil y preferencias      | Autenticado      |
+| `GET`    | `/api/profile/photo`                             | Consultar fotografía propia           | Autenticado      |
+| `POST`   | `/api/profile/photo`                             | Cargar o reemplazar fotografía propia | Autenticado      |
+| `DELETE` | `/api/profile/photo`                             | Eliminar fotografía propia            | Autenticado      |
+| `GET`    | `/api/patients/[id]/photo`                       | Consultar fotografía de paciente      | Autorizado       |
+| `POST`   | `/api/patients/[id]/photo`                       | Cargar o reemplazar fotografía        | Autorizado       |
+| `DELETE` | `/api/patients/[id]/photo`                       | Eliminar fotografía de paciente       | Autorizado       |
 
 ## Estrategia Git
 
@@ -585,16 +635,19 @@ No se deben desarrollar funcionalidades directamente sobre `develop` ni `main`.
 
 ### Iteración actual
 
-La Fase 8 permanece integrada en producción. La Fase 9 se desarrolla de forma incremental en `feature/phase-9`:
+La Fase 8 permanece integrada en producción. El alcance implementado de la Fase 9 quedó integrado en `develop` mediante el PR #26:
 
 - Bloque 9.1: dominio, persistencia, servicio y API autenticada del perfil y sus preferencias.
 - Bloque 9.2: página `/dashboard/profile`, formulario, navegación, preferencias de interfaz y sincronización del tema.
-- Commit del Bloque 9.2: `9ee3221` (`feat: add profile preferences UI and theme synchronization`).
-- Rama local y remota sincronizadas después del push.
-- Validación final del bloque: 356 pruebas aprobadas en 59 archivos, TypeScript, ESLint y build de producción sin errores.
-- Prueba manual completada para el cambio `DARK ↔ LIGHT`, navegación y persistencia local.
+- Bloque 9.3: fotografías del usuario y de pacientes mediante almacenamiento privado en Vercel Blob.
+- Commit del editor de fotografías: `998ac57` (`feat(profile): add patient profile photo editor`).
+- Commit de formato requerido por CI: `ae4af00` (`style: apply prettier formatting`).
+- Commit de integración en `develop`: `83c8c6d`.
+- Validación final: 69 archivos de prueba y 443 pruebas aprobadas, además de formato, TypeScript, ESLint y build de producción sin errores.
+- GitHub Actions y despliegue Preview de Vercel aprobados en el PR #26.
+- Rama local `feature/phase-9` eliminada después del merge.
 
-Estos cambios todavía deben pasar por pull request antes de integrarse en `develop` y posteriormente en `main`.
+Este alcance todavía debe promoverse de `develop` a `main` antes de considerarlo publicado en producción. La rama remota `feature/phase-9` puede eliminarse al finalizar la limpieza conjunta de las ramas ya integradas.
 
 ## CI/CD
 
@@ -813,7 +866,7 @@ Mejora futura no bloqueante: incorporar procesamiento por lotes o generación as
 
 ### Fase 9 — Perfil, configuración y auditoría
 
-**Estado: en desarrollo**
+**Estado: en desarrollo; bloques 9.1, 9.2 y 9.3 integrados en `develop`**
 
 Objetivo: incorporar un perfil administrativo persistente, preferencias personales y las bases necesarias para configuración, permisos, auditoría y observabilidad.
 
@@ -827,6 +880,8 @@ Bloque 9.1 — Dominio, persistencia y API de perfil:
 - Separación entre contratos, repositorio, servicio y Route Handler.
 - Endpoints autenticados `GET /api/profile` y `PATCH /api/profile`.
 - Conservación de los campos no enviados en actualizaciones parciales.
+
+Estado del bloque: completado e integrado.
 
 Bloque 9.2 — Interfaz y sincronización de preferencias:
 
@@ -843,19 +898,48 @@ Bloque 9.2 — Interfaz y sincronización de preferencias:
 - Eliminación de la clave heredada `birads-tracker-theme`.
 - Persistencia unificada mediante la clave local `theme`.
 - Pruebas manuales del ciclo `DARK → LIGHT → DARK` y persistencia tras recargar.
-- 356 pruebas aprobadas en 59 archivos, además de typecheck, lint y build.
+
+Estado del bloque: completado e integrado.
+
+Bloque 9.3 — Fotografías de usuario y pacientes:
+
+- Editor reutilizable incorporado al perfil propio y a la ficha del paciente.
+- Avatar por iniciales cuando no existe una fotografía.
+- Carga, sustitución y eliminación confirmada de imágenes.
+- Formatos permitidos: JPEG, PNG y WebP.
+- Límite máximo de 5 MB.
+- Validación en cliente y servidor.
+- Almacenamiento privado mediante Vercel Blob.
+- Metadatos y referencias persistidos en Redis.
+- Endpoints autenticados para la fotografía del usuario.
+- Endpoints protegidos por permisos para fotografías de pacientes.
+- Servicio desacoplado del proveedor mediante una abstracción de almacenamiento.
+- Manejo de progreso, mensajes de éxito y errores accesibles.
+- Pruebas con Testing Library y `jsdom@26.1.0`.
+
+Estado del bloque: completado e integrado.
+
+Validación consolidada de los bloques 9.1–9.3:
+
+- 69 archivos de prueba aprobados.
+- 443 pruebas aprobadas.
+- `format:check`, TypeScript, ESLint y build aprobados.
+- CI y despliegue Preview de Vercel aprobados.
+- PR #26 fusionado hacia `develop`.
 
 Pendiente dentro de la Fase 9:
 
 - Configuración administrativa.
-- Gestión de roles y permisos.
+- Ampliación de la gestión de roles y permisos administrativos.
 - Registro de acciones relevantes.
 - Observabilidad y trazabilidad de errores.
-- Integración de la rama mediante pull request hacia `develop`.
+- Promoción de `develop` hacia `main` y verificación en producción.
 
-Rama actual: `feature/phase-9`.
+Rama de implementación utilizada: `feature/phase-9`.
 
-Commit del Bloque 9.2: `9ee3221`.
+Integración: PR #26 hacia `develop`, commit `83c8c6d`.
+
+La subdivisión 9.1–9.3 representa correctamente el alcance ya implementado. La Fase 9 completa no debe marcarse como finalizada hasta completar los pendientes administrativos, de auditoría y observabilidad.
 
 ### Fase 10 — Asistencia con IA
 
@@ -901,15 +985,11 @@ Cada fase deberá cumplir, como mínimo, con los siguientes criterios:
 
 ## Próximo paso
 
-Los bloques 9.1 y 9.2 están implementados y publicados en `origin/feature/phase-9`. El siguiente paso es definir e implementar el próximo bloque de la Fase 9 en la misma rama o cerrar el alcance actual mediante un pull request hacia `develop`, según la estrategia acordada para la fase.
+Integrar esta actualización documental mediante la rama `docs/phase-9-readme` y un pull request hacia `develop`. Después se debe definir el siguiente bloque funcional de la Fase 9: configuración administrativa y ampliación de permisos, seguido de auditoría y observabilidad.
 
-```bash
-git status
-git branch --show-current
-git log -1 --oneline
-```
+Cuando `develop` reúna un alcance estable y validado, deberá abrirse un pull request hacia `main`, ejecutar nuevamente todos los controles de calidad y verificar el despliegue de producción. Hasta entonces, los bloques 9.1–9.3 deben describirse como integrados en `develop`, no como publicados en producción.
 
-Antes del pull request deben volver a ejecutarse los controles de calidad y confirmarse que la rama no contenga cambios sin registrar. No se debe afirmar que la Fase 9 está en producción hasta completar la integración `feature/phase-9 → develop → main` y verificar el despliegue.
+La rama remota `feature/phase-9` todavía existe porque no se ejecutó `git push origin --delete feature/phase-9`. Puede eliminarse junto con las demás ramas remotas ya fusionadas cuando concluya la revisión y actualización del README.
 
 Antes de trabajar con datos reales también deben definirse las políticas de privacidad, respaldo, retención, eliminación y auditoría indicadas en este documento.
 
