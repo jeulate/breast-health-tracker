@@ -61,6 +61,7 @@ describe("ProfilePhotoService", () => {
 
     vi.mocked(storage.upload).mockResolvedValue(uploadedPhoto);
     vi.mocked(storage.remove).mockResolvedValue(undefined);
+    vi.mocked(storage.download).mockResolvedValue(null);
 
     users.findById.mockResolvedValue(user);
     users.updateProfilePhoto.mockResolvedValue(undefined);
@@ -68,6 +69,97 @@ describe("ProfilePhotoService", () => {
     patients.findById.mockResolvedValue(patient);
     patients.updateProfilePhoto.mockResolvedValue(undefined);
   });
+
+  it("downloads a user profile photo from its persisted pathname", async () => {
+    const downloadedPhoto = {
+        body: new Blob(["stored-photo"], {
+        type: "image/jpeg",
+        }).stream(),
+        contentType: "image/jpeg",
+        size: 12,
+    };
+
+    vi.mocked(storage.download).mockResolvedValue(downloadedPhoto);
+
+    const service = createService();
+
+    const result = await service.download("users", "user-1");
+
+    expect(users.findById).toHaveBeenCalledWith("user-1");
+    expect(storage.download).toHaveBeenCalledWith(
+        user.profilePhotoPath,
+    );
+    expect(result).toBe(downloadedPhoto);
+    });
+
+    it("downloads a patient profile photo using the patient repository", async () => {
+    const downloadedPhoto = {
+        body: new Blob(["stored-photo"], {
+        type: "image/jpeg",
+        }).stream(),
+        contentType: "image/jpeg",
+        size: 12,
+    };
+
+    vi.mocked(storage.download).mockResolvedValue(downloadedPhoto);
+
+    const service = createService();
+
+    const result = await service.download(
+        "patients",
+        "patient-1",
+    );
+
+    expect(patients.findById).toHaveBeenCalledWith(
+        "patient-1",
+    );
+    expect(users.findById).not.toHaveBeenCalled();
+    expect(storage.download).toHaveBeenCalledWith(
+        patient.profilePhotoPath,
+    );
+    expect(result).toBe(downloadedPhoto);
+    });
+
+    it("returns null when the owner has no profile photo", async () => {
+    users.findById.mockResolvedValue({
+        ...user,
+        profilePhotoPath: undefined,
+    });
+
+    const service = createService();
+
+    const result = await service.download("users", "user-1");
+
+    expect(result).toBeNull();
+    expect(storage.download).not.toHaveBeenCalled();
+    });
+
+    it("returns null when the persisted photo no longer exists in storage", async () => {
+    vi.mocked(storage.download).mockResolvedValue(null);
+
+    const service = createService();
+
+    const result = await service.download("users", "user-1");
+
+    expect(storage.download).toHaveBeenCalledWith(
+        user.profilePhotoPath,
+    );
+    expect(result).toBeNull();
+    });
+
+    it("rejects download when the owner does not exist", async () => {
+    users.findById.mockResolvedValue(null);
+
+    const service = createService();
+
+    await expect(
+        service.download("users", "missing-user"),
+    ).rejects.toMatchObject({
+        code: "OWNER_NOT_FOUND",
+    } satisfies Partial<ProfilePhotoError>);
+
+    expect(storage.download).not.toHaveBeenCalled();
+    });
 
   it("replaces a user profile photo and removes the previous one", async () => {
     const service = createService();
