@@ -42,26 +42,27 @@ export class ProfilePhotoService {
     this.patients = dependencies.patients ?? new PatientRepository();
   }
 
-  async download(
+   async download(
     ownerType: ProfilePhotoOwnerType,
     ownerId: string,
-    ): Promise<DownloadedProfilePhoto | null> {
+  ): Promise<DownloadedProfilePhoto | null> {
     const repository = this.getRepository(ownerType);
     const owner = await repository.findById(ownerId);
 
     if (!owner) {
-        throw new ProfilePhotoError(
+      throw new ProfilePhotoError(
         "OWNER_NOT_FOUND",
         "The profile photo owner does not exist.",
-        );
+      );
     }
 
     if (!owner.profilePhotoPath) {
-        return null;
+      return null;
     }
 
     return this.storage.download(owner.profilePhotoPath);
-    }
+  }
+
   async replace(
     ownerType: ProfilePhotoOwnerType,
     ownerId: string,
