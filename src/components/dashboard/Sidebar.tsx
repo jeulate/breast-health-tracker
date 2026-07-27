@@ -3,22 +3,50 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { hasPermission, type Permission } from "@/features/auth/permissions";
+import type { UserRole } from "@/types";
 
 interface SidebarProps {
+  userRole?: UserRole;
   isMobileOpen: boolean;
   isDesktopCollapsed: boolean;
   onMobileClose: () => void;
 }
 
-const navItems = [
+interface NavItem {
+  href: string;
+  label: string;
+  icon: string;
+  permission?: Permission;
+}
+
+const navItems: NavItem[] = [
   { href: "/dashboard", label: "Inicio", icon: "⊞" },
   { href: "/dashboard/patients", label: "Pacientes", icon: "♡" },
-  { href: "/dashboard/calendar", label: "Calendario", icon: "▦" },
+  { href: "/dashboard/calendar", label: "Calendario", icon: "◦" },
   { href: "/dashboard/reports", label: "Reportes", icon: "▤" },
   { href: "/dashboard/profile", label: "Mi perfil", icon: "○" },
+  {
+    href: "/dashboard/admin",
+    label: "Administración",
+    icon: "⚙",
+    permission: "settings:manage",
+  },
 ];
 
-export function Sidebar({ isMobileOpen, isDesktopCollapsed, onMobileClose }: SidebarProps) {
+export function getSidebarNavItems(userRole?: UserRole): NavItem[] {
+  return navItems.filter(
+    ({ permission }) =>
+      !permission || (userRole !== undefined && hasPermission(userRole, permission)),
+  );
+}
+
+export function Sidebar({
+  userRole,
+  isMobileOpen,
+  isDesktopCollapsed,
+  onMobileClose,
+}: SidebarProps) {
   const pathname = usePathname();
 
   useEffect(() => {
@@ -64,7 +92,7 @@ export function Sidebar({ isMobileOpen, isDesktopCollapsed, onMobileClose }: Sid
           Menú
         </p>
         <div className="flex flex-col gap-1">
-          {navItems.map(({ href, label, icon }) => {
+          {getSidebarNavItems(userRole).map(({ href, label, icon }) => {
             const isActive =
               pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
             return (

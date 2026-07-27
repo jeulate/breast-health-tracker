@@ -3,17 +3,18 @@
 import { useCallback, useState } from "react";
 import { Header } from "@/components/dashboard/Header";
 import { Sidebar } from "@/components/dashboard/Sidebar";
+import type { UserRole } from "@/types";
 
 interface DashboardShellProps {
   children: React.ReactNode;
   userEmail?: string;
+  userRole?: UserRole;
 }
 
 const DESKTOP_MEDIA_QUERY = "(min-width: 1024px)";
 
-export function DashboardShell({ children, userEmail }: Readonly<DashboardShellProps>) {
+export function DashboardShell({ children, userEmail, userRole }: Readonly<DashboardShellProps>) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-
   const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(false);
 
   const toggleSidebar = useCallback(() => {
@@ -34,6 +35,7 @@ export function DashboardShell({ children, userEmail }: Readonly<DashboardShellP
   return (
     <div className="bg-background text-foreground fixed inset-0 flex overflow-hidden">
       <Sidebar
+        userRole={userRole}
         isMobileOpen={isMobileSidebarOpen}
         isDesktopCollapsed={isDesktopSidebarCollapsed}
         onMobileClose={closeMobileSidebar}

@@ -14,7 +14,10 @@ export default async function DashboardLayout({ children }: Readonly<DashboardLa
   return (
     <>
       {profile && <ThemePreferenceSync theme={profile.preferences.theme} />}
-      <DashboardShell userEmail={session?.email}>{children}</DashboardShell>
+
+      <DashboardShell userEmail={session?.email} userRole={session?.role}>
+        {children}
+      </DashboardShell>
     </>
   );
 }
