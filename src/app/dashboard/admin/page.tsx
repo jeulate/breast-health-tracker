@@ -15,9 +15,7 @@ export default async function AdminPage() {
         aria-labelledby="admin-access-denied-title"
         className="rounded-2xl border border-red-200 bg-red-50 p-6 dark:border-red-900/50 dark:bg-red-950/30"
       >
-        <p className="text-sm font-medium text-red-700 dark:text-red-300">
-          Acceso restringido
-        </p>
+        <p className="text-sm font-medium text-red-700 dark:text-red-300">Acceso restringido</p>
 
         <h1
           id="admin-access-denied-title"
@@ -32,7 +30,7 @@ export default async function AdminPage() {
 
         <Link
           href="/dashboard"
-          className="mt-6 inline-flex rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+          className="mt-6 inline-flex rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:outline-none dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
         >
           Volver al dashboard
         </Link>
@@ -43,9 +41,7 @@ export default async function AdminPage() {
   return (
     <section aria-labelledby="admin-page-title" className="space-y-6">
       <div>
-        <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
-          Administración
-        </p>
+        <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Administración</p>
 
         <h1
           id="admin-page-title"
@@ -55,8 +51,8 @@ export default async function AdminPage() {
         </h1>
 
         <p className="mt-2 max-w-3xl text-sm text-slate-600 dark:text-slate-300">
-          Gestiona los usuarios, la configuración general y las funciones
-          administrativas de BI-RADS Tracker.
+          Gestiona los usuarios, la configuración general y las funciones administrativas de BI-RADS
+          Tracker.
         </p>
       </div>
 
@@ -70,7 +66,7 @@ export default async function AdminPage() {
             Administra roles, estados y acceso de las cuentas registradas.
           </p>
 
-          <p className="mt-4 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          <p className="mt-4 text-xs font-medium tracking-wide text-slate-500 uppercase dark:text-slate-400">
             Disponible en la Fase 9.4.2
           </p>
         </article>
@@ -81,11 +77,10 @@ export default async function AdminPage() {
           </h2>
 
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            Configura el nombre de la aplicación, zona horaria y opciones para
-            fotografías.
+            Configura el nombre de la aplicación, zona horaria y opciones para fotografías.
           </p>
 
-          <p className="mt-4 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          <p className="mt-4 text-xs font-medium tracking-wide text-slate-500 uppercase dark:text-slate-400">
             Disponible en la Fase 9.4.3
           </p>
         </article>
