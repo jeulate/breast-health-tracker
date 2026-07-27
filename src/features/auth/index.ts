@@ -2,6 +2,9 @@
 export { AuthService } from "@/services/auth.service";
 export { loginSchema } from "@/lib/validations/auth";
 export type { LoginInput } from "@/lib/validations/auth";
-export { PERMISSIONS, ROLE_PERMISSIONS, hasPermission } from "./permissions";
 
+export { PERMISSIONS, ROLE_PERMISSIONS, hasPermission } from "./permissions";
 export type { Permission } from "./permissions";
+
+export { authorize } from "./authorization";
+export type { AuthorizationResult } from "./authorization";
