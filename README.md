@@ -13,33 +13,33 @@ Las fases de arquitectura base, dashboard analítico, gestión avanzada de pacie
 
 La Fase 9 continúa en desarrollo por bloques. Los bloques 9.1, 9.2 y 9.3 —perfil y API, interfaz y preferencias, y fotografías de perfil— fueron implementados, validados e integrados en `develop` mediante el PR #26. El incremento administrativo y de experiencia de usuario 9.4.2.4.4C se encuentra implementado y validado localmente, pero todavía está pendiente de commit, push, pull request e integración. La fase completa aún no fue promovida a `main` ni a producción.
 
-| Área                          | Estado     | Implementación                                   |
-| ----------------------------- | ---------- | ------------------------------------------------ |
-| Arquitectura inicial          | Completada | Next.js 16, App Router y TypeScript              |
-| Persistencia                  | Completada | Upstash Redis con aislamiento por prefijo        |
-| Autenticación                 | Completada | JWT, cookie HTTP-only y rutas protegidas         |
-| Gestión avanzada de pacientes | Completada | Búsqueda, filtros, ordenamiento y paginación     |
-| Dashboard base                | Completada | Header, sidebar y tarjetas reutilizables         |
-| Diseño responsive             | Completada | Sidebar colapsable en escritorio y drawer móvil  |
-| Modo oscuro                   | Completada | Tema persistente y componentes adaptados         |
-| Calidad                       | Completada | Formato, lint, typecheck, tests y build          |
-| CI/CD                         | Completada | GitHub Actions y despliegue en Vercel            |
-| Dashboard analítico           | Completada | KPIs reales, gráfica y actividad reciente        |
-| Perfil de paciente            | Completada | Avatar, datos, estado y edición validada         |
-| Hallazgos BI-RADS             | Completada | Registro, consulta, edición y seguimiento        |
-| Timeline clínico              | Completada | Hallazgos, controles, síntomas y notas           |
-| Calendario                    | Completada | Vista mensual, agenda móvil y filtros            |
-| Recordatorios                 | Completada | Programación, ejecución y control de estados     |
-| Telegram                      | Completada | Vinculación segura y entrega de recordatorios    |
-| Reportes                      | Completada | Resumen, filtros y tabla administrativa          |
-| Exportaciones                 | Completada | Descargas CSV UTF-8 y PDF protegidas             |
-| Perfil de usuario             | En develop | Datos de cuenta y preferencias persistentes      |
-| Preferencias de interfaz      | En develop | Tema, idioma, zona horaria y notificaciones      |
-| Sincronización de tema        | En develop | Modos claro, oscuro y sistema sin sobrescrituras |
-| Fotografías de perfil         | En progreso | Usuario, pacientes y edición administrativa      |
-| Avatar reactivo del header    | Validado localmente | Actualización inmediata sin cerrar sesión   |
-| Gestión administrativa       | En progreso | Edición administrativa y fotografía de usuarios |
-| Auditoría y observabilidad    | Pendiente  | Registro de acciones y trazabilidad de errores   |
+| Área                          | Estado              | Implementación                                   |
+| ----------------------------- | ------------------- | ------------------------------------------------ |
+| Arquitectura inicial          | Completada          | Next.js 16, App Router y TypeScript              |
+| Persistencia                  | Completada          | Upstash Redis con aislamiento por prefijo        |
+| Autenticación                 | Completada          | JWT, cookie HTTP-only y rutas protegidas         |
+| Gestión avanzada de pacientes | Completada          | Búsqueda, filtros, ordenamiento y paginación     |
+| Dashboard base                | Completada          | Header, sidebar y tarjetas reutilizables         |
+| Diseño responsive             | Completada          | Sidebar colapsable en escritorio y drawer móvil  |
+| Modo oscuro                   | Completada          | Tema persistente y componentes adaptados         |
+| Calidad                       | Completada          | Formato, lint, typecheck, tests y build          |
+| CI/CD                         | Completada          | GitHub Actions y despliegue en Vercel            |
+| Dashboard analítico           | Completada          | KPIs reales, gráfica y actividad reciente        |
+| Perfil de paciente            | Completada          | Avatar, datos, estado y edición validada         |
+| Hallazgos BI-RADS             | Completada          | Registro, consulta, edición y seguimiento        |
+| Timeline clínico              | Completada          | Hallazgos, controles, síntomas y notas           |
+| Calendario                    | Completada          | Vista mensual, agenda móvil y filtros            |
+| Recordatorios                 | Completada          | Programación, ejecución y control de estados     |
+| Telegram                      | Completada          | Vinculación segura y entrega de recordatorios    |
+| Reportes                      | Completada          | Resumen, filtros y tabla administrativa          |
+| Exportaciones                 | Completada          | Descargas CSV UTF-8 y PDF protegidas             |
+| Perfil de usuario             | En develop          | Datos de cuenta y preferencias persistentes      |
+| Preferencias de interfaz      | En develop          | Tema, idioma, zona horaria y notificaciones      |
+| Sincronización de tema        | En develop          | Modos claro, oscuro y sistema sin sobrescrituras |
+| Fotografías de perfil         | En progreso         | Usuario, pacientes y edición administrativa      |
+| Avatar reactivo del header    | Validado localmente | Actualización inmediata sin cerrar sesión        |
+| Gestión administrativa        | En progreso         | Edición administrativa y fotografía de usuarios  |
+| Auditoría y observabilidad    | Pendiente           | Registro de acciones y trazabilidad de errores   |
 
 ## Tecnologías
 
