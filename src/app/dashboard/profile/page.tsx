@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 
 export const metadata: Metadata = {
-  title: "Mi perfil | BI-RADS Tracker",
+  title: "Mi perfil",
 };
 
 export default function ProfilePage() {

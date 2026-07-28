@@ -11,7 +11,7 @@ import {
 } from "@/features/calendar/calendar-month";
 import { CalendarService } from "@/services/calendar.service";
 
-export const metadata: Metadata = { title: "Calendario | BI-RADS Tracker" };
+export const metadata: Metadata = { title: "Calendario" };
 export const dynamic = "force-dynamic";
 
 interface CalendarPageProps {

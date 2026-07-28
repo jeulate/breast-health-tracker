@@ -15,7 +15,7 @@ import type { Finding, Patient, TimelineEntry } from "@/types";
 import { ProfilePhotoEditor } from "@/components/profile-photo/ProfilePhotoEditor";
 
 export const metadata: Metadata = {
-  title: "Detalle paciente | BI-RADS Tracker",
+  title: "Detalle paciente",
 };
 
 export const dynamic = "force-dynamic";

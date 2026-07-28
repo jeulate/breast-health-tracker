@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { authorize } from "@/features/auth";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Administración",
+};
 
 export default async function AdminPage() {
   const authorization = await authorize("settings:manage");
@@ -74,19 +79,23 @@ export default async function AdminPage() {
           </p>
         </Link>
 
-        <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <Link
+          href="/dashboard/admin/settings"
+          className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-blue-300 hover:shadow-md focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-700"
+        >
           <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
-            Configuración general
+            Configuración de la aplicación
           </h2>
 
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            Configura el nombre de la aplicación, zona horaria y opciones para fotografías.
+            Configura el nombre de la aplicación, la zona horaria y las opciones para fotografías de
+            perfil.
           </p>
 
-          <p className="mt-4 text-xs font-medium tracking-wide text-slate-500 uppercase dark:text-slate-400">
-            Disponible en la Fase 9.4.3
+          <p className="mt-4 text-xs font-semibold tracking-wide text-blue-600 uppercase dark:text-blue-400">
+            Administrar configuración →
           </p>
-        </article>
+        </Link>
       </div>
     </section>
   );

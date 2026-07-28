@@ -7,6 +7,7 @@ import type { UserRole } from "@/types";
 
 interface DashboardShellProps {
   children: React.ReactNode;
+  appName?: string;
   userName?: string;
   userEmail?: string;
   userRole?: UserRole;
@@ -17,6 +18,7 @@ const DESKTOP_MEDIA_QUERY = "(min-width: 1024px)";
 
 export function DashboardShell({
   children,
+  appName = "BI-RADS Tracker",
   userName,
   userEmail,
   userRole,
@@ -43,6 +45,7 @@ export function DashboardShell({
   return (
     <div className="bg-background text-foreground fixed inset-0 flex overflow-hidden">
       <Sidebar
+        appName={appName}
         userRole={userRole}
         isMobileOpen={isMobileSidebarOpen}
         isDesktopCollapsed={isDesktopSidebarCollapsed}

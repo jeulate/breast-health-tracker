@@ -7,6 +7,7 @@ import { hasPermission, type Permission } from "@/features/auth/permissions";
 import type { UserRole } from "@/types";
 
 interface SidebarProps {
+  appName?: string;
   userRole?: UserRole;
   isMobileOpen: boolean;
   isDesktopCollapsed: boolean;
@@ -32,6 +33,12 @@ const navItems: NavItem[] = [
     icon: "⚙",
     permission: "settings:manage",
   },
+  {
+    href: "/dashboard/admin/settings",
+    label: "Configuración",
+    icon: "◉",
+    permission: "settings:manage",
+  },
 ];
 
 export function getSidebarNavItems(userRole?: UserRole): NavItem[] {
@@ -41,13 +48,42 @@ export function getSidebarNavItems(userRole?: UserRole): NavItem[] {
   );
 }
 
+export function isSidebarNavItemActive(pathname: string, href: string): boolean {
+  const isAdminChildRoute =
+    href === "/dashboard/admin" &&
+    pathname.startsWith("/dashboard/admin/") &&
+    !pathname.startsWith("/dashboard/admin/settings");
+
+  const isNestedRoute =
+    href !== "/dashboard" && href !== "/dashboard/admin" && pathname.startsWith(`${href}/`);
+
+  return pathname === href || isAdminChildRoute || isNestedRoute;
+}
+
+export function getAppInitials(appName: string): string {
+  const words = appName.trim().split(/\s+/).filter(Boolean);
+
+  if (words.length === 0) {
+    return "BT";
+  }
+
+  return words
+    .slice(0, 2)
+    .map((word) => word.charAt(0))
+    .join("")
+    .toLocaleUpperCase("es-BO");
+}
+
 export function Sidebar({
+  appName = "BI-RADS Tracker",
   userRole,
   isMobileOpen,
   isDesktopCollapsed,
   onMobileClose,
 }: SidebarProps) {
   const pathname = usePathname();
+  const normalizedAppName = appName.trim() || "BI-RADS Tracker";
+  const appInitials = getAppInitials(normalizedAppName);
 
   useEffect(() => {
     onMobileClose();
@@ -70,10 +106,10 @@ export function Sidebar({
       <div className="border-border flex h-16 shrink-0 items-center justify-between border-b px-4 sm:px-5">
         <Link href="/dashboard" className="group flex min-w-0 items-center gap-3">
           <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-600 text-sm font-bold text-white shadow-sm shadow-rose-500/20">
-            BT
+            {appInitials}
           </span>
           <div className="min-w-0">
-            <p className="text-foreground truncate text-base font-bold">BI-RADS Tracker</p>
+            <p className="text-foreground truncate text-base font-bold">{normalizedAppName}</p>
             <p className="text-muted truncate text-xs">Health Dashboard</p>
           </div>
         </Link>
@@ -93,8 +129,8 @@ export function Sidebar({
         </p>
         <div className="flex flex-col gap-1">
           {getSidebarNavItems(userRole).map(({ href, label, icon }) => {
-            const isActive =
-              pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
+            const isActive = isSidebarNavItemActive(pathname, href);
+
             return (
               <Link
                 key={href}
@@ -129,7 +165,7 @@ export function Sidebar({
 
       <footer className="border-border bg-surface mt-auto shrink-0 border-t p-4">
         <div className="bg-surface-secondary rounded-xl px-3 py-3">
-          <p className="text-foreground text-xs font-medium">BI-RADS Tracker</p>
+          <p className="text-foreground truncate text-xs font-medium">{normalizedAppName}</p>
           <p className="text-muted mt-0.5 text-xs">v0.1.0 · Fase 9</p>
         </div>
       </footer>
