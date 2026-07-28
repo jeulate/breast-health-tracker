@@ -15,7 +15,12 @@ export default async function DashboardLayout({ children }: Readonly<DashboardLa
     <>
       {profile && <ThemePreferenceSync theme={profile.preferences.theme} />}
 
-      <DashboardShell userEmail={session?.email} userRole={session?.role}>
+      <DashboardShell
+        userName={profile?.user.name}
+        userEmail={profile?.user.email ?? session?.email}
+        userRole={profile?.user.role ?? session?.role}
+        hasProfilePhoto={Boolean(profile?.user.profilePhotoPath)}
+      >
         {children}
       </DashboardShell>
     </>

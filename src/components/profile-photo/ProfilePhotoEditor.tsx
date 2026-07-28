@@ -22,6 +22,20 @@ interface ProfilePhotoEditorProps {
   compact?: boolean;
 }
 
+const PROFILE_PHOTO_UPDATED_EVENT = "profile-photo-updated";
+
+interface ProfilePhotoUpdatedEventDetail {
+  endpoint: string;
+  hasPhoto: boolean;
+  version: number;
+}
+
+function dispatchProfilePhotoUpdated(detail: ProfilePhotoUpdatedEventDetail): void {
+  window.dispatchEvent(
+    new CustomEvent<ProfilePhotoUpdatedEventDetail>(PROFILE_PHOTO_UPDATED_EVENT, { detail }),
+  );
+}
+
 export function ProfilePhotoEditor({
   endpoint,
   initials,
@@ -35,6 +49,8 @@ export function ProfilePhotoEditor({
   const [pendingAction, setPendingAction] = useState<"upload" | "delete" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   function openFilePicker(): void {
     inputRef.current?.click();
@@ -66,6 +82,7 @@ export function ProfilePhotoEditor({
     }
 
     setPendingAction("upload");
+    setUploadProgress(0);
     setMessage(null);
     setError(null);
 
@@ -73,22 +90,21 @@ export function ProfilePhotoEditor({
       const formData = new FormData();
       formData.set("photo", file);
 
-      const response = await fetch(endpoint, {
-        method: "POST",
-        body: formData,
+      const result = await uploadProfilePhoto(endpoint, formData, setUploadProgress);
+
+      const nextImageVersion = Date.now();
+
+      setHasPhoto(result.hasPhoto);
+      setImageVersion(nextImageVersion);
+
+      dispatchProfilePhotoUpdated({
+        endpoint,
+        hasPhoto: result.hasPhoto,
+        version: nextImageVersion,
       });
 
-      const body = (await response.json()) as ApiResponse<ProfilePhotoMutationData>;
-
-      if (!response.ok || !body.data) {
-        throw new Error(body.error?.message ?? "No fue posible guardar la fotografía.");
-      }
-
-      setHasPhoto(body.data.hasPhoto);
-      setImageVersion(Date.now());
-
       setMessage(
-        body.data.previousPhotoCleanupFailed
+        result.previousPhotoCleanupFailed
           ? "La fotografía fue actualizada, pero el archivo anterior no pudo limpiarse automáticamente."
           : "La fotografía fue actualizada correctamente.",
       );
@@ -96,14 +112,11 @@ export function ProfilePhotoEditor({
       setError(cause instanceof Error ? cause.message : "No fue posible guardar la fotografía.");
     } finally {
       setPendingAction(null);
+      setUploadProgress(0);
     }
   }
 
   async function removePhoto(): Promise<void> {
-    if (!window.confirm("¿Deseas eliminar esta fotografía de perfil?")) {
-      return;
-    }
-
     setPendingAction("delete");
     setMessage(null);
     setError(null);
@@ -120,6 +133,14 @@ export function ProfilePhotoEditor({
       }
 
       setHasPhoto(false);
+      setImageVersion(0);
+      setShowDeleteConfirmation(false);
+
+      dispatchProfilePhotoUpdated({
+        endpoint,
+        hasPhoto: false,
+        version: Date.now(),
+      });
 
       setMessage(
         body.data.previousPhotoCleanupFailed
@@ -174,15 +195,37 @@ export function ProfilePhotoEditor({
             <Button
               type="button"
               variant="danger"
-              onClick={removePhoto}
+              onClick={() => setShowDeleteConfirmation(true)}
               disabled={pendingAction !== null}
             >
-              {pendingAction === "delete" ? "Eliminando..." : "Eliminar"}
+              Eliminar
             </Button>
           ) : null}
         </div>
       </div>
 
+      {pendingAction === "upload" ? (
+        <div
+          className="w-full sm:max-w-xs"
+          role="progressbar"
+          aria-label="Progreso de carga de la fotografía"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={uploadProgress}
+        >
+          <div className="flex justify-between text-xs text-slate-600 dark:text-slate-300">
+            <span>Cargando fotografía</span>
+            <span>{uploadProgress}%</span>
+          </div>
+
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+            <div
+              className="h-full rounded-full bg-rose-600 transition-[width]"
+              style={{ width: `${uploadProgress}%` }}
+            />
+          </div>
+        </div>
+      ) : null}
       <input
         ref={inputRef}
         type="file"
@@ -214,6 +257,106 @@ export function ProfilePhotoEditor({
           {error}
         </p>
       ) : null}
+      {showDeleteConfirmation ? (
+        <div
+          role="presentation"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setShowDeleteConfirmation(false);
+            }
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-profile-photo-title"
+            aria-describedby="delete-profile-photo-description"
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-900"
+          >
+            <h2
+              id="delete-profile-photo-title"
+              className="text-lg font-semibold text-slate-950 dark:text-white"
+            >
+              Eliminar fotografía
+            </h2>
+
+            <p
+              id="delete-profile-photo-description"
+              className="mt-2 text-sm text-slate-600 dark:text-slate-300"
+            >
+              ¿Confirmas que deseas eliminar esta fotografía de perfil? Se volverán a mostrar las
+              iniciales del usuario.
+            </p>
+
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setShowDeleteConfirmation(false)}
+                disabled={pendingAction === "delete"}
+              >
+                Cancelar
+              </Button>
+
+              <Button
+                type="button"
+                variant="danger"
+                onClick={() => void removePhoto()}
+                disabled={pendingAction === "delete"}
+              >
+                {pendingAction === "delete" ? "Eliminando..." : "Eliminar fotografía"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
+}
+
+function uploadProfilePhoto(
+  endpoint: string,
+  formData: FormData,
+  onProgress: (progress: number) => void,
+): Promise<ProfilePhotoMutationData> {
+  return new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest();
+
+    request.open("POST", endpoint);
+
+    request.upload.addEventListener("progress", (event) => {
+      if (!event.lengthComputable) {
+        return;
+      }
+
+      onProgress(Math.round((event.loaded / event.total) * 100));
+    });
+
+    request.addEventListener("load", () => {
+      try {
+        const body = JSON.parse(request.responseText) as ApiResponse<ProfilePhotoMutationData>;
+
+        if (request.status < 200 || request.status >= 300 || !body.success || !body.data) {
+          reject(new Error(body.error?.message ?? "No fue posible guardar la fotografía."));
+          return;
+        }
+
+        onProgress(100);
+        resolve(body.data);
+      } catch {
+        reject(new Error("El servidor devolvió una respuesta inválida."));
+      }
+    });
+
+    request.addEventListener("error", () => {
+      reject(new Error("No fue posible conectar con el servidor."));
+    });
+
+    request.addEventListener("abort", () => {
+      reject(new Error("La carga de la fotografía fue cancelada."));
+    });
+
+    request.send(formData);
+  });
 }

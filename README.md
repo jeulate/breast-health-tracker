@@ -11,7 +11,7 @@ El proyecto combina un dashboard administrativo, persistencia en Redis, autentic
 
 Las fases de arquitectura base, dashboard analítico, gestión avanzada de pacientes, hallazgos BI-RADS, timeline clínico, calendario, recordatorios, integración con Telegram y reportes se encuentran completadas y publicadas en `main`.
 
-La Fase 9 continúa en desarrollo por bloques. Los bloques 9.1, 9.2 y 9.3 —perfil y API, interfaz y preferencias, y fotografías de perfil— fueron implementados, validados e integrados en `develop` mediante el PR #26. Todavía no fueron promovidos a `main` ni a producción. Permanecen pendientes la configuración administrativa, la ampliación de permisos, la auditoría y la observabilidad.
+La Fase 9 continúa en desarrollo por bloques. Los bloques 9.1, 9.2 y 9.3 —perfil y API, interfaz y preferencias, y fotografías de perfil— fueron implementados, validados e integrados en `develop` mediante el PR #26. El incremento administrativo y de experiencia de usuario 9.4.2.4.4C se encuentra implementado y validado localmente, pero todavía está pendiente de commit, push, pull request e integración. La fase completa aún no fue promovida a `main` ni a producción.
 
 | Área                          | Estado     | Implementación                                   |
 | ----------------------------- | ---------- | ------------------------------------------------ |
@@ -36,7 +36,9 @@ La Fase 9 continúa en desarrollo por bloques. Los bloques 9.1, 9.2 y 9.3 —per
 | Perfil de usuario             | En develop | Datos de cuenta y preferencias persistentes      |
 | Preferencias de interfaz      | En develop | Tema, idioma, zona horaria y notificaciones      |
 | Sincronización de tema        | En develop | Modos claro, oscuro y sistema sin sobrescrituras |
-| Fotografías de perfil         | En develop | Usuario y pacientes mediante Vercel Blob         |
+| Fotografías de perfil         | En progreso | Usuario, pacientes y edición administrativa      |
+| Avatar reactivo del header    | Validado localmente | Actualización inmediata sin cerrar sesión   |
+| Gestión administrativa       | En progreso | Edición administrativa y fotografía de usuarios |
 | Auditoría y observabilidad    | Pendiente  | Registro de acciones y trazabilidad de errores   |
 
 ## Tecnologías
@@ -393,6 +395,13 @@ breast-health-tracker/
 - Eliminación segura de la referencia anterior al reemplazar o borrar una imagen.
 - Manejo visible de progreso, éxito y errores accesibles.
 - Pruebas de validación, repositorios, servicio, almacenamiento, contratos API y componente React.
+- Barra accesible con porcentaje real durante la carga mediante `XMLHttpRequest`.
+- Modal de confirmación que permanece visible y muestra `Eliminando...` hasta recibir la respuesta del servidor.
+- Actualización inmediata de la fotografía del header después de cargar, reemplazar o eliminar la imagen propia.
+- Invalidación de caché de la imagen mediante una versión en la URL.
+- Restauración inmediata de las iniciales en el editor y el header después de eliminar la fotografía.
+- Aislamiento por endpoint para impedir que la edición administrativa de otro usuario modifique el avatar del usuario autenticado.
+- Edición administrativa de fotografías mediante `/api/admin/users/[id]/profile-photo`.
 
 ### Interfaz
 
@@ -598,6 +607,9 @@ El código solo debe integrarse cuando todos los controles finalicen correctamen
 | `GET`    | `/api/profile/photo`                             | Consultar fotografía propia           | Autenticado      |
 | `POST`   | `/api/profile/photo`                             | Cargar o reemplazar fotografía propia | Autenticado      |
 | `DELETE` | `/api/profile/photo`                             | Eliminar fotografía propia            | Autenticado      |
+| `GET`    | `/api/admin/users/[id]/profile-photo`            | Consultar fotografía de otro usuario  | Administrador    |
+| `POST`   | `/api/admin/users/[id]/profile-photo`            | Cargar o reemplazar foto de usuario   | Administrador    |
+| `DELETE` | `/api/admin/users/[id]/profile-photo`            | Eliminar fotografía de otro usuario   | Administrador    |
 | `GET`    | `/api/patients/[id]/photo`                       | Consultar fotografía de paciente      | Autorizado       |
 | `POST`   | `/api/patients/[id]/photo`                       | Cargar o reemplazar fotografía        | Autorizado       |
 | `DELETE` | `/api/patients/[id]/photo`                       | Eliminar fotografía de paciente       | Autorizado       |
@@ -635,7 +647,7 @@ No se deben desarrollar funcionalidades directamente sobre `develop` ni `main`.
 
 ### Iteración actual
 
-La Fase 8 permanece integrada en producción. El alcance implementado de la Fase 9 quedó integrado en `develop` mediante el PR #26:
+La Fase 8 permanece integrada en producción. El alcance base de la Fase 9 quedó integrado en `develop` mediante el PR #26:
 
 - Bloque 9.1: dominio, persistencia, servicio y API autenticada del perfil y sus preferencias.
 - Bloque 9.2: página `/dashboard/profile`, formulario, navegación, preferencias de interfaz y sincronización del tema.
@@ -643,11 +655,24 @@ La Fase 8 permanece integrada en producción. El alcance implementado de la Fase
 - Commit del editor de fotografías: `998ac57` (`feat(profile): add patient profile photo editor`).
 - Commit de formato requerido por CI: `ae4af00` (`style: apply prettier formatting`).
 - Commit de integración en `develop`: `83c8c6d`.
-- Validación final: 69 archivos de prueba y 443 pruebas aprobadas, además de formato, TypeScript, ESLint y build de producción sin errores.
+- Validación final de esa integración: 69 archivos de prueba y 443 pruebas aprobadas, además de formato, TypeScript, ESLint y build de producción sin errores.
 - GitHub Actions y despliegue Preview de Vercel aprobados en el PR #26.
 - Rama local `feature/phase-9` eliminada después del merge.
 
-Este alcance todavía debe promoverse de `develop` a `main` antes de considerarlo publicado en producción. La rama remota `feature/phase-9` puede eliminarse al finalizar la limpieza conjunta de las ramas ya integradas.
+Después de esa integración se implementó el incremento 9.4.2.4.4C, todavía sin commit ni push:
+
+- Edición administrativa de fotografías de usuarios.
+- Progreso porcentual durante la carga.
+- Confirmación accesible de eliminación y estado `Eliminando...`.
+- Sincronización inmediata entre el editor del perfil propio y el avatar del header.
+- Reemplazo de imagen sin recargar mediante versión anticaché.
+- Restauración inmediata de iniciales al eliminar.
+- Aislamiento de eventos para que la edición de otro usuario no cambie el avatar de la sesión activa.
+- Pruebas de componente actualizadas para `XMLHttpRequest`, progreso y modal.
+- Validación automática aprobada: `typecheck`, `lint`, 498 de 498 pruebas, `build` y `git diff --check`.
+- Seis pruebas manuales del flujo solicitadas y aprobadas.
+
+Este incremento debe cerrarse en su rama actual, integrarse primero en `develop` y validarse en un despliegue Preview. La Fase 9 completa todavía debe promoverse de `develop` a `main` antes de considerarse publicada en producción.
 
 ## CI/CD
 
@@ -866,7 +891,7 @@ Mejora futura no bloqueante: incorporar procesamiento por lotes o generación as
 
 ### Fase 9 — Perfil, configuración y auditoría
 
-**Estado: en desarrollo; bloques 9.1, 9.2 y 9.3 integrados en `develop`**
+**Estado: en desarrollo; bloques 9.1–9.3 integrados en `develop` e incremento 9.4.2.4.4C validado localmente**
 
 Objetivo: incorporar un perfil administrativo persistente, preferencias personales y las bases necesarias para configuración, permisos, auditoría y observabilidad.
 
@@ -919,7 +944,38 @@ Bloque 9.3 — Fotografías de usuario y pacientes:
 
 Estado del bloque: completado e integrado.
 
-Validación consolidada de los bloques 9.1–9.3:
+Bloque 9.4 — Administración de usuarios, permisos y experiencia de perfil:
+
+Alcance implementado y validado hasta el incremento 9.4.2.4.4C:
+
+- Reutilización del editor de fotografías dentro de la edición administrativa.
+- Route Handler protegido `/api/admin/users/[id]/profile-photo`.
+- Carga con progreso porcentual visible.
+- Reemplazo de la fotografía sin recargar la página.
+- Eliminación mediante modal accesible.
+- Estado de eliminación visible hasta la confirmación del servidor.
+- Sincronización inmediata de la fotografía propia con el header.
+- Fallback inmediato a iniciales después de eliminar.
+- Evento de navegador limitado al endpoint propio para evitar efectos sobre la sesión al editar a terceros.
+- Compatibilidad comprobada en el perfil propio y en la edición administrativa.
+
+Validación del incremento:
+
+- `npm run typecheck`: aprobado.
+- `npm run lint`: aprobado.
+- `npm run test`: 498 de 498 pruebas aprobadas.
+- `npm run build`: aprobado.
+- `git diff --check`: aprobado.
+- Carga de fotografía propia y actualización inmediata del header: aprobada.
+- Sustitución de la fotografía sin recarga: aprobada.
+- Eliminación y restauración de iniciales: aprobada.
+- Cancelación de la eliminación sin cambios: aprobada.
+- Edición administrativa de otro usuario: aprobada.
+- Aislamiento del avatar del usuario autenticado durante la edición administrativa: aprobado.
+
+Estado del incremento: implementación y validación local completadas; pendiente de cierre Git e integración.
+
+Validación consolidada de los bloques 9.1–9.3 integrados:
 
 - 69 archivos de prueba aprobados.
 - 443 pruebas aprobadas.
@@ -927,19 +983,52 @@ Validación consolidada de los bloques 9.1–9.3:
 - CI y despliegue Preview de Vercel aprobados.
 - PR #26 fusionado hacia `develop`.
 
-Pendiente dentro de la Fase 9:
+Alcance restante para completar la Fase 9:
 
-- Configuración administrativa.
-- Ampliación de la gestión de roles y permisos administrativos.
-- Registro de acciones relevantes.
-- Observabilidad y trazabilidad de errores.
-- Promoción de `develop` hacia `main` y verificación en producción.
+1. Cerrar e integrar el incremento 9.4.2.4.4C:
+   - Revisar la rama actual y el diff final.
+   - Crear el commit del incremento.
+   - Subir la rama remota.
+   - Abrir el pull request hacia `develop`.
+   - Confirmar GitHub Actions y el despliegue Preview.
+   - Ejecutar una verificación funcional breve en Preview.
+   - Fusionar el pull request y limpiar la rama cuando corresponda.
+2. Completar la configuración administrativa:
+   - Definir qué parámetros serán globales y cuáles pertenecerán a cada usuario.
+   - Crear una sección administrativa protegida.
+   - Persistir y validar las configuraciones desde servicio y repositorio.
+   - Evitar que secretos o parámetros sensibles se editen desde la interfaz.
+3. Completar la gestión de usuarios, roles y permisos:
+   - Finalizar listado, creación, edición, activación y desactivación de usuarios según el alcance aprobado.
+   - Definir una matriz explícita de permisos para `ADMIN`, `PROFESSIONAL` y futuros roles.
+   - Aplicar autorización en servidor a páginas y Route Handlers; no depender únicamente de ocultar controles.
+   - Añadir pruebas de acceso permitido y denegado por rol.
+4. Implementar auditoría:
+   - Definir el modelo de evento de auditoría.
+   - Registrar actor, acción, recurso, identificador, fecha, resultado y metadatos mínimos.
+   - Cubrir inicio de sesión, cambios de perfil, fotografías, pacientes, hallazgos, recordatorios, exportaciones y administración.
+   - Evitar almacenar contraseñas, tokens, contenido clínico innecesario o archivos en los eventos.
+   - Incorporar consulta protegida, filtros, paginación y política de retención.
+5. Implementar observabilidad y trazabilidad:
+   - Establecer logs estructurados con identificador de correlación.
+   - Normalizar el manejo de errores del servidor y los mensajes seguros para el cliente.
+   - Registrar fallos de Redis, Blob, Telegram, cron y exportaciones sin exponer datos sensibles.
+   - Definir métricas mínimas, alertas y procedimiento de diagnóstico.
+   - Documentar qué se monitorea en desarrollo, Preview y producción.
+6. Cerrar la Fase 9:
+   - Actualizar pruebas, arquitectura, endpoints, variables y documentación.
+   - Ejecutar `format:check`, `lint`, `typecheck`, `test` y `build`.
+   - Ejecutar la regresión manual de perfil, administración, permisos, auditoría y errores controlados.
+   - Integrar `develop` en `main`.
+   - Verificar migraciones o datos requeridos.
+   - Validar el despliegue de producción y los flujos críticos.
+   - Etiquetar/documentar la versión estable y limpiar ramas ya fusionadas.
 
 Rama de implementación utilizada: `feature/phase-9`.
 
 Integración: PR #26 hacia `develop`, commit `83c8c6d`.
 
-La subdivisión 9.1–9.3 representa correctamente el alcance ya implementado. La Fase 9 completa no debe marcarse como finalizada hasta completar los pendientes administrativos, de auditoría y observabilidad.
+La Fase 9 no debe marcarse como finalizada por el solo hecho de aprobar el incremento 9.4.2.4.4C. Todavía requiere completar la configuración administrativa, cerrar la matriz de permisos, implementar auditoría y observabilidad e integrar y verificar todo el alcance en producción.
 
 ### Fase 10 — Asistencia con IA
 
@@ -985,11 +1074,11 @@ Cada fase deberá cumplir, como mínimo, con los siguientes criterios:
 
 ## Próximo paso
 
-Integrar esta actualización documental mediante la rama `docs/phase-9-readme` y un pull request hacia `develop`. Después se debe definir el siguiente bloque funcional de la Fase 9: configuración administrativa y ampliación de permisos, seguido de auditoría y observabilidad.
+El siguiente paso inmediato es cerrar el incremento 9.4.2.4.4C que ya superó las validaciones automáticas y las seis pruebas manuales. Antes de crear el commit se debe revisar `git branch --show-current`, `git diff --stat` y `git status --short`; después corresponde crear el commit, subir la rama y abrir un pull request hacia `develop`.
 
-Cuando `develop` reúna un alcance estable y validado, deberá abrirse un pull request hacia `main`, ejecutar nuevamente todos los controles de calidad y verificar el despliegue de producción. Hasta entonces, los bloques 9.1–9.3 deben describirse como integrados en `develop`, no como publicados en producción.
+Una vez integrado ese incremento y verificado en Preview, el siguiente bloque funcional debe completar la configuración administrativa y la matriz de roles y permisos. Auditoría y observabilidad deben implementarse a continuación, antes de promover la Fase 9 hacia `main`.
 
-La rama remota `feature/phase-9` todavía existe porque no se ejecutó `git push origin --delete feature/phase-9`. Puede eliminarse junto con las demás ramas remotas ya fusionadas cuando concluya la revisión y actualización del README.
+Cuando `develop` reúna todo el alcance estable y validado, deberá abrirse un pull request hacia `main`, ejecutar nuevamente todos los controles de calidad y verificar el despliegue de producción. Hasta entonces, los bloques 9.1–9.3 deben describirse como integrados en `develop` y el incremento 9.4.2.4.4C como validado localmente, no como publicado.
 
 Antes de trabajar con datos reales también deben definirse las políticas de privacidad, respaldo, retención, eliminación y auditoría indicadas en este documento.
 
