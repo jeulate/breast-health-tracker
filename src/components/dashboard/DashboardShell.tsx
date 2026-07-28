@@ -7,13 +7,21 @@ import type { UserRole } from "@/types";
 
 interface DashboardShellProps {
   children: React.ReactNode;
+  userName?: string;
   userEmail?: string;
   userRole?: UserRole;
+  hasProfilePhoto?: boolean;
 }
 
 const DESKTOP_MEDIA_QUERY = "(min-width: 1024px)";
 
-export function DashboardShell({ children, userEmail, userRole }: Readonly<DashboardShellProps>) {
+export function DashboardShell({
+  children,
+  userName,
+  userEmail,
+  userRole,
+  hasProfilePhoto = false,
+}: Readonly<DashboardShellProps>) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(false);
 
@@ -52,7 +60,10 @@ export function DashboardShell({ children, userEmail, userRole }: Readonly<Dashb
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Header
+          userName={userName}
           userEmail={userEmail}
+          userRole={userRole}
+          hasProfilePhoto={hasProfilePhoto}
           isMobileSidebarOpen={isMobileSidebarOpen}
           isDesktopSidebarCollapsed={isDesktopSidebarCollapsed}
           onMenuClick={toggleSidebar}

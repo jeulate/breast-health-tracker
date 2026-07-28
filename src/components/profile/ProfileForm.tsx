@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import type { ApiResponse } from "@/types";
 import type { ProfileLanguage, ProfileTheme, UserProfile } from "@/features/profile";
+import { ProfilePhotoEditor } from "@/components/profile-photo/ProfilePhotoEditor";
 import {
   profileThemeToNextTheme,
   toProfileFormValues,
@@ -96,9 +97,28 @@ export function ProfileForm() {
     );
   }
 
+  const profileInitials = profile.user.name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
+
   return (
     <form onSubmit={handleSubmit} className="grid min-w-0 gap-6 xl:grid-cols-3">
       <div className="space-y-6 xl:col-span-2">
+        <Section
+          title="Fotografía de perfil"
+          description="Agrega, reemplaza o elimina tu fotografía."
+        >
+          <ProfilePhotoEditor
+            endpoint="/api/profile/photo"
+            initials={profileInitials || "US"}
+            alt={`Fotografía de perfil de ${profile.user.name}`}
+            initialHasPhoto={Boolean(profile.user.profilePhotoPath)}
+          />
+        </Section>
+
         <Section
           title="Información personal"
           description="Actualiza el nombre que se muestra dentro del sistema."

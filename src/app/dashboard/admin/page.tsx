@@ -57,7 +57,10 @@ export default async function AdminPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <Link
+          href="/dashboard/admin/users"
+          className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-blue-300 hover:shadow-md focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-700"
+        >
           <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
             Gestión de usuarios
           </h2>
@@ -66,10 +69,10 @@ export default async function AdminPage() {
             Administra roles, estados y acceso de las cuentas registradas.
           </p>
 
-          <p className="mt-4 text-xs font-medium tracking-wide text-slate-500 uppercase dark:text-slate-400">
-            Disponible en la Fase 9.4.2
+          <p className="mt-4 text-xs font-semibold tracking-wide text-blue-600 uppercase dark:text-blue-400">
+            Gestionar usuarios →
           </p>
-        </article>
+        </Link>
 
         <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
