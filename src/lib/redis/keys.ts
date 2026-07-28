@@ -17,6 +17,10 @@ export const redisKeys = {
     return `${getPrefix()}users:${id}`;
   },
 
+  appSettings(): string {
+    return `${getPrefix()}settings:application`;
+  },
+
   userByEmail(email: string): string {
     return `${getPrefix()}users:email:${normalizeEmail(email)}`;
   },
