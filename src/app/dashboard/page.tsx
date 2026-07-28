@@ -7,7 +7,7 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { DashboardService } from "@/services/dashboard.service";
 
 export const metadata: Metadata = {
-  title: "Inicio | BI-RADS Tracker",
+  title: "Inicio",
 };
 
 export const dynamic = "force-dynamic";

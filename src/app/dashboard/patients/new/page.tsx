@@ -3,7 +3,7 @@ import Link from "next/link";
 import { PatientForm } from "@/components/forms/PatientForm";
 
 export const metadata: Metadata = {
-  title: "Nueva paciente | BI-RADS Tracker",
+  title: "Nueva paciente",
 };
 
 export default function NewPatientPage() {

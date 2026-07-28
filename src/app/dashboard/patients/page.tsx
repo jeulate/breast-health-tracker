@@ -7,7 +7,7 @@ import { parsePatientListQuery } from "@/lib/validations/patient-list";
 import { PatientService } from "@/services/patient.service";
 
 export const metadata: Metadata = {
-  title: "Pacientes | BI-RADS Tracker",
+  title: "Pacientes",
 };
 
 export const dynamic = "force-dynamic";
